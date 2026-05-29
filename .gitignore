@@ -1,0 +1,13 @@
+node_modules/
+.DS_Store
+*.log
+exported-garmin-project/bin/
+exported-garmin-project/build/
+minimal-test/bin/
+minimal-test/build/
+.vscode/
+.env
+*.prg
+dist/
+build/
+.claude/settings.local.json

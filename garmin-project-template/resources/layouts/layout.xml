@@ -1,0 +1,4 @@
+<layout id="WatchFace">
+    <!-- Primary rendering is done programmatically via dc.draw*() calls in onUpdate().
+         This layout file satisfies the Rez.Layouts.WatchFace(dc) call in onLayout(). -->
+</layout>

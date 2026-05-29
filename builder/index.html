@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watch Face Builder — Garmin Vivoactive 6</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── Toolbar ───────────────────────────────────────────────────── -->
+    <div id="toolbar">
+      <span class="app-title">⌚ Watch Face Builder</span>
+      <div class="toolbar-group">
+        <button id="btn-add" class="btn">＋ Add Element</button>
+        <button id="btn-undo" class="btn" title="Undo (Ctrl+Z)">↩ Undo</button>
+        <button id="btn-redo" class="btn" title="Redo (Ctrl+Y)">↪ Redo</button>
+      </div>
+      <div class="toolbar-group">
+        <button id="btn-safe-area" class="btn active" title="Toggle safe-area guide">Safe Area</button>
+        <button id="btn-grid" class="btn" title="Toggle alignment grid (20 px minor / 100 px major)">Grid</button>
+        <button id="btn-bring-forward" class="btn" title="Bring selected element forward">▲ Forward</button>
+        <button id="btn-send-backward" class="btn" title="Send selected element backward">▼ Back</button>
+      </div>
+      <div class="spacer"></div>
+      <div class="toolbar-group">
+        <span id="save-indicator" class="save-indicator" title="Design auto-saved">● Saved</span>
+        <button id="btn-new" class="btn" title="Start a new design">New</button>
+        <button id="btn-save-json" class="btn" title="Download design as JSON file">💾 Save</button>
+        <button id="btn-load-json" class="btn" title="Load a previously saved JSON file">📂 Load</button>
+        <input id="file-input" type="file" accept=".json" style="display:none">
+      </div>
+      <div class="toolbar-group">
+        <button id="btn-preview" class="btn btn-preview" title="Build and launch in Garmin simulator">▶ Preview</button>
+        <button id="btn-open-vscode" class="btn" title="Open exported project in VS Code">VS Code</button>
+        <button id="btn-export" class="btn btn-primary" title="Export Monkey C project and build .prg">⚙ Export .prg</button>
+      </div>
+    </div>
+
+    <!-- ── Main three-panel layout ───────────────────────────────────── -->
+    <div id="main">
+
+      <!-- Left: element palette -->
+      <div id="sidebar">
+        <h3 class="panel-title">Elements</h3>
+        <div id="field-palette"></div>
+      </div>
+
+      <!-- Center: canvas -->
+      <div id="canvas-area">
+        <div id="canvas-wrapper">
+          <canvas id="watch-canvas" width="390" height="390"></canvas>
+        </div>
+        <p class="canvas-hint">Click to select · Drag to move · Corner handles to resize</p>
+      </div>
+
+      <!-- Right: properties -->
+      <div id="properties">
+        <h3 class="panel-title">Properties</h3>
+        <div id="properties-panel">
+          <p class="no-selection">Select an element to edit its properties.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Add Element Modal ─────────────────────────────────────────────── -->
+  <div id="field-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Add Element</h3>
+        <button id="modal-close" class="btn-close" aria-label="Close">✕</button>
+      </div>
+      <div id="modal-field-list"></div>
+    </div>
+  </div>
+
+  <!-- ── Build Log Overlay ─────────────────────────────────────────────── -->
+  <div id="log-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-box log-box">
+      <div class="modal-header">
+        <h3>Build Output</h3>
+        <button id="log-close" class="btn-close" aria-label="Close">✕</button>
+      </div>
+      <pre id="log-content"></pre>
+      <div class="log-actions">
+        <button id="log-open-vscode" class="btn">Open in VS Code</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

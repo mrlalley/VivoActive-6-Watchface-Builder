@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<debugInfo>
+    <manifest filename="C:\Users\mr_la\WatchFace Builder\exported-garmin-project\manifest.xml"/>
+    <pcToLineNum>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="1" lineNum="37" parent="globals/WatchFaceView" pc="268435460" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\bin\\gen\\006-B4625-00\\source\\Rez.mcgen" id="2" lineNum="7" parent="globals/Rez" pc="268435472" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="3" lineNum="28" parent="globals/WatchFaceViewDelegate" pc="268435492" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="4" lineNum="16" parent="globals/WatchFaceApp" pc="268435504" symbol="&lt;init&gt;"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="5" lineNum="205" parent="globals/WatchFaceView" pc="268435516" symbol="onExitSleep"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="5" lineNum="205" parent="globals/WatchFaceView" pc="268435518" symbol="onExitSleep"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="49" parent="globals/WatchFaceView" pc="268435530" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="51" parent="globals/WatchFaceView" pc="268435533" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="52" parent="globals/WatchFaceView" pc="268435569" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="54" parent="globals/WatchFaceView" pc="268435579" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="55" parent="globals/WatchFaceView" pc="268435601" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="56" parent="globals/WatchFaceView" pc="268435626" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="56" parent="globals/WatchFaceView" pc="268435633" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="57" parent="globals/WatchFaceView" pc="268435646" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="58" parent="globals/WatchFaceView" pc="268435668" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="59" parent="globals/WatchFaceView" pc="268435693" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="59" parent="globals/WatchFaceView" pc="268435700" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="60" parent="globals/WatchFaceView" pc="268435713" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="61" parent="globals/WatchFaceView" pc="268435729" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="62" parent="globals/WatchFaceView" pc="268435793" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="63" parent="globals/WatchFaceView" pc="268435821" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="64" parent="globals/WatchFaceView" pc="268435852" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="65" parent="globals/WatchFaceView" pc="268435868" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="66" parent="globals/WatchFaceView" pc="268435884" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="68" parent="globals/WatchFaceView" pc="268435951" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="68" parent="globals/WatchFaceView" pc="268435973" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="69" parent="globals/WatchFaceView" pc="268435979" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="70" parent="globals/WatchFaceView" pc="268436007" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="71" parent="globals/WatchFaceView" pc="268436076" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="72" parent="globals/WatchFaceView" pc="268436095" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="73" parent="globals/WatchFaceView" pc="268436114" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="74" parent="globals/WatchFaceView" pc="268436139" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="75" parent="globals/WatchFaceView" pc="268436156" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="76" parent="globals/WatchFaceView" pc="268436180" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="76" parent="globals/WatchFaceView" pc="268436187" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="77" parent="globals/WatchFaceView" pc="268436198" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="77" parent="globals/WatchFaceView" pc="268436207" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="6" lineNum="78" parent="globals/WatchFaceView" pc="268436218" symbol="calcSunTimeMin"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="7" lineNum="192" parent="globals/WatchFaceView" pc="268436221" symbol="onPartialUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="7" lineNum="194" parent="globals/WatchFaceView" pc="268436224" symbol="onPartialUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="7" lineNum="195" parent="globals/WatchFaceView" pc="268436236" symbol="onPartialUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="7" lineNum="196" parent="globals/WatchFaceView" pc="268436252" symbol="onPartialUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="7" lineNum="199" parent="globals/WatchFaceView" pc="268436323" symbol="onPartialUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="7" lineNum="200" parent="globals/WatchFaceView" pc="268436342" symbol="onPartialUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="8" lineNum="81" parent="globals/WatchFaceView" pc="268436381" symbol="onShow"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="8" lineNum="82" parent="globals/WatchFaceView" pc="268436383" symbol="onShow"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="9" lineNum="43" parent="globals/WatchFaceView" pc="268436395" symbol="onLayout"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="10" lineNum="206" parent="globals/WatchFaceView" pc="268436398" symbol="onEnterSleep"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="10" lineNum="206" parent="globals/WatchFaceView" pc="268436400" symbol="onEnterSleep"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="11" lineNum="39" parent="globals/WatchFaceView" pc="268436412" symbol="initialize"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="11" lineNum="40" parent="globals/WatchFaceView" pc="268436414" symbol="initialize"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="85" parent="globals/WatchFaceView" pc="268436427" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="86" parent="globals/WatchFaceView" pc="268436430" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="87" parent="globals/WatchFaceView" pc="268436448" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="88" parent="globals/WatchFaceView" pc="268436460" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="90" parent="globals/WatchFaceView" pc="268436468" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="91" parent="globals/WatchFaceView" pc="268436480" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="92" parent="globals/WatchFaceView" pc="268436492" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="93" parent="globals/WatchFaceView" pc="268436510" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="94" parent="globals/WatchFaceView" pc="268436522" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="96" parent="globals/WatchFaceView" pc="268436534" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="97" parent="globals/WatchFaceView" pc="268436546" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="97" parent="globals/WatchFaceView" pc="268436549" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="97" parent="globals/WatchFaceView" pc="268436552" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="98" parent="globals/WatchFaceView" pc="268436555" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="99" parent="globals/WatchFaceView" pc="268436572" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="100" parent="globals/WatchFaceView" pc="268436587" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="100" parent="globals/WatchFaceView" pc="268436599" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="100" parent="globals/WatchFaceView" pc="268436612" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="102" parent="globals/WatchFaceView" pc="268436618" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="103" parent="globals/WatchFaceView" pc="268436643" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="104" parent="globals/WatchFaceView" pc="268436668" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="105" parent="globals/WatchFaceView" pc="268436708" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="106" parent="globals/WatchFaceView" pc="268436749" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="107" parent="globals/WatchFaceView" pc="268436809" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="108" parent="globals/WatchFaceView" pc="268436869" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="109" parent="globals/WatchFaceView" pc="268436909" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="110" parent="globals/WatchFaceView" pc="268436916" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="111" parent="globals/WatchFaceView" pc="268436952" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="112" parent="globals/WatchFaceView" pc="268436968" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="113" parent="globals/WatchFaceView" pc="268436986" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="113" parent="globals/WatchFaceView" pc="268436993" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="114" parent="globals/WatchFaceView" pc="268437006" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="115" parent="globals/WatchFaceView" pc="268437013" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="115" parent="globals/WatchFaceView" pc="268437035" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="116" parent="globals/WatchFaceView" pc="268437045" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="116" parent="globals/WatchFaceView" pc="268437056" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="117" parent="globals/WatchFaceView" pc="268437066" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="117" parent="globals/WatchFaceView" pc="268437077" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="118" parent="globals/WatchFaceView" pc="268437087" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="118" parent="globals/WatchFaceView" pc="268437098" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="119" parent="globals/WatchFaceView" pc="268437108" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="119" parent="globals/WatchFaceView" pc="268437119" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="120" parent="globals/WatchFaceView" pc="268437129" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="120" parent="globals/WatchFaceView" pc="268437140" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="121" parent="globals/WatchFaceView" pc="268437150" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="121" parent="globals/WatchFaceView" pc="268437161" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="122" parent="globals/WatchFaceView" pc="268437171" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="123" parent="globals/WatchFaceView" pc="268437178" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="125" parent="globals/WatchFaceView" pc="268437228" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="126" parent="globals/WatchFaceView" pc="268437245" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="128" parent="globals/WatchFaceView" pc="268437283" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="129" parent="globals/WatchFaceView" pc="268437300" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="131" parent="globals/WatchFaceView" pc="268437338" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="132" parent="globals/WatchFaceView" pc="268437355" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="134" parent="globals/WatchFaceView" pc="268437419" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="135" parent="globals/WatchFaceView" pc="268437436" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="137" parent="globals/WatchFaceView" pc="268437457" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="138" parent="globals/WatchFaceView" pc="268437474" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="140" parent="globals/WatchFaceView" pc="268437496" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="141" parent="globals/WatchFaceView" pc="268437513" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="143" parent="globals/WatchFaceView" pc="268437534" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="144" parent="globals/WatchFaceView" pc="268437551" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="146" parent="globals/WatchFaceView" pc="268437573" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="147" parent="globals/WatchFaceView" pc="268437589" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="149" parent="globals/WatchFaceView" pc="268437610" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="150" parent="globals/WatchFaceView" pc="268437626" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="152" parent="globals/WatchFaceView" pc="268437648" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="153" parent="globals/WatchFaceView" pc="268437665" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="155" parent="globals/WatchFaceView" pc="268437688" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="156" parent="globals/WatchFaceView" pc="268437705" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="158" parent="globals/WatchFaceView" pc="268437728" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="159" parent="globals/WatchFaceView" pc="268437745" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="162" parent="globals/WatchFaceView" pc="268437769" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="163" parent="globals/WatchFaceView" pc="268437787" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="164" parent="globals/WatchFaceView" pc="268437802" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="169" parent="globals/WatchFaceView" pc="268437822" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="170" parent="globals/WatchFaceView" pc="268437839" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="172" parent="globals/WatchFaceView" pc="268437857" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="173" parent="globals/WatchFaceView" pc="268437870" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="175" parent="globals/WatchFaceView" pc="268437881" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="176" parent="globals/WatchFaceView" pc="268437904" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="179" parent="globals/WatchFaceView" pc="268437924" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="180" parent="globals/WatchFaceView" pc="268437953" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="182" parent="globals/WatchFaceView" pc="268437976" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="184" parent="globals/WatchFaceView" pc="268437995" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="185" parent="globals/WatchFaceView" pc="268438011" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="13" lineNum="186" parent="globals/WatchFaceView" pc="268438038" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="14" lineNum="29" parent="globals/WatchFaceViewDelegate" pc="268438077" symbol="initialize"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="14" lineNum="30" parent="globals/WatchFaceViewDelegate" pc="268438079" symbol="initialize"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="15" lineNum="32" parent="globals/WatchFaceViewDelegate" pc="268438092" symbol="onPowerBudgetExceeded"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="15" lineNum="33" parent="globals/WatchFaceViewDelegate" pc="268438094" symbol="onPowerBudgetExceeded"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="16" lineNum="18" parent="globals/WatchFaceApp" pc="268438126" symbol="getInitialView"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="16" lineNum="19" parent="globals/WatchFaceApp" pc="268438129" symbol="getInitialView"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="16" lineNum="20" parent="globals/WatchFaceApp" pc="268438144" symbol="getInitialView"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="16" lineNum="21" parent="globals/WatchFaceApp" pc="268438164" symbol="getInitialView"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="16" lineNum="23" parent="globals/WatchFaceApp" pc="268438200" symbol="getInitialView"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="17" lineNum="17" parent="globals/WatchFaceApp" pc="268438226" symbol="initialize"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\source\\WatchFaceView.mc" id="17" lineNum="17" parent="globals/WatchFaceApp" pc="268438228" symbol="initialize"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\bin\\gen\\006-B4625-00\\source\\Rez.mcgen" id="18" lineNum="13" parent="globals/Rez/Layouts" pc="268438241" symbol="WatchFace"/>
+        <entry filename="C:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project\\bin\\gen\\006-B4625-00\\source\\Rez.mcgen" id="18" lineNum="14" parent="globals/Rez/Layouts" pc="268438251" symbol="WatchFace"/>
+    </pcToLineNum>
+    <symbolTable>
+        <entry id="8388639" module="true" symbol="Graphics"/>
+        <entry id="8388632" method="true" symbol="&lt;init&gt;"/>
+        <entry id="8390098" method="true" symbol="onPowerBudgetExceeded"/>
+        <entry id="6" object="true" symbol="WatchFaceApp"/>
+        <entry field="true" id="8388611" module="true" symbol="Toybox"/>
+        <entry field="true" id="12" symbol="AppName"/>
+        <entry id="8388633" module="true" symbol="ActivityMonitor"/>
+        <entry id="5" module="true" symbol="globals/Rez/Strings"/>
+        <entry id="8388631" module="true" symbol="Activity"/>
+        <entry id="8388648" module="true" symbol="WatchUi"/>
+        <entry id="8390097" method="true" symbol="onPartialUpdate"/>
+        <entry id="2" module="true" symbol="globals/Rez"/>
+        <entry id="8389124" method="true" symbol="onUpdate"/>
+        <entry id="8389375" method="true" object="true" symbol="WatchFace"/>
+        <entry id="8388771" module="true" object="true" symbol="Drawables"/>
+        <entry id="4" module="true" symbol="globals/Rez/Layouts"/>
+        <entry id="8389122" method="true" symbol="onLayout"/>
+        <entry id="8389376" method="true" symbol="onEnterSleep"/>
+        <entry id="3" module="true" symbol="globals/Rez/Drawables"/>
+        <entry id="8390095" object="true" symbol="WatchFaceDelegate"/>
+        <entry id="9" method="true" symbol="calcSunTimeMin"/>
+        <entry id="8389377" method="true" symbol="onExitSleep"/>
+        <entry id="8388645" module="true" symbol="Time"/>
+        <entry id="8388769" module="true" object="true" symbol="Rez"/>
+        <entry id="8388640" module="true" symbol="Lang"/>
+        <entry field="true" id="11" symbol="LauncherIcon"/>
+        <entry id="8388610" symbol="statics"/>
+        <entry id="8389123" method="true" symbol="onShow"/>
+        <entry id="8389350" module="true" symbol="globals"/>
+        <entry id="8388770" module="true" object="true" symbol="Strings"/>
+        <entry id="8388702" method="true" symbol="initialize"/>
+        <entry id="8388641" module="true" symbol="Math"/>
+        <entry id="7" object="true" symbol="WatchFaceView"/>
+        <entry id="8389280" method="true" symbol="getInitialView"/>
+        <entry id="8389781" module="true" symbol="SensorHistory"/>
+        <entry id="8" object="true" symbol="WatchFaceViewDelegate"/>
+        <entry id="10" module="true" symbol="Layouts"/>
+        <entry id="8388642" module="true" symbol="Position"/>
+        <entry id="8389125" method="true" symbol="onHide"/>
+    </symbolTable>
+    <localVars>
+        <entry arg="true" endPc="268436220" name="latDeg" stackId="1" startPc="268435530"/>
+        <entry arg="true" endPc="268436220" name="lonDeg" stackId="2" startPc="268435530"/>
+        <entry arg="true" endPc="268436220" name="isSunrise" stackId="3" startPc="268435530"/>
+        <entry endPc="268436220" name="jd" stackId="4" startPc="268435533"/>
+        <entry endPc="268436220" name="D" stackId="5" startPc="268435533"/>
+        <entry endPc="268436220" name="g" stackId="6" startPc="268435533"/>
+        <entry endPc="268436220" name="q" stackId="7" startPc="268435533"/>
+        <entry endPc="268436220" name="gRad" stackId="8" startPc="268435533"/>
+        <entry endPc="268436220" name="L" stackId="9" startPc="268435533"/>
+        <entry endPc="268436220" name="e" stackId="10" startPc="268435533"/>
+        <entry endPc="268436220" name="sinDec" stackId="11" startPc="268435533"/>
+        <entry endPc="268436220" name="dec" stackId="12" startPc="268435533"/>
+        <entry endPc="268436220" name="latRad" stackId="13" startPc="268435533"/>
+        <entry endPc="268436220" name="cosH" stackId="14" startPc="268435533"/>
+        <entry endPc="268436220" name="H" stackId="15" startPc="268435533"/>
+        <entry endPc="268436220" name="RA" stackId="16" startPc="268435533"/>
+        <entry endPc="268436220" name="eqTime" stackId="17" startPc="268435533"/>
+        <entry endPc="268436220" name="solarNoon" stackId="18" startPc="268435533"/>
+        <entry endPc="268436220" name="sunUTC" stackId="19" startPc="268435533"/>
+        <entry endPc="268436220" name="tzSec" stackId="20" startPc="268435533"/>
+        <entry endPc="268436220" name="localMin" stackId="21" startPc="268435533"/>
+        <entry arg="true" endPc="268436380" name="dc" stackId="1" startPc="268436221"/>
+        <entry endPc="268436316" name="clockTime" stackId="2" startPc="268436224"/>
+        <entry endPc="268436374" name="ex" stackId="3" startPc="268436323"/>
+        <entry arg="true" endPc="268438076" name="dc" stackId="1" startPc="268436427"/>
+        <entry endPc="268437969" name="clockTime" stackId="2" startPc="268436468"/>
+        <entry endPc="268437969" name="now" stackId="3" startPc="268436468"/>
+        <entry endPc="268437969" name="info" stackId="4" startPc="268436468"/>
+        <entry endPc="268437969" name="_ai" stackId="5" startPc="268436468"/>
+        <entry endPc="268437969" name="_ami" stackId="6" startPc="268436468"/>
+        <entry endPc="268437969" name="_pos" stackId="7" startPc="268436468"/>
+        <entry endPc="268437969" name="_lat" stackId="8" startPc="268436468"/>
+        <entry endPc="268437969" name="_lon" stackId="9" startPc="268436468"/>
+        <entry endPc="268437969" name="_hasPos" stackId="10" startPc="268436468"/>
+        <entry endPc="268436614" name="_coords" stackId="11" startPc="268436572"/>
+        <entry endPc="268437969" name="_srMin" stackId="12" startPc="268436468"/>
+        <entry endPc="268437969" name="_ssMin" stackId="13" startPc="268436468"/>
+        <entry endPc="268437969" name="heartRate" stackId="14" startPc="268436468"/>
+        <entry endPc="268437969" name="battery" stackId="15" startPc="268436468"/>
+        <entry endPc="268437969" name="sunriseTime" stackId="16" startPc="268436468"/>
+        <entry endPc="268437969" name="sunsetTime" stackId="17" startPc="268436468"/>
+        <entry endPc="268437969" name="steps" stackId="18" startPc="268436468"/>
+        <entry endPc="268437969" name="bodyBattery" stackId="19" startPc="268436468"/>
+        <entry endPc="268437969" name="_jdM" stackId="20" startPc="268436468"/>
+        <entry endPc="268437969" name="_phs" stackId="21" startPc="268436468"/>
+        <entry endPc="268437969" name="moonPhase" stackId="22" startPc="268436468"/>
+        <entry endPc="268437969" name="moonPhasePercent" stackId="23" startPc="268436468"/>
+        <entry endPc="268437920" name="_sxWan" stackId="24" startPc="268437881"/>
+        <entry endPc="268437969" name="_sxWax" stackId="25" startPc="268437924"/>
+        <entry endPc="268438070" name="ex" stackId="26" startPc="268437976"/>
+        <entry arg="true" endPc="268438091" name="view" stackId="1" startPc="268438077"/>
+        <entry arg="true" endPc="268438125" name="powerInfo" stackId="1" startPc="268438092"/>
+        <entry endPc="268438196" name="view" stackId="1" startPc="268438144"/>
+        <entry arg="true" endPc="268438253" name="dc" stackId="1" startPc="268438241"/>
+    </localVars>
+    <deviceInfo deviceVersion="45fe3cbb0de8ea0a70e12628d2697915f1272301" partNumber="006-B4625-00"/>
+    <annotations>
+        <annotationEntry annotation="initialized" class="Drawables" module="globals/Rez" symbol="LauncherIcon"/>
+        <annotationEntry annotation="initialized" class="Strings" module="globals/Rez" symbol="AppName"/>
+    </annotations>
+    <dataEntryOffsetMappings>
+        <dataEntry label="globals" offset="58" parentId="" symbolId="globals" type="module"/>
+        <dataEntry label="globals/WatchFaceView" offset="125" parentId="globals" symbolId="WatchFaceView" type="class"/>
+        <dataEntry label="globals/Rez" offset="241" parentId="globals" symbolId="Rez" type="module"/>
+        <dataEntry label="globals/WatchFaceViewDelegate" offset="294" parentId="globals" symbolId="WatchFaceViewDelegate" type="class"/>
+        <dataEntry label="globals/WatchFaceApp" offset="347" parentId="globals" symbolId="WatchFaceApp" type="class"/>
+        <dataEntry label="globals/Rez/Drawables" offset="400" parentId="Rez" symbolId="Drawables" type="module"/>
+        <dataEntry label="globals/Rez/Layouts" offset="435" parentId="Rez" symbolId="Layouts" type="module"/>
+        <dataEntry label="globals/Rez/Strings" offset="470" parentId="Rez" symbolId="Strings" type="module"/>
+    </dataEntryOffsetMappings>
+    <functions>
+        <functionEntry accessMode="public" endPc="268435471" name="&lt;init&gt;" parent="WatchFaceView" startPc="268435460">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435491" name="&lt;init&gt;" parent="Rez" startPc="268435472">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435503" name="&lt;init&gt;" parent="WatchFaceViewDelegate" startPc="268435492">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435515" name="&lt;init&gt;" parent="WatchFaceApp" startPc="268435504">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268435529" name="onExitSleep" parent="WatchFaceView" startPc="268435516">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436220" name="calcSunTimeMin" parent="WatchFaceView" startPc="268435530">
+            <param id="latDeg"/>
+            <param id="lonDeg"/>
+            <param id="isSunrise"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436380" name="onPartialUpdate" parent="WatchFaceView" startPc="268436221">
+            <param id="dc"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436394" name="onShow" parent="WatchFaceView" startPc="268436381">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436397" name="onLayout" parent="WatchFaceView" startPc="268436395">
+            <param id="dc"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436411" name="onEnterSleep" parent="WatchFaceView" startPc="268436398">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268436426" name="initialize" parent="WatchFaceView" startPc="268436412">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" name="onHide" parent="WatchFaceView">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268438076" name="onUpdate" parent="WatchFaceView" startPc="268436427">
+            <param id="dc"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" name="&lt;init&gt;" parent="Drawables">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" name="&lt;init&gt;" parent="Layouts">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" name="&lt;init&gt;" parent="Strings">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268438091" name="initialize" parent="WatchFaceViewDelegate" startPc="268438077">
+            <param id="view"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268438125" name="onPowerBudgetExceeded" parent="WatchFaceViewDelegate" startPc="268438092">
+            <param id="powerInfo"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268438225" name="getInitialView" parent="WatchFaceApp" startPc="268438126">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268438240" name="initialize" parent="WatchFaceApp" startPc="268438226">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268438253" name="WatchFace" parent="Layouts" startPc="268438241">
+            <param id="dc"/>
+            <documentation/>
+        </functionEntry>
+    </functions>
+</debugInfo>

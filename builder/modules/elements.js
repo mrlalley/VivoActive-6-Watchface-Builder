@@ -1,0 +1,131 @@
+import { DATA_FIELDS } from './data-fields.js';
+
+// Total line-height in device pixels for each Garmin font (vivoactive6 simulator.json).
+// Used for: (a) default element height at creation, (b) canvas font sizing, (c) auto-update on font change.
+export const FONT_HEIGHTS = {
+  FONT_XTINY:            17,
+  FONT_TINY:             20,
+  FONT_SMALL:            45,
+  FONT_MEDIUM:           53,
+  FONT_LARGE:            61,
+  FONT_NUMBER_MILD:      97,
+  FONT_NUMBER_MEDIUM:   130,
+  FONT_NUMBER_HOT:      148,
+  FONT_NUMBER_THAI_HOT: 179,
+};
+
+let elements = [];
+let nextId = 1;
+let history = [];
+let historyIndex = -1;
+
+export function createElement(fieldId, x, y) {
+  const field = DATA_FIELDS.find(f => f.id === fieldId);
+  if (!field) return null;
+
+  const font = field.defaultFont || 'FONT_MEDIUM';
+  const defaultH = field.shapeType
+    ? (field.defaultHeight !== undefined ? field.defaultHeight : 60)
+    : (FONT_HEIGHTS[font] || 36);
+  const defaultW = field.defaultWidth !== undefined
+    ? field.defaultWidth
+    : (field.shapeType ? 60 : estimateTextWidth(font, field.preview ?? field.label));
+
+  return {
+    id: nextId++,
+    fieldId,
+    label: field.label,
+    x,
+    y,
+    width:  defaultW,
+    height: defaultH,
+    font,
+    color: field.defaultColor || '#FFFFFF',
+    align: 'center',
+    visibility: 'always',
+    format: '',
+    zIndex: elements.length,
+    shapeType: field.shapeType || null,
+    preview: field.preview !== undefined ? field.preview : field.label,
+  };
+}
+
+// Rough character-width estimate for the initial selection box width.
+function estimateTextWidth(font, text) {
+  const charWidths = {
+    FONT_XTINY: 7, FONT_TINY: 9, FONT_SMALL: 17, FONT_MEDIUM: 21, FONT_LARGE: 26,
+    FONT_NUMBER_MILD: 32, FONT_NUMBER_MEDIUM: 48, FONT_NUMBER_HOT: 58, FONT_NUMBER_THAI_HOT: 70,
+  };
+  const cw = charWidths[font] || 21;
+  return Math.min(380, Math.max(60, String(text || '').length * cw));
+}
+
+export function addElement(el, saveHistory = true) {
+  elements.push(el);
+  if (saveHistory) pushHistory();
+}
+
+export function removeElement(id) {
+  elements = elements.filter(e => e.id !== id);
+  pushHistory();
+}
+
+export function updateElement(id, props) {
+  const el = elements.find(e => e.id === id);
+  if (el) Object.assign(el, props);
+}
+
+export function getElements() {
+  return elements;
+}
+
+export function setElements(els) {
+  elements = els;
+  nextId = els.length > 0 ? Math.max(...els.map(e => e.id)) + 1 : 1;
+}
+
+export function exportState() {
+  return JSON.stringify({ elements, nextId });
+}
+
+export function importState(json) {
+  const state = JSON.parse(json);
+  elements = state.elements || [];
+  nextId = state.nextId !== undefined
+    ? state.nextId
+    : (elements.length > 0 ? Math.max(...elements.map(e => e.id)) + 1 : 1);
+  history = [JSON.parse(JSON.stringify(elements))];
+  historyIndex = 0;
+}
+
+export function commitHistory() {
+  pushHistory();
+}
+
+export function undo() {
+  if (historyIndex > 0) {
+    historyIndex--;
+    elements = JSON.parse(JSON.stringify(history[historyIndex]));
+    return true;
+  }
+  return false;
+}
+
+export function redo() {
+  if (historyIndex < history.length - 1) {
+    historyIndex++;
+    elements = JSON.parse(JSON.stringify(history[historyIndex]));
+    return true;
+  }
+  return false;
+}
+
+function pushHistory() {
+  history = history.slice(0, historyIndex + 1);
+  history.push(JSON.parse(JSON.stringify(elements)));
+  if (history.length > 10) history.shift();
+  else historyIndex++;
+}
+
+// Seed the empty initial state into history
+pushHistory();

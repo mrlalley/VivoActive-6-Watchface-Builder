@@ -1,0 +1,302 @@
+[ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 1; @symbol_importdef<0> = [Toybox,1,7,13]; @symbol_importdef<1> = [Application,1,14,25]; ]
+import Toybox.Application;
+[ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 2; @symbol_importdef<0> = [Toybox,2,7,13]; @symbol_importdef<1> = [Graphics,2,14,22]; ]
+import Toybox.Graphics;
+[ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 3; @symbol_importdef<0> = [Toybox,3,7,13]; @symbol_importdef<1> = [Lang,3,14,18]; ]
+import Toybox.Lang;
+[ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 4; @symbol_importdef<0> = [Toybox,4,7,13]; @symbol_importdef<1> = [System,4,14,20]; ]
+import Toybox.System;
+[ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 5; @symbol_importdef<0> = [Toybox,5,7,13]; @symbol_importdef<1> = [WatchUi,5,14,21]; ]
+import Toybox.WatchUi;
+[ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 7; @symbol_classdef = [MinimalApp,7,6,16]; @symbol_extends<0> = [Application,7,25,36]; @symbol_extends<1> = [AppBase,7,37,44]; ]
+class MinimalApp extends Application.AppBase {
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 7; ]
+    <init> {
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 7; ]
+    static
+    <init> {
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 8; @symbol_functiondef = [initialize,8,13,23]; ]
+    function initialize() as Void {
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_8_26_8_50_start:
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 8 28 ]
+        symbol [ AppBase %tmp.2 8 28 35 ];
+        %tmp.2 = getv ? :AppBase;
+        symbol [ initialize %tmp.3 8 36 46 ];
+        %tmp.3 = getv function %tmp.2 :initialize;
+        invoke %tmp.2 %tmp.3();
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_8_26_8_50_stop:
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 9; @symbol_functiondef = [onStart,9,13,20]; @symbol_param<0> = [state,9,21,26]; @symbol_param<0>_type<0> = [Dictionary,9,30,40]; ]
+    function onStart(state as Dictionary or Null) as Void {
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 10; @symbol_functiondef = [onStop,10,13,19]; @symbol_param<0> = [state,10,20,25]; @symbol_param<0>_type<0> = [Dictionary,10,29,39]; ]
+    function onStop(state as Dictionary or Null) as Void {
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 11; @symbol_functiondef = [getInitialView,11,13,27]; @symbol_return<0> = [WatchUi,11,34,41]; @symbol_return<1> = [Views,11,42,47]; @symbol_return<2> = [WatchUi,11,53,60]; @symbol_return<3> = [Views,11,61,66]; @symbol_return<4> = [WatchUi,11,68,75]; @symbol_return<5> = [InputDelegates,11,76,90]; ]
+    function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_11_92_13_4_start:
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 12 8 ]
+        %tmp.1 = newa 1;
+        symbol [ MinimalView %tmp.5 12 20 31 ];
+        %tmp.5 = getv ? :MinimalView;
+        %tmp.2 = newc %tmp.5 ();
+        %tmp.6 = dup %tmp.1;
+        %tmp.7 = aputv %tmp.6 0 %tmp.2;
+        ret %tmp.7;
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_11_92_13_4_stop:
+    }
+}
+[ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 16; @symbol_classdef = [MinimalView,16,6,17]; @symbol_extends<0> = [WatchUi,16,26,33]; @symbol_extends<1> = [WatchFace,16,34,43]; ]
+class MinimalView extends WatchUi.WatchFace {
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 16; ]
+    <init> {
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 16; ]
+    static
+    <init> {
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 17; @symbol_functiondef = [initialize,17,13,23]; ]
+    function initialize() as Void {
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_17_26_17_52_start:
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 17 28 ]
+        symbol [ WatchFace %tmp.2 17 28 37 ];
+        %tmp.2 = getv ? :WatchFace;
+        symbol [ initialize %tmp.3 17 38 48 ];
+        %tmp.3 = getv function %tmp.2 :initialize;
+        invoke %tmp.2 %tmp.3();
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_17_26_17_52_stop:
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 18; @symbol_functiondef = [onLayout,18,13,21]; @symbol_param<0> = [dc,18,22,24]; @symbol_param<0>_type<0> = [Graphics,18,28,36]; @symbol_param<0>_type<1> = [Dc,18,37,39]; ]
+    function onLayout(dc as Graphics.Dc) as Void {
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 19; @symbol_functiondef = [onShow,19,13,19]; ]
+    function onShow() as Void {
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_19_30_19_57_start:
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 19 32 ]
+        symbol [ WatchUi %tmp.1 19 32 39 ];
+        %tmp.1 = getm $.Toybox.WatchUi;
+        symbol [ requestUpdate %tmp.2 19 40 53 ];
+        %tmp.2 = getv function %tmp.1 :requestUpdate;
+        invoke %tmp.1 %tmp.2();
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_19_30_19_57_stop:
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 21; @symbol_functiondef = [onUpdate,21,13,21]; @symbol_param<0> = [dc,21,22,24]; @symbol_param<0>_type<0> = [Graphics,21,28,36]; @symbol_param<0>_type<1> = [Dc,21,37,39]; ]
+    function onUpdate(dc as Graphics.Dc) as Void {
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_21_49_29_4_start:
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 22 8 ]
+        symbol [ System %tmp.1 22 8 14 ];
+        %tmp.1 = getm $.Toybox.System;
+        symbol [ println %tmp.2 22 15 22 ];
+        %tmp.2 = getv function %tmp.1 :println;
+        %tmp.3 = "MinimalView onUpdate called";
+        invoke %tmp.1 %tmp.2(%tmp.3);
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 23 8 ]
+        %tmp.4 = lgetv %dc;
+        symbol [ dc %tmp.4 23 8 10 ];
+        symbol [ setColor %tmp.5 23 11 19 ];
+        %tmp.5 = getv function %tmp.4 :setColor;
+        symbol [ Graphics %tmp.6 23 20 28 ];
+        %tmp.6 = getm $.Toybox.Graphics;
+        symbol [ COLOR_BLACK %tmp.7 23 29 40 ];
+        %tmp.7 = getv %tmp.6 :COLOR_BLACK;
+        symbol [ Graphics %tmp.8 23 42 50 ];
+        %tmp.8 = getm $.Toybox.Graphics;
+        symbol [ COLOR_BLACK %tmp.9 23 51 62 ];
+        %tmp.9 = getv %tmp.8 :COLOR_BLACK;
+        invoke %tmp.4 %tmp.5(%tmp.7, %tmp.9);
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 24 8 ]
+        %tmp.10 = lgetv %dc;
+        symbol [ dc %tmp.10 24 8 10 ];
+        symbol [ clear %tmp.11 24 11 16 ];
+        %tmp.11 = getv function %tmp.10 :clear;
+        invoke %tmp.10 %tmp.11();
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 25 8 ]
+        %tmp.12 = lgetv %dc;
+        symbol [ dc %tmp.12 25 8 10 ];
+        symbol [ setColor %tmp.13 25 11 19 ];
+        %tmp.13 = getv function %tmp.12 :setColor;
+        symbol [ Graphics %tmp.14 25 20 28 ];
+        %tmp.14 = getm $.Toybox.Graphics;
+        symbol [ COLOR_WHITE %tmp.15 25 29 40 ];
+        %tmp.15 = getv %tmp.14 :COLOR_WHITE;
+        symbol [ Graphics %tmp.16 25 42 50 ];
+        %tmp.16 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.17 25 51 68 ];
+        %tmp.17 = getv %tmp.16 :COLOR_TRANSPARENT;
+        invoke %tmp.12 %tmp.13(%tmp.15, %tmp.17);
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 26 8 ]
+        %tmp.18 = lgetv %dc;
+        symbol [ dc %tmp.18 26 8 10 ];
+        symbol [ drawText %tmp.19 26 11 19 ];
+        %tmp.19 = getv function %tmp.18 :drawText;
+        %tmp.20 = 195;
+        %tmp.21 = 195;
+        symbol [ Graphics %tmp.22 26 30 38 ];
+        %tmp.22 = getm $.Toybox.Graphics;
+        symbol [ FONT_LARGE %tmp.23 26 39 49 ];
+        %tmp.23 = getv %tmp.22 :FONT_LARGE;
+        %tmp.24 = "HELLO WORLD";
+        symbol [ Graphics %tmp.25 26 66 74 ];
+        %tmp.25 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.26 26 75 94 ];
+        %tmp.26 = getv %tmp.25 :TEXT_JUSTIFY_CENTER;
+        symbol [ Graphics %tmp.27 26 97 105 ];
+        %tmp.27 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.28 26 106 126 ];
+        %tmp.28 = getv %tmp.27 :TEXT_JUSTIFY_VCENTER;
+        %tmp.29 = bitor %tmp.26 %tmp.28;
+        invoke %tmp.18 %tmp.19(%tmp.20, %tmp.21, %tmp.23, %tmp.24, %tmp.29);
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 27 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_21_49_29_4_start" "C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_21_49_29_4_stop" ]
+        %t.1 = local;
+        symbol [ t %t.1 27 12 13 ];
+        symbol [ System %tmp.30 27 16 22 ];
+        %tmp.30 = getm $.Toybox.System;
+        symbol [ getClockTime %tmp.31 27 23 35 ];
+        %tmp.31 = getv function %tmp.30 :getClockTime;
+        %tmp.32 = invoke %tmp.30 %tmp.31();
+        lputv %t.1 %tmp.32;
+        symbol [ t %t.1 27 12 13 ];
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 28 8 ]
+        %tmp.33 = lgetv %dc;
+        symbol [ dc %tmp.33 28 8 10 ];
+        symbol [ drawText %tmp.34 28 11 19 ];
+        %tmp.34 = getv function %tmp.33 :drawText;
+        %tmp.35 = 195;
+        %tmp.36 = 250;
+        symbol [ Graphics %tmp.37 28 30 38 ];
+        %tmp.37 = getm $.Toybox.Graphics;
+        symbol [ FONT_MEDIUM %tmp.38 28 39 50 ];
+        %tmp.38 = getv %tmp.37 :FONT_MEDIUM;
+        %tmp.39 = lgetv %t.1;
+        symbol [ t %tmp.39 28 52 53 ];
+        symbol [ hour %tmp.40 28 54 58 ];
+        %tmp.40 = getv %tmp.39 :hour;
+        symbol [ format %tmp.41 28 59 65 ];
+        %tmp.41 = getv function %tmp.40 :format;
+        %tmp.42 = "%02d";
+        %tmp.43 = invoke %tmp.40 %tmp.41(%tmp.42);
+        %tmp.44 = ":";
+        %tmp.45 = add %tmp.43 %tmp.44;
+        %tmp.46 = lgetv %t.1;
+        symbol [ t %tmp.46 28 82 83 ];
+        symbol [ min %tmp.47 28 84 87 ];
+        %tmp.47 = getv %tmp.46 :min;
+        symbol [ format %tmp.48 28 88 94 ];
+        %tmp.48 = getv function %tmp.47 :format;
+        %tmp.49 = "%02d";
+        %tmp.50 = invoke %tmp.47 %tmp.48(%tmp.49);
+        %tmp.51 = add %tmp.45 %tmp.50;
+        symbol [ Graphics %tmp.52 28 104 112 ];
+        %tmp.52 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.53 28 113 132 ];
+        %tmp.53 = getv %tmp.52 :TEXT_JUSTIFY_CENTER;
+        symbol [ Graphics %tmp.54 28 135 143 ];
+        %tmp.54 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.55 28 144 164 ];
+        %tmp.55 = getv %tmp.54 :TEXT_JUSTIFY_VCENTER;
+        %tmp.56 = bitor %tmp.53 %tmp.55;
+        invoke %tmp.33 %tmp.34(%tmp.35, %tmp.36, %tmp.38, %tmp.51, %tmp.56);
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_21_49_29_4_stop:
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 31; @symbol_functiondef = [onPartialUpdate,31,13,28]; @symbol_param<0> = [dc,31,29,31]; @symbol_param<0>_type<0> = [Graphics,31,35,43]; @symbol_param<0>_type<1> = [Dc,31,44,46]; ]
+    function onPartialUpdate(dc as Graphics.Dc) as Void {
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_31_56_35_4_start:
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 32 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_31_56_35_4_start" "C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_31_56_35_4_stop" ]
+        %t.1 = local;
+        symbol [ t %t.1 32 12 13 ];
+        symbol [ System %tmp.1 32 16 22 ];
+        %tmp.1 = getm $.Toybox.System;
+        symbol [ getClockTime %tmp.2 32 23 35 ];
+        %tmp.2 = getv function %tmp.1 :getClockTime;
+        %tmp.3 = invoke %tmp.1 %tmp.2();
+        lputv %t.1 %tmp.3;
+        symbol [ t %t.1 32 12 13 ];
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 33 8 ]
+        %tmp.4 = lgetv %dc;
+        symbol [ dc %tmp.4 33 8 10 ];
+        symbol [ setColor %tmp.5 33 11 19 ];
+        %tmp.5 = getv function %tmp.4 :setColor;
+        symbol [ Graphics %tmp.6 33 20 28 ];
+        %tmp.6 = getm $.Toybox.Graphics;
+        symbol [ COLOR_WHITE %tmp.7 33 29 40 ];
+        %tmp.7 = getv %tmp.6 :COLOR_WHITE;
+        symbol [ Graphics %tmp.8 33 42 50 ];
+        %tmp.8 = getm $.Toybox.Graphics;
+        symbol [ COLOR_BLACK %tmp.9 33 51 62 ];
+        %tmp.9 = getv %tmp.8 :COLOR_BLACK;
+        invoke %tmp.4 %tmp.5(%tmp.7, %tmp.9);
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 34 8 ]
+        %tmp.10 = lgetv %dc;
+        symbol [ dc %tmp.10 34 8 10 ];
+        symbol [ drawText %tmp.11 34 11 19 ];
+        %tmp.11 = getv function %tmp.10 :drawText;
+        %tmp.12 = 195;
+        %tmp.13 = 250;
+        symbol [ Graphics %tmp.14 34 30 38 ];
+        %tmp.14 = getm $.Toybox.Graphics;
+        symbol [ FONT_MEDIUM %tmp.15 34 39 50 ];
+        %tmp.15 = getv %tmp.14 :FONT_MEDIUM;
+        %tmp.16 = lgetv %t.1;
+        symbol [ t %tmp.16 34 52 53 ];
+        symbol [ hour %tmp.17 34 54 58 ];
+        %tmp.17 = getv %tmp.16 :hour;
+        symbol [ format %tmp.18 34 59 65 ];
+        %tmp.18 = getv function %tmp.17 :format;
+        %tmp.19 = "%02d";
+        %tmp.20 = invoke %tmp.17 %tmp.18(%tmp.19);
+        %tmp.21 = ":";
+        %tmp.22 = add %tmp.20 %tmp.21;
+        %tmp.23 = lgetv %t.1;
+        symbol [ t %tmp.23 34 82 83 ];
+        symbol [ min %tmp.24 34 84 87 ];
+        %tmp.24 = getv %tmp.23 :min;
+        symbol [ format %tmp.25 34 88 94 ];
+        %tmp.25 = getv function %tmp.24 :format;
+        %tmp.26 = "%02d";
+        %tmp.27 = invoke %tmp.24 %tmp.25(%tmp.26);
+        %tmp.28 = add %tmp.22 %tmp.27;
+        symbol [ Graphics %tmp.29 34 104 112 ];
+        %tmp.29 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.30 34 113 132 ];
+        %tmp.30 = getv %tmp.29 :TEXT_JUSTIFY_CENTER;
+        symbol [ Graphics %tmp.31 34 135 143 ];
+        %tmp.31 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.32 34 144 164 ];
+        %tmp.32 = getv %tmp.31 :TEXT_JUSTIFY_VCENTER;
+        %tmp.33 = bitor %tmp.30 %tmp.32;
+        invoke %tmp.10 %tmp.11(%tmp.12, %tmp.13, %tmp.15, %tmp.28, %tmp.33);
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_31_56_35_4_stop:
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 37; @symbol_functiondef = [onHide,37,13,19]; ]
+    function onHide() as Void {
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 38; @symbol_functiondef = [onExitSleep,38,13,24]; ]
+    function onExitSleep() as Void {
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_38_35_38_62_start:
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 38 37 ]
+        symbol [ WatchUi %tmp.1 38 37 44 ];
+        %tmp.1 = getm $.Toybox.WatchUi;
+        symbol [ requestUpdate %tmp.2 38 45 58 ];
+        %tmp.2 = getv function %tmp.1 :requestUpdate;
+        invoke %tmp.1 %tmp.2();
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_38_35_38_62_stop:
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 39; @symbol_functiondef = [onEnterSleep,39,13,25]; ]
+    function onEnterSleep() as Void {
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_39_36_39_63_start:
+[ "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc" 39 38 ]
+        symbol [ WatchUi %tmp.1 39 38 45 ];
+        %tmp.1 = getm $.Toybox.WatchUi;
+        symbol [ requestUpdate %tmp.2 39 46 59 ];
+        %tmp.2 = getv function %tmp.1 :requestUpdate;
+        invoke %tmp.1 %tmp.2();
+C__Users_mr_la_WatchFace_Builder_minimal_test_source_MinimalApp_mc_39_36_39_63_stop:
+    }
+}
+[ @file = "C:\Users\mr_la\WatchFace Builder\minimal-test\source\MinimalApp.mc"; @line = 1; ]
+<init> {
+}

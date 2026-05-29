@@ -1,0 +1,13 @@
+{
+  "name": "watchface-builder",
+  "version": "1.0.0",
+  "description": "Garmin Vivoactive 6 Watch Face Visual Builder",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
