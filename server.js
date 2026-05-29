@@ -3,127 +3,137 @@ const path = require('path');
 const fs = require('fs');
 const { exec, spawn } = require('child_process');
 
-const app = express();
-const PORT = 3000;
+// ─── Config ────────────────────────────────────────────────────────────────────
+// Returns configuration object with optional user overrides (used by Electron)
 
-const SDK_BIN  = 'C:\\Users\\mr_la\\AppData\\Roaming\\Garmin\\ConnectIQ\\Sdks\\connectiq-sdk-win-9.1.0-2026-03-09-6a872a80b\\bin';
-const MONKEYC  = path.join(SDK_BIN, 'monkeyc.bat');
-const MONKEYDO = path.join(SDK_BIN, 'monkeydo.bat');
-const SIM_EXE  = path.join(SDK_BIN, 'simulator.exe');
-const DEV_KEY  = 'C:\\Users\\mr_la\\.garmin\\developer_key.der';
-const EXPORT_DIR = path.join(__dirname, 'exported-garmin-project');
+function getConfig(overrides = {}) {
+  const SDK_BIN  = overrides.sdkBin  || 'C:\\Users\\mr_la\\AppData\\Roaming\\Garmin\\ConnectIQ\\Sdks\\connectiq-sdk-win-9.1.0-2026-03-09-6a872a80b\\bin';
+  const DEV_KEY  = overrides.devKey  || 'C:\\Users\\mr_la\\.garmin\\developer_key.der';
+  const EXPORT_DIR = overrides.exportDir || path.join(__dirname, 'exported-garmin-project');
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'builder')));
+  return {
+    sdkBin: SDK_BIN,
+    monkeyc: path.join(SDK_BIN, 'monkeyc.bat'),
+    monkeydo: path.join(SDK_BIN, 'monkeydo.bat'),
+    simExe: path.join(SDK_BIN, 'simulator.exe'),
+    devKey: DEV_KEY,
+    exportDir: EXPORT_DIR,
+    tempDir: overrides.tempDir || 'C:\\Temp\\CIQPreview',
+  };
+}
 
-app.post('/api/export', (req, res) => {
-  const { elements = [], projectName = 'MyWatchFace' } = req.body;
+// ─── Server factory ────────────────────────────────────────────────────────────
+// Creates and returns an Express app with all routes configured
 
-  try {
-    generateProjectFiles(elements, projectName);
-  } catch (err) {
-    return res.json({ success: false, error: `File generation failed: ${err.message}`, log: '' });
-  }
+function createServer(config = {}) {
+  const cfg = getConfig(config);
+  const app = express();
 
-  if (!fs.existsSync(MONKEYC)) {
-    return res.json({
-      success: false,
-      error: `monkeyc not found. Add the SDK bin directory to PATH:\n  ${SDK_BIN}\nThen restart this server, or open exported-garmin-project/ in VS Code and run "Monkey C: Build for Device".`,
-      log: '',
-      projectPath: EXPORT_DIR,
-    });
-  }
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.static(path.join(__dirname, 'builder')));
 
-  if (!fs.existsSync(DEV_KEY)) {
-    return res.json({
-      success: false,
-      error: `Developer key not found at: ${DEV_KEY}\nGenerate one via VS Code Command Palette → "Monkey C: Generate a Developer Key".`,
-      log: '',
-      projectPath: EXPORT_DIR,
-    });
-  }
+  app.post('/api/export', (req, res) => {
+    const { elements = [], projectName = 'MyWatchFace' } = req.body;
 
-  const prgName = safePrgName(projectName);
-  const outPrg  = path.join(EXPORT_DIR, 'bin', `${prgName}.prg`);
-  const jungle  = path.join(EXPORT_DIR, 'monkey.jungle');
-
-  // All paths quoted so spaces in directory names (e.g. "WatchFace Builder") don't split the args
-  const cmd = `"${MONKEYC}" -o "${outPrg}" -f "${jungle}" -y "${DEV_KEY}" -d vivoactive6 --warn`;
-
-  exec(cmd, { timeout: 60000 }, (err, stdout, stderr) => {
-    const log = [stdout, stderr].filter(Boolean).join('\n').trim();
-    if (err) {
-      return res.json({ success: false, error: 'Build failed — see log for details.', log, projectPath: EXPORT_DIR });
-    }
-    res.json({ success: true, log, prgPath: outPrg, projectPath: EXPORT_DIR });
-  });
-});
-
-app.post('/api/open-vscode', (req, res) => {
-  exec(`code "${EXPORT_DIR}"`, (err) => {
-    if (err) return res.json({ success: false, error: err.message });
-    res.json({ success: true });
-  });
-});
-
-app.post('/api/preview', (req, res) => {
-  const { elements = [], projectName = 'WatchFacePreview' } = req.body;
-
-  try {
-    generateProjectFiles(elements, projectName);
-  } catch (err) {
-    return res.json({ success: false, error: `File generation failed: ${err.message}`, log: '' });
-  }
-
-  if (!fs.existsSync(MONKEYC) || !fs.existsSync(DEV_KEY)) {
-    return res.json({ success: false, error: 'monkeyc or developer key not found.', log: '' });
-  }
-
-  const outPrg = path.join(EXPORT_DIR, 'bin', 'WatchFace.prg');
-  const jungle = path.join(EXPORT_DIR, 'monkey.jungle');
-  // Use vivoactive6 (not vivoactive6_sim) — the SDK Devices dir only has vivoactive6.
-  // monkeydo must receive the same device ID as the build target.
-  const buildCmd = `"${MONKEYC}" -o "${outPrg}" -f "${jungle}" -y "${DEV_KEY}" -d vivoactive6 --warn`;
-
-  exec(buildCmd, { timeout: 60000 }, (buildErr, stdout, stderr) => {
-    const log = [stdout, stderr].filter(Boolean).join('\n').trim();
-    if (buildErr) {
-      return res.json({ success: false, error: 'Build failed — see log.', log });
+    try {
+      generateProjectFiles(elements, projectName, cfg);
+    } catch (err) {
+      return res.json({ success: false, error: `File generation failed: ${err.message}`, log: '' });
     }
 
-    // Check if simulator is already running
-    exec('tasklist /FI "IMAGENAME eq simulator.exe" /NH', (_, taskOut) => {
-      const simRunning = taskOut && taskOut.toLowerCase().includes('simulator.exe');
+    if (!fs.existsSync(cfg.monkeyc)) {
+      return res.json({
+        success: false,
+        error: `monkeyc not found. Add the SDK bin directory to PATH:\n  ${cfg.sdkBin}\nThen restart this server, or open exported-garmin-project/ in VS Code and run "Monkey C: Build for Device".`,
+        log: '',
+        projectPath: cfg.exportDir,
+      });
+    }
 
-      if (!simRunning) {
-        spawn(SIM_EXE, [], { detached: true, stdio: 'ignore' }).unref();
+    if (!fs.existsSync(cfg.devKey)) {
+      return res.json({
+        success: false,
+        error: `Developer key not found at: ${cfg.devKey}\nGenerate one via VS Code Command Palette → "Monkey C: Generate a Developer Key".`,
+        log: '',
+        projectPath: cfg.exportDir,
+      });
+    }
+
+    const prgName = safePrgName(projectName);
+    const outPrg  = path.join(cfg.exportDir, 'bin', `${prgName}.prg`);
+    const jungle  = path.join(cfg.exportDir, 'monkey.jungle');
+
+    const cmd = `"${cfg.monkeyc}" -o "${outPrg}" -f "${jungle}" -y "${cfg.devKey}" -d vivoactive6 --warn`;
+
+    exec(cmd, { timeout: 60000 }, (err, stdout, stderr) => {
+      const log = [stdout, stderr].filter(Boolean).join('\n').trim();
+      if (err) {
+        return res.json({ success: false, error: 'Build failed — see log for details.', log, projectPath: cfg.exportDir });
+      }
+      res.json({ success: true, log, prgPath: outPrg, projectPath: cfg.exportDir });
+    });
+  });
+
+  app.post('/api/open-vscode', (req, res) => {
+    exec(`code "${cfg.exportDir}"`, (err) => {
+      if (err) return res.json({ success: false, error: err.message });
+      res.json({ success: true });
+    });
+  });
+
+  app.post('/api/preview', (req, res) => {
+    const { elements = [], projectName = 'WatchFacePreview' } = req.body;
+
+    try {
+      generateProjectFiles(elements, projectName, cfg);
+    } catch (err) {
+      return res.json({ success: false, error: `File generation failed: ${err.message}`, log: '' });
+    }
+
+    if (!fs.existsSync(cfg.monkeyc) || !fs.existsSync(cfg.devKey)) {
+      return res.json({ success: false, error: 'monkeyc or developer key not found.', log: '' });
+    }
+
+    const outPrg = path.join(cfg.exportDir, 'bin', 'WatchFace.prg');
+    const jungle = path.join(cfg.exportDir, 'monkey.jungle');
+    const buildCmd = `"${cfg.monkeyc}" -o "${outPrg}" -f "${jungle}" -y "${cfg.devKey}" -d vivoactive6 --warn`;
+
+    exec(buildCmd, { timeout: 60000 }, (buildErr, stdout, stderr) => {
+      const log = [stdout, stderr].filter(Boolean).join('\n').trim();
+      if (buildErr) {
+        return res.json({ success: false, error: 'Build failed — see log.', log });
       }
 
-      res.json({ success: true, log, message: simRunning ? 'Reloading in simulator…' : 'Starting simulator…' });
+      exec('tasklist /FI "IMAGENAME eq simulator.exe" /NH', (_, taskOut) => {
+        const simRunning = taskOut && taskOut.toLowerCase().includes('simulator.exe');
 
-      // Poll until simulator.exe process is visible, then give it 5s to finish initializing
-      waitForSimulator(() => {
-        // monkeydo.bat passes %prg_path% unquoted to Java, so spaces in the path break it.
-        // Copy the .prg to a no-spaces temp path to work around this.
-        const tmpDir = 'C:\\Temp\\CIQPreview';
-        const tmpPrg = path.join(tmpDir, 'WatchFace.prg');
-        try { fs.mkdirSync(tmpDir, { recursive: true }); fs.copyFileSync(outPrg, tmpPrg); } catch {}
+        if (!simRunning) {
+          spawn(cfg.simExe, [], { detached: true, stdio: 'ignore' }).unref();
+        }
 
-        const prgArg = fs.existsSync(tmpPrg) ? tmpPrg : outPrg;
-        console.log('[monkeydo] loading:', prgArg);
-        // monkeydo is a long-lived debug session — use exec with no timeout so it
-        // isn't killed early. The HTTP response already went out; callback fires when done.
-        exec(`"${MONKEYDO}" "${prgArg}" vivoactive6`, (mdErr, mdOut, mdErr2) => {
-          const mdLog = [mdOut, mdErr2].filter(Boolean).join('\n').trim();
-          if (mdErr) console.error('[monkeydo] failed:', mdErr.message, '\n', mdLog);
-          else console.log('[monkeydo] OK:', mdLog || '(no output)');
+        res.json({ success: true, log, message: simRunning ? 'Reloading in simulator…' : 'Starting simulator…' });
+
+        waitForSimulator(() => {
+          const tmpDir = cfg.tempDir;
+          const tmpPrg = path.join(tmpDir, 'WatchFace.prg');
+          try { fs.mkdirSync(tmpDir, { recursive: true }); fs.copyFileSync(outPrg, tmpPrg); } catch {}
+
+          const prgArg = fs.existsSync(tmpPrg) ? tmpPrg : outPrg;
+          console.log('[monkeydo] loading:', prgArg);
+          exec(`"${cfg.monkeydo}" "${prgArg}" vivoactive6`, (mdErr, mdOut, mdErr2) => {
+            const mdLog = [mdOut, mdErr2].filter(Boolean).join('\n').trim();
+            if (mdErr) console.error('[monkeydo] failed:', mdErr.message, '\n', mdLog);
+            else console.log('[monkeydo] OK:', mdLog || '(no output)');
+          });
         });
       });
     });
   });
-});
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+  return app;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function safePrgName(name) {
   return ((name || 'WatchFace')
@@ -132,11 +142,8 @@ function safePrgName(name) {
     .slice(0, 30)) || 'WatchFace';
 }
 
-// ─── Simulator helpers ────────────────────────────────────────────────────────
-
-// Poll until simulator.exe is in the process list, then wait 2s for it to init
 function waitForSimulator(callback, deadline) {
-  if (!deadline) deadline = Date.now() + 20000; // 20s max
+  if (!deadline) deadline = Date.now() + 20000;
   exec('tasklist /FI "IMAGENAME eq simulator.exe" /NH', (_, out) => {
     if (out && out.toLowerCase().includes('simulator.exe')) {
       console.log('[sim] simulator.exe is running — waiting 8s for init');
@@ -154,40 +161,38 @@ function waitForSimulator(callback, deadline) {
 
 const TEMPLATE_DIR = path.join(__dirname, 'garmin-project-template');
 
-function generateProjectFiles(elements, projectName) {
+function generateProjectFiles(elements, projectName, cfg) {
   const dirs = [
-    EXPORT_DIR,
-    path.join(EXPORT_DIR, 'source'),
-    path.join(EXPORT_DIR, 'resources', 'layouts'),
-    path.join(EXPORT_DIR, 'resources', 'drawables'),
-    path.join(EXPORT_DIR, 'resources', 'strings'),
-    path.join(EXPORT_DIR, 'resources', 'fonts'),
-    path.join(EXPORT_DIR, 'bin'),
+    cfg.exportDir,
+    path.join(cfg.exportDir, 'source'),
+    path.join(cfg.exportDir, 'resources', 'layouts'),
+    path.join(cfg.exportDir, 'resources', 'drawables'),
+    path.join(cfg.exportDir, 'resources', 'strings'),
+    path.join(cfg.exportDir, 'resources', 'fonts'),
+    path.join(cfg.exportDir, 'bin'),
   ];
   dirs.forEach(d => fs.mkdirSync(d, { recursive: true }));
 
-  // Copy launcher icon assets from template
   const iconSrc = path.join(TEMPLATE_DIR, 'resources', 'drawables', 'launcher_icon.png');
-  const iconDst = path.join(EXPORT_DIR,   'resources', 'drawables', 'launcher_icon.png');
+  const iconDst = path.join(cfg.exportDir, 'resources', 'drawables', 'launcher_icon.png');
   if (fs.existsSync(iconSrc)) fs.copyFileSync(iconSrc, iconDst);
   fs.writeFileSync(
-    path.join(EXPORT_DIR, 'resources', 'drawables', 'drawables.xml'),
+    path.join(cfg.exportDir, 'resources', 'drawables', 'drawables.xml'),
     `<drawables xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">\n    <bitmap id="LauncherIcon" filename="launcher_icon.png" />\n</drawables>\n`,
   );
 
-  // VS Code Monkey C extension needs the developer key path
-  const vscodeDir = path.join(EXPORT_DIR, '.vscode');
+  const vscodeDir = path.join(cfg.exportDir, '.vscode');
   fs.mkdirSync(vscodeDir, { recursive: true });
   fs.writeFileSync(path.join(vscodeDir, 'settings.json'),
-    JSON.stringify({ 'monkeyC.developerKeyPath': DEV_KEY }, null, 2) + '\n');
+    JSON.stringify({ 'monkeyC.developerKeyPath': cfg.devKey }, null, 2) + '\n');
 
   const permissions = getRequiredPermissions(elements);
 
-  fs.writeFileSync(path.join(EXPORT_DIR, 'manifest.xml'),   generateManifest(projectName, permissions));
-  fs.writeFileSync(path.join(EXPORT_DIR, 'monkey.jungle'),  generateJungle());
-  fs.writeFileSync(path.join(EXPORT_DIR, 'source', 'WatchFaceView.mc'), generateMonkeyC(elements));
-  fs.writeFileSync(path.join(EXPORT_DIR, 'resources', 'layouts', 'layout.xml'), generateLayout());
-  fs.writeFileSync(path.join(EXPORT_DIR, 'resources', 'strings', 'strings.xml'), generateStrings(projectName));
+  fs.writeFileSync(path.join(cfg.exportDir, 'manifest.xml'),   generateManifest(projectName, permissions));
+  fs.writeFileSync(path.join(cfg.exportDir, 'monkey.jungle'),  generateJungle());
+  fs.writeFileSync(path.join(cfg.exportDir, 'source', 'WatchFaceView.mc'), generateMonkeyC(elements));
+  fs.writeFileSync(path.join(cfg.exportDir, 'resources', 'layouts', 'layout.xml'), generateLayout());
+  fs.writeFileSync(path.join(cfg.exportDir, 'resources', 'strings', 'strings.xml'), generateStrings(projectName));
 }
 
 function getRequiredPermissions(elements) {
@@ -206,13 +211,6 @@ function getRequiredPermissions(elements) {
     hrvStatus:        'SensorHistory',
     bodyBattery:      'SensorHistory',
     stressLevel:      'SensorHistory',
-    steps:            'UserProfile',
-    stepGoal:         'UserProfile',
-    calories:         'UserProfile',
-    activeCalories:   'UserProfile',
-    intensityMins:    'UserProfile',
-    distance:         'UserProfile',
-    floorsClimbed:    'UserProfile',
     vo2Max:           'UserProfile',
     fitnessAge:       'UserProfile',
     sunrise:          'Positioning',
@@ -220,7 +218,6 @@ function getRequiredPermissions(elements) {
     timeTillSunEvent: 'Positioning',
     weather:          'Positioning',
     weatherHiLo:      'Positioning',
-    // moonPhase uses only Time.now() — no Positioning permission needed
   };
   const perms = new Set();
   elements.forEach(el => { const p = permMap[el.fieldId]; if (p) perms.add(p); });
@@ -264,8 +261,7 @@ vivoactive6.sourcePath = $(base.sourcePath)
 const DATE_FIELDS     = new Set(['dateFullDate', 'dateMonthDay', 'dateDay', 'amPm']);
 const ACTIVITY_FIELDS = new Set(['heartRate','heartRateZone']);
 const MONITOR_FIELDS  = new Set(['steps','stepGoal','calories','activeCalories','intensityMins','floorsClimbed','distance']);
-const SOLAR_FIELDS    = new Set(['sunrise','sunset','timeTillSunEvent']); // GPS-based only
-// moonPhase uses only the current date — no GPS permission needed
+const SOLAR_FIELDS    = new Set(['sunrise','sunset','timeTillSunEvent']);
 
 function generateMonkeyC(elements) {
   const sorted = elements.slice().sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
@@ -276,17 +272,15 @@ function generateMonkeyC(elements) {
   const needsMonitor       = [...fieldIds].some(id => MONITOR_FIELDS.has(id));
   const needsUserProfile   = [...fieldIds].some(id => ['restingHeartRate'].includes(id));
   const needsSolar         = [...fieldIds].some(id => SOLAR_FIELDS.has(id));
-  const needsMoonPhase     = fieldIds.has('moonPhase'); // date only, no GPS
+  const needsMoonPhase     = fieldIds.has('moonPhase');
   const needsMath          = needsSolar || elements.some(e => e.shapeType && (e.shapeType.startsWith('tick') || e.shapeType.startsWith('analog')));
   const needsSensorHistory = [...fieldIds].some(id => ['hrGraph','bodyBattery','stressLevel','spo2','respirationRate','hrvStatus'].includes(id));
 
-  // Deduplicate fetches — each fieldId only needs one var declaration
   const seenFields = new Set();
   let dataFetches = sorted
     .filter(el => { if (seenFields.has(el.fieldId)) return false; seenFields.add(el.fieldId); return true; })
     .map(generateDataFetch).filter(Boolean).join('\n        ');
 
-  // If moonPhasePercent is used but moonPhase isn't, prepend moonPhase fetch (needed for _phs calculation)
   if (fieldIds.has('moonPhasePercent') && !fieldIds.has('moonPhase')) {
     dataFetches = generateDataFetch({fieldId: 'moonPhase'}) + '\n        ' + dataFetches;
   }
@@ -298,7 +292,6 @@ function generateMonkeyC(elements) {
     : '';
   const activityVar = needsActivity ? `var _ai = Activity.getActivityInfo();` : '';
   const monitorVar  = needsMonitor  ? `var _ami = ActivityMonitor.getInfo();` : '';
-  // Solar: get GPS fix, compute sunrise/sunset as minutes-from-midnight integers
   const solarVars = needsSolar ? `
         var _pos = Position.getInfo();
         var _lat = 0.0; var _lon = 0.0; var _hasPos = false;
@@ -309,15 +302,10 @@ function generateMonkeyC(elements) {
         var _srMin = _hasPos ? calcSunTimeMin(_lat, _lon, true)  : -1;
         ${fieldIds.has('sunset') || fieldIds.has('timeTillSunEvent') ? 'var _ssMin = _hasPos ? calcSunTimeMin(_lat, _lon, false) : -1;' : ''}` : '';
 
-  // calcSunTimeMin — only generated when solar fields are present
   const sunMethodBody = needsSolar ? `
-    // Returns local time (minutes past midnight) for sunrise or sunset using NOAA algorithm.
-    // Returns -1 for polar day/night or when location unavailable.
     function calcSunTimeMin(latDeg, lonDeg, isSunrise) {
-        // All arithmetic kept as Float to avoid Double/Float mixed-type errors
         var jd = 2440587.5 + Time.today().value().toFloat() / 86400.0;
         var D = jd - 2451545.0;
-        // Monkey C % only works on integers — simulate float modulo with floor division
         var g = (357.529 + 0.98560028 * D).toFloat();
         g -= (g / 360.0).toNumber() * 360.0;
         if (g < 0.0) { g += 360.0; }
@@ -359,7 +347,6 @@ using Toybox.Lang as Lang;
 ${needsMath                   ? 'using Toybox.Math as Math;'                       : ''}
 ${needsSensorHistory          ? 'using Toybox.SensorHistory as SensorHistory;'     : ''}
 
-// Entry point — manifest entry="WatchFaceApp"
 class WatchFaceApp extends App.AppBase {
     function initialize() { AppBase.initialize(); }
     function getInitialView() {
@@ -371,7 +358,6 @@ class WatchFaceApp extends App.AppBase {
     }
 }
 
-// Required in CIQ 3+ to receive onPowerBudgetExceeded callbacks
 class WatchFaceViewDelegate extends Ui.WatchFaceDelegate {
     function initialize(view as WatchFaceView) {
         WatchFaceDelegate.initialize();
@@ -388,10 +374,8 @@ class WatchFaceView extends Ui.WatchFace {
     }
 
     function onLayout(dc) {
-        // All rendering done programmatically in onUpdate
     }
 ${sunMethodBody}
-    // Force initial render when view becomes visible
     function onShow() {
         Ui.requestUpdate();
     }
@@ -410,15 +394,12 @@ ${sunMethodBody}
 
             ${drawCalls}
         } catch (ex instanceof Lang.Exception) {
-            // Render the exception message so we can see it in the simulator
             dc.setColor(Gfx.COLOR_RED, Gfx.COLOR_BLACK);
             dc.drawText(195, 195, Gfx.FONT_SMALL, ex.getErrorMessage(), Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
             Sys.println("WF onUpdate exception: " + ex.getErrorMessage());
         }
     }
 
-    // In sleep/ambient mode the dc is a partial-update context — only redraw the clock digits
-    // to avoid clearing/drawing outside the clip region.
     function onPartialUpdate(dc) {
         try {
             var clockTime = Sys.getClockTime();
@@ -440,9 +421,8 @@ ${sunMethodBody}
 
 function generateDataFetch(el) {
   const map = {
-    // Time (no fetch needed — clockTime and info already declared)
-    altTimeZone:       `var altTimeZone = "--"; // TODO: store UTC offset in app settings`,
-    alarm:             `var alarmTime = "--"; // TODO: Sys.getClockTime().alarmCount`,
+    altTimeZone:       `var altTimeZone = "--";`,
+    alarm:             `var alarmTime = "--";`,
     sunrise:          `var sunriseTime = _srMin >= 0 ? (_srMin / 60).format("%d") + ":" + (_srMin % 60).format("%02d") : "--:--";`,
     sunset:           `var sunsetTime  = _ssMin >= 0 ? (_ssMin / 60).format("%d") + ":" + (_ssMin % 60).format("%02d") : "--:--";`,
     timeTillSunEvent: `var _nowM = Sys.getClockTime().hour * 60 + Sys.getClockTime().min;
@@ -451,19 +431,16 @@ function generateDataFetch(el) {
         else if (_ssMin >= 0 && _ssMin > _nowM) { _next = _ssMin - _nowM; }
         else if (_srMin >= 0) { _next = 1440 - _nowM + _srMin; }
         var timeTillSun = _next >= 0 ? (_next / 60).format("%d") + "h " + (_next % 60).format("%02d") + "m" : "--h --m";`,
-    // Moon phase: synodic month from Jan 6, 2000 (JD 2451549.5).
-    // Only generates phase calculation (_jdM, _phs) — text variables generated separately only if used.
     moonPhase: `var _jdM = 2440587.5 + Time.now().value().toFloat() / 86400.0;
         var _phs = (_jdM - 2451549.5) / 29.530589;
         _phs -= _phs.toNumber().toFloat();
         if (_phs < 0.0) { _phs += 1.0; }
-        _phs = 1.0 - _phs;`,  // Invert phase (reference date fix)
+        _phs = 1.0 - _phs;`,
     moonPhasePercent: `var moonPhasePercent = ((_phs < 0.5 ? _phs : 1.0 - _phs) * 200.0).toNumber().toString() + "%";`,
-    calendarEvent:     `var calendarEvent = "--"; // TODO: Toybox.Calendar not public on vivoactive6`,
-    // Heart & Cardiovascular
+    calendarEvent:     `var calendarEvent = "--";`,
     heartRate:         `var heartRate = (_ai != null && _ai.currentHeartRate != null) ? _ai.currentHeartRate.toString() : "--";`,
-    restingHeartRate:  `var restingHR = "--"; // TODO: UserProfile.getProfile().restingHeartRate (SDK 3.2+)`,
-    heartRateZone:     `var hrZone = "--"; // TODO: derive zone from HR ranges in UserProfile`,
+    restingHeartRate:  `var restingHR = "--";`,
+    heartRateZone:     `var hrZone = "--";`,
     spo2:              `var _o2h = SensorHistory.getOxygenSaturationHistory(null);
         var _o2s = _o2h != null ? _o2h.next() : null;
         var spo2 = (_o2s != null && _o2s.data != null) ? (_o2s.data.toNumber()).format("%d") + "%" : "--";`,
@@ -473,41 +450,36 @@ function generateDataFetch(el) {
     hrvStatus:         `var _hrvh = SensorHistory.getHeartRateVariabilityHistory(null);
         var _hrvs = _hrvh != null ? _hrvh.next() : null;
         var hrvStatus = (_hrvs != null && _hrvs.data != null) ? (_hrvs.data.toNumber()).format("%d") : "--";`,
-    // Energy & Recovery (SensorHistory)
     bodyBattery:       `var _bbh = SensorHistory.getBodyBatteryHistory(null);
         var _bbs = _bbh != null ? _bbh.next() : null;
         var bodyBattery = (_bbs != null && _bbs.data != null) ? (_bbs.data.toNumber()).format("%d") : "--";`,
     stressLevel:       `var _ssh = SensorHistory.getStressHistory(null);
         var _sss = _ssh != null ? _ssh.next() : null;
         var stressLevel = (_sss != null && _sss.data != null) ? (_sss.data.toNumber()).format("%d") : "--";`,
-    recoveryTime:      `var recoveryTime = "--"; // TODO: not in public API`,
-    sleepScore:        `var sleepScore = "--"; // TODO: Toybox.SensorHistory`,
-    sleepCoach:        `var sleepCoach = "--"; // TODO: not in public API`,
-    trainingReadiness: `var trainReadiness = "--"; // TODO: not in public API`,
-    // Daily totals — from ActivityMonitor.getInfo() (cached as _ami)
+    recoveryTime:      `var recoveryTime = "--";`,
+    sleepScore:        `var sleepScore = "--";`,
+    sleepCoach:        `var sleepCoach = "--";`,
+    trainingReadiness: `var trainReadiness = "--";`,
     steps:             `var steps    = (_ami != null && _ami.steps    != null) ? _ami.steps.toString()    : "--";`,
     stepGoal:          `var stepGoal = (_ami != null && _ami.stepGoal != null) ? _ami.stepGoal.toString() : "--";`,
     calories:          `var calories = (_ami != null && _ami.calories != null) ? _ami.calories.toString() : "--";`,
-    activeCalories:    `var activeCalories = "--"; // TODO: ActivityMonitor does not separate active vs. resting`,
+    activeCalories:    `var activeCalories = "--";`,
     intensityMins:     `var intensityMins = (_ami != null && _ami.activeMinutesWeek != null) ? _ami.activeMinutesWeek.total.toString() : "--";`,
     floorsClimbed:     `var floors        = (_ami != null && _ami.floorsClimbed != null)    ? _ami.floorsClimbed.toString()             : "--";`,
     distance:          `var distance      = (_ami != null && _ami.distance != null)          ? (_ami.distance / 100000.0).format("%.2f") + "km" : "--km";`,
-    // Fitness
-    vo2Max:            `var vo2Max = "--"; // TODO: UserProfile.getProfile().vo2MaxRunning`,
-    fitnessAge:        `var fitnessAge = "--"; // TODO: not directly available`,
-    acuteLoad:         `var acuteLoad = "--"; // TODO: not in public API`,
-    lastActivity:      `var lastActivity = "--"; // TODO: not in public API`,
-    weeklyRunning:     `var weeklyRunning = "--"; // TODO: ActivityMonitor weekly summary`,
-    weeklyCycling:     `var weeklyCycling = "--"; // TODO: not in public API`,
-    // Environment
-    weather:           `var weather = "--°"; // TODO: Toybox.Weather.getCurrentConditions()`,
-    weatherHiLo:       `var weatherHiLo = "--/--°"; // TODO: Toybox.Weather.getDailyForecast()`,
-    // Device
+    vo2Max:            `var vo2Max = "--";`,
+    fitnessAge:        `var fitnessAge = "--";`,
+    acuteLoad:         `var acuteLoad = "--";`,
+    lastActivity:      `var lastActivity = "--";`,
+    weeklyRunning:     `var weeklyRunning = "--";`,
+    weeklyCycling:     `var weeklyCycling = "--";`,
+    weather:           `var weather = "--°";`,
+    weatherHiLo:       `var weatherHiLo = "--/--°";`,
     battery:           `var battery = (Sys.getSystemStats().battery + 0.5).toNumber().toString() + "%";`,
     notifications:     `var notifications = Sys.getDeviceSettings().notificationCount.toString();`,
-    eventCountdown:    `var eventCountdown = "--"; // TODO: not in public API`,
-    timer:             `var timerVal = "00:00"; // TODO: requires a dedicated timer implementation`,
-    utcTime:           `var utcTime = clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d"); // Note: displays local time; UTC offset via clockTime.timeZoneOffset`,
+    eventCountdown:    `var eventCountdown = "--";`,
+    timer:             `var timerVal = "00:00";`,
+    utcTime:           `var utcTime = clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d");`,
   };
   return map[el.fieldId] || null;
 }
@@ -520,14 +492,11 @@ function colorLiteral(hexColor) {
 function generateDrawCall(el) {
   const color  = colorLiteral(el.color);
   const font   = `Gfx.${el.font || 'FONT_MEDIUM'}`;
-  // Always use VCENTER so the element's (x,y) is the visual center on device,
-  // matching the canvas where textBaseline='middle' for all alignments.
   const align  = el.align === 'center' ? 'Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER'
                : el.align === 'right'  ? 'Gfx.TEXT_JUSTIFY_RIGHT  | Gfx.TEXT_JUSTIFY_VCENTER'
                : 'Gfx.TEXT_JUSTIFY_LEFT | Gfx.TEXT_JUSTIFY_VCENTER';
 
   const textMap = {
-    // Time & Calendar
     hours:             `clockTime.hour.format("%02d")`,
     minutes:           `clockTime.min.format("%02d")`,
     seconds:           `clockTime.sec.format("%02d")`,
@@ -543,21 +512,18 @@ function generateDrawCall(el) {
     moonPhase:         `moonPhase`,
     moonPhasePercent:  `moonPhasePercent`,
     calendarEvent:     `calendarEvent`,
-    // Heart & Cardiovascular
     heartRate:         `heartRate`,
     restingHeartRate:  `restingHR`,
     heartRateZone:     `hrZone`,
     spo2:              `spo2`,
     respirationRate:   `respirationRate`,
     hrvStatus:         `hrvStatus`,
-    // Energy & Recovery
     bodyBattery:       `bodyBattery`,
     stressLevel:       `stressLevel`,
     recoveryTime:      `recoveryTime`,
     sleepScore:        `sleepScore`,
     sleepCoach:        `sleepCoach`,
     trainingReadiness: `trainReadiness`,
-    // Activity
     steps:             `steps`,
     stepGoal:          `stepGoal`,
     calories:          `calories`,
@@ -565,30 +531,25 @@ function generateDrawCall(el) {
     intensityMins:     `intensityMins`,
     floorsClimbed:     `floors`,
     distance:          `distance`,
-    // Fitness
     vo2Max:            `vo2Max`,
     fitnessAge:        `fitnessAge`,
     acuteLoad:         `acuteLoad`,
     lastActivity:      `lastActivity`,
     weeklyRunning:     `weeklyRunning`,
     weeklyCycling:     `weeklyCycling`,
-    // Environment
     weather:           `weather`,
     weatherHiLo:       `weatherHiLo`,
-    // Device
     battery:           `battery`,
     notifications:     `notifications`,
     eventCountdown:    `eventCountdown`,
     timer:             `timerVal`,
     utcTime:           `utcTime`,
-    // Custom
     customLabel:       `"${(el.format || el.label || 'Label').replace(/"/g, '\\"')}"`,
   };
 
   if (el.shapeType === 'btIcon') {
     const r = Math.round(Math.min(el.width, el.height) / 2);
-    return `// Bluetooth indicator — only visible when phone is connected
-        if (Sys.getDeviceSettings().phoneConnected) {
+    return `if (Sys.getDeviceSettings().phoneConnected) {
             dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
             dc.fillCircle(${Math.round(el.x)}, ${Math.round(el.y)}, ${r});
         }`;
@@ -597,18 +558,13 @@ function generateDrawCall(el) {
     const r = Math.round(Math.min(el.width, el.height) / 2);
     const cx = Math.round(el.x);
     const cy = Math.round(el.y);
-    return `// Moon phase graphic — lit circle + shadow showing illumination
-        // Uses _phs calculated in variable section above
-        dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
+    return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
         dc.fillCircle(${cx}, ${cy}, ${r});
-        // Draw shadow (dark part) based on phase
         dc.setColor(Gfx.COLOR_BLACK, Gfx.COLOR_TRANSPARENT);
         if (_phs < 0.5) {
-            // Waning: shadow on right
             var _sxWan = ${cx} + (${r} - ${r} * 2.0 * _phs).toNumber();
             dc.fillCircle(_sxWan, ${cy}, ${r});
         } else {
-            // Waxing: shadow on left
             var _sxWax = ${cx} - (${r} - ${r} * 2.0 * (_phs - 0.5)).toNumber();
             dc.fillCircle(_sxWax, ${cy}, ${r});
         }`;
@@ -647,8 +603,7 @@ function generateTickCode(el, count, hasMajorMinor, majorLen, minorLen, majorPen
   const majorInnerR = outerR - majorLen;
 
   if (!hasMajorMinor) {
-    return `// ${el.label} (${count} ticks, outer r=${outerR}, len=${majorLen})
-        dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
+    return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
         dc.setPenWidth(${majorPen});
         for (var _i = 0; _i < ${count}; _i++) {
             var _a = (_i.toDouble() / ${count}.0) * 2.0 * Math.PI - Math.PI / 2.0;
@@ -660,9 +615,7 @@ function generateTickCode(el, count, hasMajorMinor, majorLen, minorLen, majorPen
         }`;
   }
 
-  // Major + minor
-  return `// ${el.label} (${count} ticks, major every 5, outer r=${outerR})
-        dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
+  return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
         for (var _i = 0; _i < ${count}; _i++) {
             var _a = (_i.toDouble() / ${count}.0) * 2.0 * Math.PI - Math.PI / 2.0;
             var _isMaj = (_i % 5) == 0;
@@ -681,8 +634,7 @@ function generateTickDotsCode(el, count, dotR) {
   const cx = Math.round(el.x), cy = Math.round(el.y);
   const outerR = Math.round(el.width);
   const r = Math.max(1, Math.round(dotR));
-  return `// ${el.label} (${count} dots, outer r=${outerR}, dot r=${r})
-        dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
+  return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
         for (var _i = 0; _i < ${count}; _i++) {
             var _a = (_i.toDouble() / ${count}.0) * 2.0 * Math.PI - Math.PI / 2.0;
             var _px = ${cx} + (${outerR}.0 * Math.cos(_a)).toNumber();
@@ -696,14 +648,12 @@ function generateAnalogHandCode(el, type) {
   const cx     = Math.round(el.x), cy = Math.round(el.y);
   const len    = el.width,  tail = el.height;
   const penW   = type === 'hour' ? 5 : type === 'minute' ? 4 : 2;
-  // Use integer arithmetic first to avoid Double % Float type error in Monkey C
   const angleExpr =
     type === 'hour'   ? `((clockTime.hour % 12) * 30 + clockTime.min * 0.5) * Math.PI / 180.0 - Math.PI / 2.0`
   : type === 'minute' ? `(clockTime.min * 6 + clockTime.sec * 0.1) * Math.PI / 180.0 - Math.PI / 2.0`
   :                     `clockTime.sec * Math.PI / 30.0 - Math.PI / 2.0`;
 
-  return `// ${el.label} (len=${len}, tail=${tail})
-        { var _a = ${angleExpr};
+  return `{ var _a = ${angleExpr};
           var _cos = Math.cos(_a); var _sin = Math.sin(_a);
           dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
           dc.setPenWidth(${penW});
@@ -716,8 +666,7 @@ function generateAnalogHandCode(el, type) {
 function generateAnalogCenterCode(el) {
   const color = colorLiteral(el.color);
   const r = Math.max(2, Math.round(el.width));
-  return `// Center cap
-        dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
+  return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
         dc.fillCircle(${Math.round(el.x)}, ${Math.round(el.y)}, ${r});`;
 }
 
@@ -725,9 +674,7 @@ function generateHRGraphCode(el) {
   const color = colorLiteral(el.color);
   const gx = Math.round(el.x - el.width / 2),  gy = Math.round(el.y - el.height / 2);
   const gw = Math.round(el.width),              gh = Math.round(el.height);
-  // SensorHistoryIterator has no .size() — use a fixed max and integer math to avoid type errors
-  return `// Heart Rate Graph (SensorHistory, last 3 h)
-        { var _hrIt = SensorHistory.getHeartRateHistory({:period => 180, :order => SensorHistory.ORDER_OLDEST_FIRST});
+  return `{ var _hrIt = SensorHistory.getHeartRateHistory({:period => 180, :order => SensorHistory.ORDER_OLDEST_FIRST});
           if (_hrIt != null) {
               var _MAX = 60; var _idx = 0;
               var _px = -1; var _py = -1;
@@ -762,11 +709,21 @@ function generateStrings(projectName) {
 `;
 }
 
-// ─── Start ────────────────────────────────────────────────────────────────────
+// ─── Exports and direct invocation ────────────────────────────────────────────
 
-app.listen(PORT, () => {
-  console.log(`Watch Face Builder  →  http://localhost:${PORT}`);
-  console.log(`SDK bin:            ${SDK_BIN}`);
-  console.log(`Developer key:      ${DEV_KEY}`);
-  console.log(`Export dir:         ${EXPORT_DIR}`);
-});
+module.exports = { createServer, getConfig };
+
+// Allow direct execution: node server.js (backward compatible with fallback hardcoded paths)
+if (require.main === module) {
+  const app = createServer();
+  const PORT = 0; // Let OS choose an available port
+  const server = app.listen(PORT, '127.0.0.1', () => {
+    const addr = server.address();
+    const actualPort = addr.port;
+    const cfg = getConfig();
+    console.log(`Watch Face Builder  →  http://127.0.0.1:${actualPort}`);
+    console.log(`SDK bin:            ${cfg.sdkBin}`);
+    console.log(`Developer key:      ${cfg.devKey}`);
+    console.log(`Export dir:         ${cfg.exportDir}`);
+  });
+}
