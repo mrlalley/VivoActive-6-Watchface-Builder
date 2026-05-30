@@ -2,6 +2,8 @@
 
 A local web-based visual design tool for creating Garmin Vivoactive 6 watch faces, with one-click export to a valid Connect IQ Monkey C project.
 
+> **Contributing?** See [DEVELOPER.md](DEVELOPER.md) for architecture, testing, and how to add new features.
+
 ---
 
 ## Quick start
