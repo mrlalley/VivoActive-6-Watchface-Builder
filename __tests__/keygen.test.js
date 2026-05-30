@@ -2,7 +2,7 @@
 // Tests the validateKeyFile function with known-good and invalid inputs.
 // Does NOT test generateKey (30-second runtime is unacceptable for unit tests).
 
-const { getDefaultKeyPath, validateKeyFile } = require('../lib/keygen');
+const { getDefaultKeyPath, validateKeyFile, generateKey } = require('../lib/keygen');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -133,5 +133,72 @@ describe('keygen', () => {
         }
       );
     }, 60000); // 60-second timeout for key generation
+  });
+
+  describe('generateKey timeout', () => {
+    test('rejects on timeout after 60 seconds when crypto stalls', async () => {
+      // Mock crypto.generateKeyPair to simulate hanging indefinitely
+      const originalGenerateKeyPair = crypto.generateKeyPair;
+      const mockHangingKeyPair = jest.fn((alg, opts, cb) => {
+        // Never call callback, simulating a hung operation
+      });
+      crypto.generateKeyPair = mockHangingKeyPair;
+
+      const tempFile = path.join(os.tmpdir(), 'test-timeout.der');
+      const promise = generateKey(tempFile);
+
+      // Advance timers to trigger the 60-second timeout
+      jest.useFakeTimers();
+      jest.advanceTimersByTime(60000);
+      jest.useRealTimers();
+
+      await expect(promise).rejects.toThrow('Key generation timeout');
+
+      // Restore original function
+      crypto.generateKeyPair = originalGenerateKeyPair;
+    }, 70000); // Jest timeout: 70 seconds
+
+    test('cleans up partial file when timeout occurs', async () => {
+      const originalGenerateKeyPair = crypto.generateKeyPair;
+      const tempFile = path.join(os.tmpdir(), 'test-timeout-cleanup.der');
+
+      // Mock to write a partial file then hang
+      const mockWriteAndHang = jest.fn((alg, opts, cb) => {
+        try {
+          fs.writeFileSync(tempFile, 'partial key data');
+        } catch (e) {
+          // Ignore write errors during mock setup
+        }
+        // Never call callback
+      });
+      crypto.generateKeyPair = mockWriteAndHang;
+
+      const promise = generateKey(tempFile);
+
+      jest.useFakeTimers();
+      jest.advanceTimersByTime(60000);
+      jest.useRealTimers();
+
+      await expect(promise).rejects.toThrow('timeout');
+
+      // Verify file was cleaned up
+      expect(fs.existsSync(tempFile)).toBe(false);
+
+      crypto.generateKeyPair = originalGenerateKeyPair;
+    }, 70000);
+
+    test('succeeds within timeout (normal operation)', async () => {
+      const tempFile = path.join(os.tmpdir(), 'test-success-timeout.der');
+      try {
+        // This uses the real crypto.generateKeyPair which should succeed within timeout
+        const result = await generateKey(tempFile);
+        expect(result.success).toBe(true);
+        expect(fs.existsSync(result.path)).toBe(true);
+      } finally {
+        if (fs.existsSync(tempFile)) {
+          fs.unlinkSync(tempFile);
+        }
+      }
+    }, 90000); // 90 seconds to allow for slow systems
   });
 });
