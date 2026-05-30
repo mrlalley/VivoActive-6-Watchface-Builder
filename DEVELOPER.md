@@ -565,6 +565,77 @@ const el = {
 
 ---
 
+## Dependency Management
+
+### Version Pinning Strategy
+
+This project uses **tightened version ranges** to ensure reproducibility across machines and prevent silent breaking changes.
+
+#### Version Ranges Explained
+
+| Range | Example | Allows | Use Case |
+|-------|---------|--------|----------|
+| Exact | `4.22.2` | Only 4.22.2 | Critical runtime (express, electron-store, electron) |
+| Tilde | `~7.11.2` | 7.11.x (patch updates) | Dev tools (jest, electron-forge) |
+| Caret | `^4.22.2` | 4.x.x (minor + major) | ❌ Not used (too loose) |
+
+#### Current Policy
+
+**Dependencies** (runtime, pinned exactly):
+```json
+"electron-store": "9.0.0",    // Config storage — must be exact
+"express": "~4.22.2"          // HTTP framework — patch updates OK
+```
+
+**DevDependencies** (build/test, tilde for patches):
+```json
+"electron": "42.3.0",                    // Desktop shell — exact
+"electron-builder": "~26.8.1",          // Packaging tool — patches OK
+"jest": "~29.7.0",                      // Test runner — patches OK
+"@electron-forge/*": "~7.11.2"          // Build tools — patches OK
+```
+
+### Updating Dependencies Safely
+
+#### For Patch Updates (e.g., 7.11.2 → 7.11.3)
+```bash
+npm update
+# Allowed automatically (tilde range)
+# Run: npm test
+```
+
+#### For Minor Updates (e.g., 4.22.x → 4.23.x)
+```bash
+npm install express@~4.23.0
+# Manual: update package.json or use npm
+# Then: npm test, npm start, manual testing
+```
+
+#### For Major Updates (e.g., 9.0.0 → 10.0.0)
+```bash
+# Creates a branch first!
+git checkout -b deps/electron-store-10
+
+# Install new version
+npm install electron-store@latest
+
+# Full testing required:
+npm test
+npm start
+# Manual: export/preview flows
+
+# If all pass: create PR for review
+```
+
+### `.npmrc` Configuration
+
+This project includes `.npmrc` which:
+- **`save-exact=true`** — `npm install --save pkg` adds exact versions
+- **`package-lock=true`** — Always use package-lock.json
+- **`audit=true`** — Report security issues on install
+
+---
+
 ## Useful Resources
 
 - **[README.md](README.md)** — User guide, deployment, troubleshooting
@@ -572,6 +643,7 @@ const el = {
 - **Garmin SDK**: https://developer.garmin.com/connect-iq/sdk/
 - **Monkey C Language**: https://developer.garmin.com/connect-iq/monkey-c/
 - **Jest Testing**: https://jestjs.io/docs/getting-started
+- **Semantic Versioning**: https://semver.org/
 
 ---
 
