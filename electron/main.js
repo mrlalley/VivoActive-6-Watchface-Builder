@@ -116,6 +116,28 @@ function hasCompleteConfig() {
   return store.get('sdkBin') && store.get('devKey');
 }
 
+// Check server health and send status to renderer
+async function checkHealth() {
+  try {
+    const res = await fetch(`http://127.0.0.1:${serverPort}/api/health`);
+    const health = await res.json();
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('app:health-status', health);
+      if (!health.ok) {
+        mainWindow.webContents.send('app:health-warning', health);
+      }
+    }
+  } catch (err) {
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('app:health-warning', {
+        ok: false,
+        error: 'Server unreachable',
+        message: err.message
+      });
+    }
+  }
+}
+
 // Handle IPC: open file dialog
 ipcMain.handle('dialog:open', async (event, options) => {
   const result = await dialog.showOpenDialog(mainWindow, options);
@@ -220,6 +242,11 @@ app.on('ready', async () => {
   }
   createWindow();
   createMenu();
+
+  // Check server health and warn about missing SDK/key
+  if (serverPort) {
+    await checkHealth();
+  }
 
   // Show Settings if config is incomplete
   if (!hasCompleteConfig()) {

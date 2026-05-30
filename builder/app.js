@@ -39,6 +39,50 @@ function tryRestore() {
   }
 }
 
+// ─── Health check ────────────────────────────────────────────────────────────
+
+function initHealthCheck() {
+  const warningEl = document.getElementById('health-warning');
+  const warningTextEl = document.getElementById('health-warning-text');
+  const closeBtn = document.getElementById('health-warning-close');
+
+  if (!warningEl || !warningTextEl || !closeBtn) return;
+
+  // Handle health warning from main process
+  if (window.electronAPI?.onHealthWarning) {
+    window.electronAPI.onHealthWarning((event, health) => {
+      if (health.ok === false) {
+        let message = '';
+        if (!health.sdkFound && !health.keyFound) {
+          message = '⚠️ Garmin SDK and developer key not found. Install SDK and generate a key in Settings.';
+        } else if (!health.sdkFound) {
+          message = '⚠️ Garmin SDK not found. Install SDK from https://developer.garmin.com/connect-iq/sdk/';
+        } else if (!health.keyFound) {
+          message = '⚠️ Developer key not found. Generate a key in Settings → Generate Key.';
+        } else if (health.error) {
+          message = `⚠️ Server error: ${health.error}`;
+        } else {
+          message = '⚠️ Build dependencies are not configured properly.';
+        }
+        warningTextEl.textContent = message;
+        warningEl.style.display = 'flex';
+      }
+    });
+  }
+
+  // Handle health status (for logging)
+  if (window.electronAPI?.onHealthStatus) {
+    window.electronAPI.onHealthStatus((event, health) => {
+      console.log('[Health Check]', health);
+    });
+  }
+
+  // Close button
+  closeBtn.addEventListener('click', () => {
+    warningEl.style.display = 'none';
+  });
+}
+
 // ─── Settings ────────────────────────────────────────────────────────────────
 
 function initSettings() {
@@ -187,6 +231,7 @@ function hideSettings() {
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 function init() {
+  initHealthCheck();
   initSettings();
   buildPalette();
 

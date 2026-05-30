@@ -16,6 +16,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // File menu events
   onNewDesign: (callback) => ipcRenderer.on('file:newDesign', callback),
 
+  // Health check events
+  onHealthStatus: (callback) => ipcRenderer.on('app:health-status', callback),
+  onHealthWarning: (callback) => ipcRenderer.on('app:health-warning', callback),
+
   // Open VS Code with a folder
   openInVSCode: (folderPath) => ipcRenderer.invoke('shell:openVSCode', folderPath),
 

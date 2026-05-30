@@ -116,6 +116,19 @@ function createServer(config = {}, detectors = {}) {
     }
   });
 
+  // ── GET /api/health – Health check for Electron startup validation ──
+  app.get('/api/health', (req, res) => {
+    const health = {
+      ok: fs.existsSync(cfg.monkeyc) && fs.existsSync(cfg.devKey),
+      sdkFound: fs.existsSync(cfg.monkeyc),
+      keyFound: fs.existsSync(cfg.devKey),
+      sdkPath: cfg.monkeyc,
+      keyPath: cfg.devKey,
+      timestamp: new Date().toISOString(),
+    };
+    res.status(health.ok ? 200 : 503).json(health);
+  });
+
   return app;
 }
 

@@ -31,6 +31,20 @@
 
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 13px; overflow: hidden; }
 
+/* ── Health warning banner ───────────────────────────────────────────────────── */
+.health-warning {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 10px 12px;
+  background: linear-gradient(90deg, rgba(224, 80, 80, 0.95) 0%, rgba(200, 60, 60, 0.95) 100%);
+  border-bottom: 2px solid var(--danger);
+  color: #ffffff; font-weight: 500; font-size: 13px;
+}
+.health-warning-close {
+  background: none; border: none; color: #ffffff; cursor: pointer; font-size: 16px;
+  padding: 2px 4px; border-radius: 3px; transition: background 0.2s;
+}
+.health-warning-close:hover { background: rgba(255, 255, 255, 0.2); }
+
 /* ── App shell ─────────────────────────────────────────────────────────────── */
 #app { display: flex; flex-direction: column; height: 100vh; }
 
