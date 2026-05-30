@@ -84,30 +84,55 @@ function createServer(config = {}, detectors = {}) {
       const prgName = safePrgName(projectName);
       const expectedFileName = `${prgName}.prg`;
 
-      // Search for the .prg file in the export directory (recursively)
+      // Search for the .prg file in the export directory (recursively with depth limit)
       // Files are saved in request-scoped subdirectories, so we need to search
+      // But limit recursion depth to prevent DoS on misconfigured or corrupt export dirs
       let exists = false;
       try {
-        const findFile = (dir) => {
-          const files = fs.readdirSync(dir);
-          for (const file of files) {
-            const filePath = path.join(dir, file);
-            const stat = fs.statSync(filePath);
-            if (stat.isDirectory()) {
-              if (findFile(filePath)) return true;
-            } else if (file === expectedFileName) {
-              return true;
+        const MAX_DEPTH = 10;
+        const MAX_FILES_CHECKED = 10000;
+        let filesChecked = 0;
+
+        const findFile = (dir, currentDepth = 0) => {
+          // Depth limit: prevent infinite recursion on symlink loops or deep trees
+          if (currentDepth > MAX_DEPTH) {
+            throw new Error(`Export directory too deeply nested (max depth: ${MAX_DEPTH})`);
+          }
+
+          // File count limit: prevent runaway traversal on large filesystems
+          if (filesChecked++ > MAX_FILES_CHECKED) {
+            throw new Error(`Too many files in export directory (searched ${MAX_FILES_CHECKED}+ files)`);
+          }
+
+          try {
+            const files = fs.readdirSync(dir);
+            for (const file of files) {
+              const filePath = path.join(dir, file);
+              // Use lstat instead of stat to detect symlinks (symlinks return isSymbolicLink = true)
+              const stat = fs.lstatSync(filePath);
+              // Skip symlinks to prevent traversal outside exportDir
+              if (stat.isSymbolicLink()) {
+                continue;
+              } else if (stat.isDirectory()) {
+                if (findFile(filePath, currentDepth + 1)) return true;
+              } else if (file === expectedFileName) {
+                return true;
+              }
             }
+          } catch (readErr) {
+            // Permission denied, I/O error, etc. — skip this directory
+            logWarn('export-check:read-failed', { dir, reason: readErr.message });
           }
           return false;
         };
 
         if (fs.existsSync(cfg.exportDir)) {
-          exists = findFile(cfg.exportDir);
+          exists = findFile(cfg.exportDir, 0);
         }
       } catch (searchErr) {
-        // If search fails, assume file doesn't exist (fail open)
-        exists = false;
+        // If search fails (depth limit, file count, permission denied), return error
+        res.status(400).json({ success: false, error: searchErr.message });
+        return;
       }
 
       res.json({ success: true, exists, projectName });
