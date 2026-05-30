@@ -70,7 +70,7 @@ function scheduleRedraw() {
   });
 }
 
-const ANALOG_SHAPES = new Set(['analogHour', 'analogMinute', 'analogSecond', 'analogCenter']);
+export const ANALOG_SHAPES = new Set(['analogHour', 'analogMinute', 'analogSecond', 'analogCenter']);
 function isAnalogShape(el) { return el.shapeType && ANALOG_SHAPES.has(el.shapeType); }
 
 function hasAnalogElements() {
@@ -149,7 +149,7 @@ export function render() {
   }
 }
 
-const TICK_TYPES = new Set(['tickHour', 'tickMinute', 'tickMixed', 'tickDots']);
+export const TICK_TYPES = new Set(['tickHour', 'tickMinute', 'tickMixed', 'tickDots']);
 function isTickShape(el) { return el.shapeType && TICK_TYPES.has(el.shapeType); }
 
 // ─── Element drawing ──────────────────────────────────────────────────────────

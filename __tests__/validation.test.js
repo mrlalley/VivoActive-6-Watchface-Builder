@@ -157,12 +157,12 @@ describe('Validation', () => {
     });
 
     it('allows elements near cardinal edges (within safe circle)', () => {
-      // Top edge (within safe radius)
-      const topElement = { ...validElement, x: 170, y: 15, width: 50, height: 30 };
+      // (x, y) is CENTER — element centered at (195, 30) with h=30 has top edge at y=15
+      const topElement = { ...validElement, x: 195, y: 30, width: 50, height: 30 };
       expect(validateElement(topElement, 0)).toBe(true);
 
-      // Right edge (within safe radius)
-      const rightElement = { ...validElement, x: 340, y: 170, width: 30, height: 50 };
+      // Right: centered at (360, 195) with w=30, right edge at x=375 — within 185px radius
+      const rightElement = { ...validElement, x: 360, y: 195, width: 30, height: 50 };
       expect(validateElement(rightElement, 0)).toBe(true);
     });
 
@@ -250,50 +250,52 @@ describe('Validation', () => {
   });
 
   describe('isWithinSafeCircle', () => {
+    // (x, y) is the element CENTER — matching canvas.js rendering convention
+
     it('accepts elements at canvas center', () => {
-      // Center of canvas with 50x50 element
-      expect(isWithinSafeCircle(170, 170, 50, 50)).toBe(true);
+      // Element centered at canvas center (195, 195) with 50x50 bounding box
+      expect(isWithinSafeCircle(195, 195, 50, 50)).toBe(true);
     });
 
     it('accepts elements at cardinal edges (within radius)', () => {
-      // Top: center x, near top edge
-      expect(isWithinSafeCircle(170, 20, 50, 30)).toBe(true);
+      // Top: centered at (195, 30), h=30 → top edge at y=15; farthest corner ≈182px from center
+      expect(isWithinSafeCircle(195, 30, 50, 30)).toBe(true);
 
-      // Bottom: center x, near bottom edge
-      expect(isWithinSafeCircle(170, 340, 50, 30)).toBe(true);
+      // Bottom: centered at (195, 360), h=30 → bottom edge at y=375
+      expect(isWithinSafeCircle(195, 360, 50, 30)).toBe(true);
 
-      // Left: near left edge, center y
-      expect(isWithinSafeCircle(20, 170, 30, 50)).toBe(true);
+      // Left: centered at (30, 195), w=30 → left edge at x=15
+      expect(isWithinSafeCircle(30, 195, 30, 50)).toBe(true);
 
-      // Right: near right edge, center y
-      expect(isWithinSafeCircle(340, 170, 30, 50)).toBe(true);
+      // Right: centered at (360, 195), w=30 → right edge at x=375
+      expect(isWithinSafeCircle(360, 195, 30, 50)).toBe(true);
     });
 
-    it('rejects elements in corners (extend beyond safe radius)', () => {
-      // Top-left corner
+    it('rejects elements centered in corners (bounding box extends beyond safe radius)', () => {
+      // Top-left: center at (10,10), corners reach (−5,−5) which is far outside
       expect(isWithinSafeCircle(10, 10, 30, 30)).toBe(false);
 
       // Top-right corner
-      expect(isWithinSafeCircle(350, 10, 30, 30)).toBe(false);
+      expect(isWithinSafeCircle(380, 10, 30, 30)).toBe(false);
 
       // Bottom-left corner
-      expect(isWithinSafeCircle(10, 350, 30, 30)).toBe(false);
+      expect(isWithinSafeCircle(10, 380, 30, 30)).toBe(false);
 
       // Bottom-right corner
-      expect(isWithinSafeCircle(350, 350, 30, 30)).toBe(false);
+      expect(isWithinSafeCircle(380, 380, 30, 30)).toBe(false);
     });
 
-    it('accepts small elements anywhere within safe area', () => {
-      // Tiny 1x1 element at corner should still fail (it's at the corner)
+    it('accepts small elements within safe area, rejects outside', () => {
+      // Tiny element centered at (10,10) — still outside safe circle
       expect(isWithinSafeCircle(10, 10, 1, 1)).toBe(false);
 
-      // But small element near center should pass
-      expect(isWithinSafeCircle(190, 190, 10, 10)).toBe(true);
+      // Small element near center — clearly inside
+      expect(isWithinSafeCircle(195, 195, 10, 10)).toBe(true);
     });
 
     it('rejects elements where any corner exceeds safe radius', () => {
-      // Element partially in corner: x in bounds but corners exceed circle
-      expect(isWithinSafeCircle(365, 170, 30, 50)).toBe(false);
+      // Centered at (370, 195), w=30 → right edge at 385, farthest corner ≈192px from center
+      expect(isWithinSafeCircle(370, 195, 30, 50)).toBe(false);
     });
   });
 });

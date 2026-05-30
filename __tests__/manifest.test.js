@@ -36,13 +36,16 @@ describe('Manifest Generator', () => {
     expect(manifest).toContain('<iq:permissions/>');
   });
 
-  it('generates application ID based on timestamp', () => {
+  it('generates a unique RFC 4122 v4 UUID application ID', () => {
     const manifest = generateManifest('Face', []);
-
-    // Extract ID
-    const idMatch = manifest.match(/id="(a[0-9a-f-]+)"/);
+    // The ID is now a full random UUID, not a partially-hardcoded timestamp value
+    const idMatch = manifest.match(/id="([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"/);
     expect(idMatch).toBeTruthy();
-    expect(idMatch[1]).toMatch(/^a[0-9a-f-]+$/);
+    // Two separate exports should produce different UUIDs
+    const manifest2 = generateManifest('Face', []);
+    const idMatch2 = manifest2.match(/id="([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"/);
+    expect(idMatch2).toBeTruthy();
+    expect(idMatch[1]).not.toBe(idMatch2[1]);
   });
 
   it('includes launcher icon reference', () => {

@@ -1,5 +1,5 @@
 import { updateElement, removeElement, commitHistory, FONT_HEIGHTS } from './elements.js';
-import { scheduleRedraw, setSelectedId } from './canvas.js';
+import { scheduleRedraw, setSelectedId, ANALOG_SHAPES, TICK_TYPES } from './canvas.js';
 import { CANVAS_SIZE, CANVAS_CENTER } from '../constants.js';
 
 /**
@@ -41,10 +41,9 @@ export function showProperties(el, onDelete, onAnyChange) {
     return;
   }
 
-  const TICK_TYPES   = new Set(['tickHour', 'tickMinute', 'tickMixed', 'tickDots']);
-  const ANALOG_TYPES = new Set(['analogHour', 'analogMinute', 'analogSecond', 'analogCenter']);
+  // Use the canonical sets imported from canvas.js — no local redeclaration
   const isTickShape   = TICK_TYPES.has(el.shapeType);
-  const isAnalogShape = ANALOG_TYPES.has(el.shapeType);
+  const isAnalogShape = ANALOG_SHAPES.has(el.shapeType);
   const isHRGraph     = el.shapeType === 'hrGraph';
   const isTextLabel   = el.fieldId === 'customLabel';
   const isShape       = !!el.shapeType;

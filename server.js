@@ -12,7 +12,7 @@ const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 
 const { getConfig } = require('./lib/config');
-const { logInfo, logError } = require('./lib/logger');
+const { logInfo, logError, logWarn } = require('./lib/logger');
 const { buildProject } = require('./lib/build');
 const { previewInSimulator } = require('./lib/preview');
 const { saveDesign, listDesigns, loadDesign } = require('./lib/design-store');

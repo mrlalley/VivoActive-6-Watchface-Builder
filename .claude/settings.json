@@ -140,7 +140,11 @@
       "Bash(curl -s \"http://127.0.0.1:60007/api/designs/CorruptedFace.json\")",
       "Bash(python -m json.tool)",
       "Bash(curl -s \"http://127.0.0.1:60007/api/designs/DaFace.json\")",
-      "Bash(python -c \"import sys, json; d=json.load\\(sys.stdin\\); print\\(f'requiresConfirmation: {d.get\\(\\\\\"requiresConfirmation\\\\\"\\)}'\\); print\\(f'validationWarning: {d.get\\(\\\\\"validationWarning\\\\\"\\)}'\\)\")"
+      "Bash(python -c \"import sys, json; d=json.load\\(sys.stdin\\); print\\(f'requiresConfirmation: {d.get\\(\\\\\"requiresConfirmation\\\\\"\\)}'\\); print\\(f'validationWarning: {d.get\\(\\\\\"validationWarning\\\\\"\\)}'\\)\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://127.0.0.1:53660/api/health\")",
+      "Bash(curl -s \"http://127.0.0.1:53660/api/health\")",
+      "Bash(curl -s \"http://127.0.0.1:56852/api/health\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://127.0.0.1:56474/api/health\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project",

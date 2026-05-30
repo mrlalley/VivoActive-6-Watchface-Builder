@@ -1,6 +1,6 @@
 import { DATA_FIELDS, CATEGORIES } from './modules/data-fields.js';
 import { addElement, createElement, exportState, importState, undo, redo, getElements } from './modules/elements.js';
-import { initCanvas, render, setSelectedId, toggleSafeArea, toggleGrid, bringForward, sendBackward } from './modules/canvas.js';
+import { initCanvas, render, setSelectedId, toggleSafeArea, toggleGrid, bringForward, sendBackward, cleanupCanvas } from './modules/canvas.js';
 import { showProperties } from './modules/properties.js';
 import { exportProject, previewInSimulator } from './modules/export.js';
 import { DEFAULT_ELEMENT_X, DEFAULT_ELEMENT_Y, MAX_DESIGN_ELEMENTS, SAVE_INDICATOR_HIDE_DELAY } from './constants.js';
@@ -297,6 +297,9 @@ function init() {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); redo(); render(); scheduleAutoSave(); }
     if (e.key === 'Escape') closeModal();
   });
+
+  // ── Stop the analog render timer when the page unloads (Electron reload / navigation) ──
+  window.addEventListener('beforeunload', () => cleanupCanvas());
 
   // ── Restore or load defaults ──
   if (!tryRestore()) addDefaults();

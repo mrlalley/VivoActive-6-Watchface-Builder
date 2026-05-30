@@ -220,8 +220,15 @@ export function redo() {
 function pushHistory() {
   history = history.slice(0, historyIndex + 1);
   history.push(JSON.parse(JSON.stringify(elements)));
-  if (history.length > 10) history.shift();
-  else historyIndex++;
+  if (history.length > 10) {
+    // Cap at 10 entries. After shift the array has 10 items and
+    // historyIndex must point at the last one — without this decrement
+    // it would freeze at 9 and the effective undo depth drops to 9.
+    history.shift();
+    historyIndex = history.length - 1;
+  } else {
+    historyIndex++;
+  }
 }
 
 // Seed the empty initial state into history

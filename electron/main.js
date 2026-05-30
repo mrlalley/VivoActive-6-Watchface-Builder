@@ -277,9 +277,14 @@ app.on('ready', async () => {
     startHealthPolling();
   }
 
-  // Show Settings if config is incomplete
+  // Show Settings if config is incomplete — wait for renderer to finish loading
+  // before sending the IPC message, otherwise the listener isn't registered yet
+  // and the message is silently dropped (webContents.send has no delivery guarantee
+  // before DOMContentLoaded fires in the renderer).
   if (!hasCompleteConfig()) {
-    mainWindow.webContents.send('settings:showOverlay');
+    mainWindow.webContents.once('did-finish-load', () => {
+      mainWindow.webContents.send('settings:showOverlay');
+    });
   }
 });
 

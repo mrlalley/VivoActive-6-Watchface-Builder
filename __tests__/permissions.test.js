@@ -12,13 +12,15 @@ describe('Permissions', () => {
       expect(perms).toEqual([]);
     });
 
-    it('returns UserProfile for profile-based fields', () => {
+    it('returns ActivityMonitor for fitness counter fields', () => {
+      // steps/calories are fetched via ActivityMonitor.getInfo(), not UserProfile
       const elements = [
         { fieldId: 'steps' },
         { fieldId: 'calories' },
       ];
       const perms = getRequiredPermissions(elements);
-      expect(perms).toContain('UserProfile');
+      expect(perms).toContain('ActivityMonitor');
+      expect(perms).not.toContain('UserProfile');
       expect(perms.length).toBe(1);
     });
 
@@ -44,12 +46,12 @@ describe('Permissions', () => {
 
     it('combines multiple permission types', () => {
       const elements = [
-        { fieldId: 'steps' },
-        { fieldId: 'bodyBattery' },
-        { fieldId: 'sunrise' },
+        { fieldId: 'steps' },        // ActivityMonitor
+        { fieldId: 'bodyBattery' },  // SensorHistory
+        { fieldId: 'sunrise' },      // Positioning
       ];
       const perms = getRequiredPermissions(elements);
-      expect(perms).toContain('UserProfile');
+      expect(perms).toContain('ActivityMonitor');
       expect(perms).toContain('SensorHistory');
       expect(perms).toContain('Positioning');
       expect(perms.length).toBe(3);
@@ -62,7 +64,7 @@ describe('Permissions', () => {
         { fieldId: 'calories' },
       ];
       const perms = getRequiredPermissions(elements);
-      expect(perms).toEqual(['UserProfile']);
+      expect(perms).toEqual(['ActivityMonitor']);
     });
 
     it('returns sorted permissions', () => {
@@ -87,15 +89,18 @@ describe('Permissions', () => {
         { fieldId: 'steps' },
       ];
       const perms = getRequiredPermissions(elements);
-      expect(perms).toEqual(['UserProfile']);
+      expect(perms).toEqual(['ActivityMonitor']);
     });
   });
 
   describe('PERMISSION_MAP', () => {
     it('contains expected permissions', () => {
-      expect(PERMISSION_MAP.steps).toBe('UserProfile');
+      // steps fetched via ActivityMonitor.getInfo() — must use ActivityMonitor permission
+      expect(PERMISSION_MAP.steps).toBe('ActivityMonitor');
       expect(PERMISSION_MAP.bodyBattery).toBe('SensorHistory');
       expect(PERMISSION_MAP.sunrise).toBe('Positioning');
+      // heartRate fetched via UserProfile.getProfile()
+      expect(PERMISSION_MAP.heartRate).toBe('UserProfile');
     });
 
     it('is not missing common fields', () => {
