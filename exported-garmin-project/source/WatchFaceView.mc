@@ -117,7 +117,7 @@ class WatchFaceView extends Ui.WatchFace {
         var _bbh = SensorHistory.getBodyBatteryHistory(null);
         var _bbs = _bbh != null ? _bbh.next() : null;
         var bodyBattery = (_bbs != null && _bbs.data != null) ? (_bbs.data.toNumber()).format("%d") : "--";
-        var trainReadiness = (_up != null && _up.trainingReadiness != null) ? _up.trainingReadiness.toString() : "--";
+        var trainReadiness = "--";
         var _ssh = SensorHistory.getStressHistory(null);
         var _sss = _ssh != null ? _ssh.next() : null;
         var stressLevel = (_sss != null && _sss.data != null) ? (_sss.data.toNumber()).format("%d") : "--";

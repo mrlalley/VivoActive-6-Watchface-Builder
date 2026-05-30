@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
-    <iq:application id="a3872ef0-6346-4321-abcd-019e770de1ae" type="watchface" name="@Strings.AppName" entry="WatchFaceApp" launcherIcon="@Drawables.LauncherIcon" minApiLevel="4.2.0">
+    <iq:application id="a3872ef0-6346-4321-abcd-019e7714ebe7" type="watchface" name="@Strings.AppName" entry="WatchFaceApp" launcherIcon="@Drawables.LauncherIcon" minApiLevel="4.2.0">
         <iq:products>
             <iq:product id="vivoactive6"/>
         </iq:products>
         <iq:permissions>
+            <iq:uses-permission id="Background"/>
             <iq:uses-permission id="Positioning"/>
             <iq:uses-permission id="Sensor"/>
             <iq:uses-permission id="UserProfile"/>
