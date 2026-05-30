@@ -1,17 +1,16 @@
 // Watch Face Builder Express server
-// Exports Monkey C projects for Garmin Vivoactive 6 watch faces
+// HTTP routing layer for the watch face builder backend.
+// Complex business logic extracted to lib/build.js, lib/preview.js, and lib/design-store.js
 
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { execFile, spawn } = require('child_process');
 
 const { getConfig } = require('./lib/config');
-const { logInfo, logError, logWarn } = require('./lib/logger');
-const { validateProjectName, validateElements } = require('./lib/validation');
-const { safePrgName } = require('./lib/naming');
-const { waitForSimulator } = require('./lib/simulator');
-const { generateProjectFiles } = require('./lib/generators');
+const { logInfo, logError } = require('./lib/logger');
+const { buildProject } = require('./lib/build');
+const { previewInSimulator } = require('./lib/preview');
+const { saveDesign, listDesigns, loadDesign } = require('./lib/design-store');
 
 // ─── Server factory ────────────────────────────────────────────────────────────
 // Creates and returns an Express app with all routes configured.
@@ -26,150 +25,38 @@ function createServer(config = {}, detectors = {}) {
   app.use(express.static(path.join(__dirname, 'builder')));
 
   // ── POST /api/export – Export and build .prg file ──
-  app.post('/api/export', (req, res) => {
+  app.post('/api/export', async (req, res) => {
     const { elements = [], projectName = 'MyWatchFace' } = req.body;
-
-    logInfo('export:start', { elementCount: elements.length, projectName });
-
-    // Validate input
     try {
-      validateProjectName(projectName);
-      validateElements(elements);
-    } catch (validationErr) {
-      logError('export:validation-failed', { reason: validationErr.message });
-      return res.json({ success: false, error: `Validation failed: ${validationErr.message}`, log: '' });
+      const result = await buildProject(cfg, projectName, elements);
+      res.json(result);
+    } catch (err) {
+      logError('export:error', { reason: err.message });
+      res.json({ success: false, error: err.message, log: '' });
     }
-
-    // Generate project files
-    try {
-      generateProjectFiles(elements, projectName, cfg);
-      logInfo('export:files-generated', { projectName });
-    } catch (fileErr) {
-      logError('export:file-generation-failed', { reason: fileErr.message });
-      return res.json({ success: false, error: `File generation failed: ${fileErr.message}`, log: '' });
-    }
-
-    // Check dependencies
-    if (!fs.existsSync(cfg.monkeyc)) {
-      logError('export:monkeyc-not-found', { path: cfg.monkeyc });
-      return res.json({
-        success: false,
-        error: `monkeyc not found. Add the SDK bin directory to PATH:\n  ${cfg.sdkBin}\nThen restart this server, or open exported-garmin-project/ in VS Code and run "Monkey C: Build for Device".`,
-        log: '',
-        projectPath: cfg.exportDir,
-      });
-    }
-
-    if (!fs.existsSync(cfg.devKey)) {
-      logError('export:devkey-not-found', { path: cfg.devKey });
-      return res.json({
-        success: false,
-        error: `Developer key not found at: ${cfg.devKey}\nGenerate one via VS Code Command Palette → "Monkey C: Generate a Developer Key".`,
-        log: '',
-        projectPath: cfg.exportDir,
-      });
-    }
-
-    const prgName = safePrgName(projectName);
-    const outPrg = path.join(cfg.exportDir, 'bin', `${prgName}.prg`);
-    const jungle = path.join(cfg.exportDir, 'monkey.jungle');
-
-    logInfo('export:building', { prgName, outPrg });
-
-    // On Windows, use cmd.exe to run .bat files; on Unix, run directly
-    const isWindows = process.platform === 'win32';
-    const cmd = isWindows ? 'cmd.exe' : cfg.monkeyc;
-    const args = isWindows
-      ? ['/c', cfg.monkeyc, '-o', outPrg, '-f', jungle, '-y', cfg.devKey, '-d', 'vivoactive6', '--warn']
-      : ['-o', outPrg, '-f', jungle, '-y', cfg.devKey, '-d', 'vivoactive6', '--warn'];
-
-    execFile(cmd, args, { timeout: 60000 }, (err, stdout, stderr) => {
-      const log = [stdout, stderr].filter(Boolean).join('\n').trim();
-      if (err) {
-        logError('export:build-failed', { code: err.code, signal: err.signal, message: err.message });
-        return res.json({ success: false, error: 'Build failed — see log for details.', log, projectPath: cfg.exportDir });
-      }
-
-      // Save design as JSON for future editing
-      const designJson = path.join(cfg.exportDir, 'design.json');
-      try {
-        fs.writeFileSync(designJson, JSON.stringify({ projectName, elements }, null, 2));
-        logInfo('export:design-saved', { designPath: designJson });
-      } catch (saveErr) {
-        logWarn('export:design-save-failed', { reason: saveErr.message });
-      }
-
-      logInfo('export:build-success', { prgPath: outPrg, designPath: designJson });
-      res.json({ success: true, log, prgPath: outPrg, designPath: designJson, projectPath: cfg.exportDir });
-    });
   });
 
-  // ── POST /api/save-design – Save design to local JSON file ──
+  // ── POST /api/save-design – Save design to disk ──
   app.post('/api/save-design', (req, res) => {
     const { projectName = 'MyWatchFace', elements = [] } = req.body;
-
-    logInfo('save-design:start', { projectName, elementCount: elements.length });
-
-    try {
-      validateProjectName(projectName);
-      validateElements(elements);
-    } catch (validationErr) {
-      logError('save-design:validation-failed', { reason: validationErr.message });
-      return res.json({ success: false, error: validationErr.message });
-    }
-
     try {
       const designsDir = path.join(__dirname, 'designs');
-      if (!fs.existsSync(designsDir)) {
-        fs.mkdirSync(designsDir, { recursive: true });
-      }
-
-      const fileName = `${safePrgName(projectName)}.json`;
-      const filePath = path.join(designsDir, fileName);
-      const designData = { projectName, elements, savedAt: new Date().toISOString() };
-
-      fs.writeFileSync(filePath, JSON.stringify(designData, null, 2));
-      logInfo('save-design:success', { filePath });
-
-      res.json({
-        success: true,
-        filePath: filePath.replace(__dirname, '.'),
-        projectName,
-        elementCount: elements.length,
-      });
+      const result = saveDesign(designsDir, projectName, elements);
+      res.json(result);
     } catch (err) {
-      logError('save-design:failed', { reason: err.message });
-      res.json({ success: false, error: `Failed to save: ${err.message}` });
+      logError('save-design:error', { reason: err.message });
+      res.json({ success: false, error: err.message });
     }
   });
 
-  // ── GET /api/designs – List saved designs ──
+  // ── GET /api/designs – List all saved designs ──
   app.get('/api/designs', (req, res) => {
     try {
       const designsDir = path.join(__dirname, 'designs');
-      if (!fs.existsSync(designsDir)) {
-        return res.json({ success: true, designs: [] });
-      }
-
-      const files = fs.readdirSync(designsDir).filter(f => f.endsWith('.json'));
-      const designs = files.map(file => {
-        const filePath = path.join(designsDir, file);
-        try {
-          const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-          return {
-            name: data.projectName || file.replace('.json', ''),
-            file: file,
-            savedAt: data.savedAt || 'unknown',
-            elementCount: data.elements ? data.elements.length : 0,
-          };
-        } catch {
-          return null;
-        }
-      }).filter(Boolean);
-
+      const designs = listDesigns(designsDir);
       res.json({ success: true, designs });
     } catch (err) {
-      logError('designs:list-failed', { reason: err.message });
+      logError('designs:list-error', { reason: err.message });
       res.json({ success: false, error: err.message });
     }
   });
@@ -177,122 +64,30 @@ function createServer(config = {}, detectors = {}) {
   // ── GET /api/designs/:filename – Load a specific design ──
   app.get('/api/designs/:filename', (req, res) => {
     try {
-      const filename = req.params.filename.replace(/[^a-zA-Z0-9._-]/g, '');
-      const filePath = path.join(__dirname, 'designs', filename);
-
-      if (!fs.existsSync(filePath)) {
-        return res.json({ success: false, error: 'Design not found' });
-      }
-
-      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-      res.json({ success: true, design: data });
+      const designsDir = path.join(__dirname, 'designs');
+      const design = loadDesign(designsDir, req.params.filename);
+      res.json({ success: true, design });
     } catch (err) {
-      logError('designs:load-failed', { reason: err.message });
+      logError('designs:load-error', { reason: err.message });
       res.json({ success: false, error: err.message });
     }
   });
 
   // ── POST /api/preview – Build and launch in simulator ──
-  app.post('/api/preview', (req, res) => {
+  app.post('/api/preview', async (req, res) => {
     const { elements = [], projectName = 'WatchFacePreview' } = req.body;
-
-    logInfo('preview:start', { elementCount: elements.length, projectName });
-
-    // Validate input
     try {
-      validateProjectName(projectName);
-      validateElements(elements);
-    } catch (validationErr) {
-      logError('preview:validation-failed', { reason: validationErr.message });
-      return res.json({ success: false, error: `Validation failed: ${validationErr.message}`, log: '' });
-    }
-
-    // Generate project files
-    try {
-      generateProjectFiles(elements, projectName, cfg);
-      logInfo('preview:files-generated', { projectName });
-    } catch (fileErr) {
-      logError('preview:file-generation-failed', { reason: fileErr.message });
-      return res.json({ success: false, error: `File generation failed: ${fileErr.message}`, log: '' });
-    }
-
-    if (!fs.existsSync(cfg.monkeyc)) {
-      logError('preview:monkeyc-not-found', { path: cfg.monkeyc });
-      return res.json({ success: false, error: 'monkeyc not found.', log: '' });
-    }
-    if (!fs.existsSync(cfg.devKey)) {
-      logError('preview:devkey-not-found', { path: cfg.devKey });
-      return res.json({ success: false, error: 'Developer key not found.', log: '' });
-    }
-
-    const outPrg = path.join(cfg.exportDir, 'bin', 'WatchFace.prg');
-    const jungle = path.join(cfg.exportDir, 'monkey.jungle');
-
-    logInfo('preview:building', { outPrg });
-
-    // On Windows, use cmd.exe to run .bat files; on Unix, run directly
-    const isWindows = process.platform === 'win32';
-    const cmd = isWindows ? 'cmd.exe' : cfg.monkeyc;
-    const args = isWindows
-      ? ['/c', cfg.monkeyc, '-o', outPrg, '-f', jungle, '-y', cfg.devKey, '-d', 'vivoactive6', '--warn']
-      : ['-o', outPrg, '-f', jungle, '-y', cfg.devKey, '-d', 'vivoactive6', '--warn'];
-
-    execFile(cmd, args, { timeout: 60000 }, (buildErr, stdout, stderr) => {
-      const log = [stdout, stderr].filter(Boolean).join('\n').trim();
-      if (buildErr) {
-        logError('preview:build-failed', { code: buildErr.code, signal: buildErr.signal });
-        return res.json({ success: false, error: 'Build failed — see log.', log });
+      const buildResult = await buildProject(cfg, projectName, elements);
+      if (!buildResult.success) {
+        return res.json(buildResult);
       }
-
-      logInfo('preview:build-success', {});
-
-      // Save design as JSON for future editing
-      const designJson = path.join(cfg.exportDir, 'design.json');
-      try {
-        fs.writeFileSync(designJson, JSON.stringify({ projectName, elements }, null, 2));
-        logInfo('preview:design-saved', { designPath: designJson });
-      } catch (saveErr) {
-        logWarn('preview:design-save-failed', { reason: saveErr.message });
-      }
-
-      execFile('tasklist.exe', ['/FI', 'IMAGENAME eq simulator.exe', '/NH'], (taskErr, taskOut) => {
-        const simRunning = taskOut && taskOut.toLowerCase().includes('simulator.exe');
-
-        if (!simRunning) {
-          logInfo('preview:launching-simulator', {});
-          spawn(cfg.simExe, [], { detached: true, stdio: 'ignore' }).unref();
-        } else {
-          logInfo('preview:simulator-already-running', {});
-        }
-
-        res.json({ success: true, log, message: simRunning ? 'Reloading in simulator…' : 'Starting simulator…' });
-
-        waitForSimulator(() => {
-          const tmpDir = cfg.tempDir;
-          const tmpPrg = path.join(tmpDir, 'WatchFace.prg');
-          try {
-            fs.mkdirSync(tmpDir, { recursive: true });
-            fs.copyFileSync(outPrg, tmpPrg);
-            logInfo('preview:prg-copied', { from: outPrg, to: tmpPrg });
-          } catch (copyErr) {
-            logWarn('preview:prg-copy-failed', { reason: copyErr.message });
-          }
-
-          const prgArg = fs.existsSync(tmpPrg) ? tmpPrg : outPrg;
-          logInfo('preview:loading-prg', { prgPath: prgArg });
-          const mdoCmd = process.platform === 'win32' ? 'cmd.exe' : cfg.monkeydo;
-          const mdoArgs = process.platform === 'win32' ? ['/c', cfg.monkeydo, prgArg, 'vivoactive6'] : [prgArg, 'vivoactive6'];
-          execFile(mdoCmd, mdoArgs, (mdErr, mdOut, mdErr2) => {
-            const mdLog = [mdOut, mdErr2].filter(Boolean).join('\n').trim();
-            if (mdErr) {
-              logError('preview:monkeydo-failed', { code: mdErr.code, message: mdErr.message });
-            } else {
-              logInfo('preview:monkeydo-success', {});
-            }
-          });
-        });
-      });
-    });
+      // Fire off preview work asynchronously (simulator launch, .prg loading)
+      previewInSimulator(cfg, buildResult.prgPath);
+      res.json({ success: true, message: 'Starting simulator…', log: buildResult.log });
+    } catch (err) {
+      logError('preview:error', { reason: err.message });
+      res.json({ success: false, error: err.message, log: '' });
+    }
   });
 
   return app;
