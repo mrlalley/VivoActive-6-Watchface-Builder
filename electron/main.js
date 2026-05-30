@@ -14,6 +14,9 @@ let mainWindow;
 let expressServer;
 let serverPort;
 
+let healthPollInterval = null;
+const HEALTH_POLL_MS = 5000;
+
 // Initialize persistent config store
 const store = new Store({
   defaults: {
@@ -68,6 +71,18 @@ function createWindow() {
 
   mainWindow = new BrowserWindow(windowConfig);
 
+  // Pause health polling while the window is out of focus or minimized.
+  // start* is idempotent (guarded by healthPollInterval); stop* is safe to call redundantly.
+  mainWindow.on('focus',    startHealthPolling);
+  mainWindow.on('show',     startHealthPolling); // restore from tray / un-minimize
+  mainWindow.on('blur',     stopHealthPolling);
+  mainWindow.on('minimize', stopHealthPolling);
+  mainWindow.on('hide',     stopHealthPolling);  // hide-to-tray
+  mainWindow.on('closed',   () => {
+    stopHealthPolling(); // prevent interval surviving after window is destroyed
+    mainWindow = null;
+  });
+
   // Load the app from localhost once Express is ready
   mainWindow.loadURL(`http://127.0.0.1:${serverPort}`);
 
@@ -81,10 +96,6 @@ function createWindow() {
       if (input.key === 'F12') event.preventDefault();
     });
   }
-
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
 }
 
 // Start the Express server with stored config.
@@ -138,6 +149,19 @@ async function checkHealth() {
         message: err.message
       });
     }
+  }
+}
+
+function startHealthPolling() {
+  if (healthPollInterval) return; // Already polling — guard against double-start
+  checkHealth(); // Immediate check so the UI sees the initial state without waiting
+  healthPollInterval = setInterval(checkHealth, HEALTH_POLL_MS);
+}
+
+function stopHealthPolling() {
+  if (healthPollInterval) {
+    clearInterval(healthPollInterval);
+    healthPollInterval = null;
   }
 }
 
@@ -246,9 +270,10 @@ app.on('ready', async () => {
   createWindow();
   createMenu();
 
-  // Check server health and warn about missing SDK/key
+  // Start health polling — fires one immediate check and then every HEALTH_POLL_MS.
+  // Focus/blur/minimize events in createWindow() will pause/resume the interval.
   if (serverPort) {
-    await checkHealth();
+    startHealthPolling();
   }
 
   // Show Settings if config is incomplete
