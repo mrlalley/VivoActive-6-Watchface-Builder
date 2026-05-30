@@ -11,6 +11,9 @@ const SAVE_INDICATOR_HIDE_DELAY = 2000;
 /** Timeout (milliseconds) for monkeyc compilation. Allows for complex projects and slow systems. */
 const BUILD_TIMEOUT_MS = 60000; // 60 seconds
 
+/** Timeout (milliseconds) for loading .prg into simulator via monkeydo. */
+const PREVIEW_TIMEOUT_MS = 30000; // 30 seconds
+
 /** Timeout (milliseconds) for developer key generation via crypto. RSA-4096 is computationally expensive. */
 const KEYGEN_TIMEOUT_MS = 60000; // 60 seconds
 
@@ -33,6 +36,7 @@ module.exports = {
   ANALOG_RENDER_INTERVAL,
   SAVE_INDICATOR_HIDE_DELAY,
   BUILD_TIMEOUT_MS,
+  PREVIEW_TIMEOUT_MS,
   KEYGEN_TIMEOUT_MS,
   APP_RESTART_DELAY_MS,
   HEALTH_CHECK_DELAY_MS,

@@ -34,6 +34,7 @@ export const DEFAULT_ELEMENT_Y = 195;
 export const ANALOG_RENDER_INTERVAL = 1000;
 export const SAVE_INDICATOR_HIDE_DELAY = 2000;
 export const BUILD_TIMEOUT_MS = 60000;
+export const PREVIEW_TIMEOUT_MS = 30000;
 export const KEYGEN_TIMEOUT_MS = 60000;
 export const APP_RESTART_DELAY_MS = 100;
 export const HEALTH_CHECK_DELAY_MS = 8000;
