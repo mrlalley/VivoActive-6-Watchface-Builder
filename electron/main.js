@@ -17,6 +17,17 @@ const store = new Store({
   },
 });
 
+// Helper to resolve binary paths in both dev and packaged modes
+function resolveBinaryPath(relativePath) {
+  if (process.env.ELECTRON_IS_DEV) {
+    // Dev mode: path relative to project root
+    return path.join(__dirname, '..', relativePath);
+  } else {
+    // Packaged mode (ASAR): unpacked binaries are in app.asar.unpacked/
+    return path.join(process.resourcesPath, 'app.asar.unpacked', relativePath);
+  }
+}
+
 // Create and show the main window
 function createWindow() {
   const iconPath = path.join(__dirname, '..', 'assets', 'icon.ico');
@@ -177,7 +188,10 @@ ipcMain.handle('shell:openVSCode', async (event, folderPath) => {
 
 // App lifecycle
 app.on('ready', async () => {
-  await startServer();
+  // Skip server startup during packaging
+  if (!process.env.PACKAGING_MODE) {
+    await startServer();
+  }
   createWindow();
   createMenu();
 
