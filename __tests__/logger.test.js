@@ -247,4 +247,65 @@ describe('Logger', () => {
       expect(originalContext).toEqual(contextCopy);
     });
   });
+
+  describe('Redaction - PATH_KEYS (known path field names)', () => {
+    it('redacts short relative paths at known path key names', () => {
+      logInfo('build:cleanup', { dir: 'exports/myface', requestId: 'req123' });
+      const logged = JSON.parse(output[0]);
+      // "exports/myface" has only 1 slash and is < 50 chars; heuristic alone misses it
+      expect(logged.dir).toBe('***redacted***');
+      expect(logged.requestId).toBe('req123');
+    });
+
+    it('redacts all known path key names (prgPath, designPath, tmpDir, outPrg, filePath)', () => {
+      logInfo('build:success', {
+        prgPath: 'bin/WatchFace.prg',
+        designPath: 'designs/MyFace.json',
+        tmpDir: 'tmp/preview-abc',
+        outPrg: 'bin/out.prg',
+        filePath: 'exports/face.json',
+        requestId: 'req123',
+      });
+      const logged = JSON.parse(output[0]);
+      expect(logged.prgPath).toBe('***redacted***');
+      expect(logged.designPath).toBe('***redacted***');
+      expect(logged.tmpDir).toBe('***redacted***');
+      expect(logged.outPrg).toBe('***redacted***');
+      expect(logged.filePath).toBe('***redacted***');
+      expect(logged.requestId).toBe('req123');
+    });
+
+    it('redacts SDK and key path fields (sdkBin, sdkPath, keyPath, monkeyc, monkeydo, simExe)', () => {
+      logInfo('config:loaded', {
+        sdkBin: 'sdk/bin',
+        sdkPath: 'sdk/path',
+        keyPath: 'keys/dev.der',
+        monkeyc: 'sdk/bin/monkeyc',
+        monkeydo: 'sdk/bin/monkeydo',
+        simExe: 'sdk/bin/simulator',
+      });
+      const logged = JSON.parse(output[0]);
+      expect(logged.sdkBin).toBe('***redacted***');
+      expect(logged.sdkPath).toBe('***redacted***');
+      expect(logged.keyPath).toBe('***redacted***');
+      expect(logged.monkeyc).toBe('***redacted***');
+      expect(logged.monkeydo).toBe('***redacted***');
+      expect(logged.simExe).toBe('***redacted***');
+    });
+
+    it('redacts from/to even when values are short relative paths', () => {
+      logInfo('preview:prg-copied', { from: 'build/app.prg', to: 'tmp/app.prg', requestId: 'req123' });
+      const logged = JSON.parse(output[0]);
+      expect(logged.from).toBe('***redacted***');
+      expect(logged.to).toBe('***redacted***');
+      expect(logged.requestId).toBe('req123');
+    });
+
+    it('redacts exportDir by key name', () => {
+      logInfo('build:request-isolated', { requestId: 'req123', exportDir: 'exported/req123' });
+      const logged = JSON.parse(output[0]);
+      expect(logged.exportDir).toBe('***redacted***');
+      expect(logged.requestId).toBe('req123');
+    });
+  });
 });
