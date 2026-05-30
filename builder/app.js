@@ -336,7 +336,15 @@ async function handleSaveDesign() {
       body: JSON.stringify({ projectName, elements }),
     });
 
-    const result = await res.json();
+    const text = await res.text();
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (parseErr) {
+      console.error('Response text:', text);
+      throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
+    }
+
     if (!result.success) {
       alert(`Save failed: ${result.error}`);
     } else {
