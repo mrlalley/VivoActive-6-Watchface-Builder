@@ -3,8 +3,10 @@ const {
   validateColor,
   validateElement,
   validateElements,
-  SAFE_AREA_MIN,
-  SAFE_AREA_MAX,
+  CANVAS_SIZE,
+  CANVAS_CENTER,
+  SAFE_AREA_RADIUS,
+  isWithinSafeCircle,
 } = require('../lib/validation');
 
 describe('Validation', () => {
@@ -134,12 +136,34 @@ describe('Validation', () => {
       expect(() => validateElement(bad, 0)).toThrow('element[0].label: must be a string');
     });
 
-    it('validates position bounds', () => {
-      const badX = { ...validElement, x: SAFE_AREA_MIN - 1 };
-      expect(() => validateElement(badX, 0)).toThrow('element[0].x: must be between');
+    it('validates position bounds (canvas limits)', () => {
+      const outOfBoundsX = { ...validElement, x: -1 };
+      expect(() => validateElement(outOfBoundsX, 0)).toThrow('element[0].x: must be between 0');
 
-      const badY = { ...validElement, y: SAFE_AREA_MAX + 1 };
-      expect(() => validateElement(badY, 0)).toThrow('element[0].y: must be between');
+      const outOfBoundsY = { ...validElement, y: CANVAS_SIZE + 1 };
+      expect(() => validateElement(outOfBoundsY, 0)).toThrow('element[0].y: must be between 0');
+    });
+
+    it('validates circular boundary (elements in corners fail)', () => {
+      // Element in corner (380, 380) with 20x20 extends beyond circular boundary
+      const cornerElement = { ...validElement, x: 370, y: 370, width: 20, height: 20 };
+      expect(() => validateElement(cornerElement, 0)).toThrow('extends outside the safe display area');
+    });
+
+    it('allows elements at canvas center', () => {
+      // Element centered at canvas middle should pass
+      const centered = { ...validElement, x: 170, y: 170, width: 50, height: 50 };
+      expect(validateElement(centered, 0)).toBe(true);
+    });
+
+    it('allows elements near cardinal edges (within safe circle)', () => {
+      // Top edge (within safe radius)
+      const topElement = { ...validElement, x: 170, y: 15, width: 50, height: 30 };
+      expect(validateElement(topElement, 0)).toBe(true);
+
+      // Right edge (within safe radius)
+      const rightElement = { ...validElement, x: 340, y: 170, width: 30, height: 50 };
+      expect(validateElement(rightElement, 0)).toBe(true);
     });
 
     it('validates dimensions', () => {
@@ -222,6 +246,54 @@ describe('Validation', () => {
 
     it('allows empty array', () => {
       expect(validateElements([])).toBe(true);
+    });
+  });
+
+  describe('isWithinSafeCircle', () => {
+    it('accepts elements at canvas center', () => {
+      // Center of canvas with 50x50 element
+      expect(isWithinSafeCircle(170, 170, 50, 50)).toBe(true);
+    });
+
+    it('accepts elements at cardinal edges (within radius)', () => {
+      // Top: center x, near top edge
+      expect(isWithinSafeCircle(170, 20, 50, 30)).toBe(true);
+
+      // Bottom: center x, near bottom edge
+      expect(isWithinSafeCircle(170, 340, 50, 30)).toBe(true);
+
+      // Left: near left edge, center y
+      expect(isWithinSafeCircle(20, 170, 30, 50)).toBe(true);
+
+      // Right: near right edge, center y
+      expect(isWithinSafeCircle(340, 170, 30, 50)).toBe(true);
+    });
+
+    it('rejects elements in corners (extend beyond safe radius)', () => {
+      // Top-left corner
+      expect(isWithinSafeCircle(10, 10, 30, 30)).toBe(false);
+
+      // Top-right corner
+      expect(isWithinSafeCircle(350, 10, 30, 30)).toBe(false);
+
+      // Bottom-left corner
+      expect(isWithinSafeCircle(10, 350, 30, 30)).toBe(false);
+
+      // Bottom-right corner
+      expect(isWithinSafeCircle(350, 350, 30, 30)).toBe(false);
+    });
+
+    it('accepts small elements anywhere within safe area', () => {
+      // Tiny 1x1 element at corner should still fail (it's at the corner)
+      expect(isWithinSafeCircle(10, 10, 1, 1)).toBe(false);
+
+      // But small element near center should pass
+      expect(isWithinSafeCircle(190, 190, 10, 10)).toBe(true);
+    });
+
+    it('rejects elements where any corner exceeds safe radius', () => {
+      // Element partially in corner: x in bounds but corners exceed circle
+      expect(isWithinSafeCircle(365, 170, 30, 50)).toBe(false);
     });
   });
 });
