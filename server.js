@@ -9,6 +9,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 
 const { getConfig } = require('./lib/config');
 const { logInfo, logError } = require('./lib/logger');
@@ -26,7 +27,21 @@ function createServer(config = {}, detectors = {}) {
   const cfg = getConfig(config, detectors);
   const app = express();
 
+  // Enable proxy trust if running behind a reverse proxy
+  app.set('trust proxy', 1);
+
   app.use(express.json({ limit: '10mb' }));
+
+  // ─── Rate limiters ────────────────────────────────────────────────────────────
+  const loadDesignLimiter = rateLimit({
+    windowMs: 60000, // 60 seconds
+    max: 30, // 30 requests max per IP
+    standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+    legacyHeaders: false, // Disable `X-RateLimit-*` headers
+    handler: (req, res) => {
+      res.status(429).json({ success: false, error: 'Too many design load requests' });
+    }
+  });
 
   // ─── Content Security Policy: nonce-based for stronger XSS protection ─────────
   app.use((req, res, next) => {
@@ -107,7 +122,8 @@ function createServer(config = {}, detectors = {}) {
   });
 
   // ── GET /api/designs/:filename – Load a specific design ──
-  app.get('/api/designs/:filename', (req, res) => {
+  // Rate-limited: 30 requests per 60 seconds per IP (prevents DOS attacks)
+  app.get('/api/designs/:filename', loadDesignLimiter, (req, res) => {
     try {
       const designsDir = path.join(__dirname, 'designs');
       const design = loadDesign(designsDir, req.params.filename);
