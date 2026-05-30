@@ -108,6 +108,45 @@ ipcMain.handle('settings:saveConfig', (event, config) => {
   return { success: true };
 });
 
+// Handle IPC: auto-detect SDK and dev key paths
+ipcMain.handle('settings:autoDetect', () => {
+  const sdkPath = detectSdkPath();
+  const keyPath = getDefaultKeyPath();
+  return {
+    sdkBin: sdkPath || '',
+    devKey: keyPath,
+    sdkFound: !!sdkPath,
+    keyFound: fs.existsSync(keyPath),
+  };
+});
+
+// Scan for Garmin SDK installation
+function detectSdkPath() {
+  const appData = process.env.APPDATA;
+  if (!appData) return null;
+
+  const garminPath = path.join(appData, 'Garmin', 'ConnectIQ', 'Sdks');
+  try {
+    if (!fs.existsSync(garminPath)) return null;
+
+    // Find the latest SDK version (highest version number)
+    const dirs = fs.readdirSync(garminPath);
+    const sdkDirs = dirs
+      .filter(d => d.startsWith('connectiq-sdk-'))
+      .sort((a, b) => b.localeCompare(a)); // reverse sort for latest first
+
+    if (sdkDirs.length === 0) return null;
+
+    const latestSdk = path.join(garminPath, sdkDirs[0], 'bin');
+    if (fs.existsSync(latestSdk)) {
+      return latestSdk;
+    }
+  } catch (err) {
+    // silently fail, return null
+  }
+  return null;
+}
+
 // Handle IPC: generate developer key
 ipcMain.handle('key:generate', async (event, options = {}) => {
   const { outputPath = null, force = false } = options;

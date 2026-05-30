@@ -60,11 +60,23 @@ function initSettings() {
 
   if (!settingsOverlay) return;
 
-  // Load config on init
-  window.electronAPI?.getConfig?.().then(cfg => {
+  // Load config on init and try auto-detect if fields are empty
+  async function loadSettings() {
+    const cfg = await window.electronAPI?.getConfig?.();
     if (cfg.sdkBin) sdkPathInput.value = cfg.sdkBin;
     if (cfg.devKey) devKeyInput.value = cfg.devKey;
-  }).catch(() => {});
+
+    // Auto-detect only if fields are empty
+    if (!cfg.sdkBin || !cfg.devKey) {
+      const detected = await window.electronAPI?.autoDetect?.();
+      if (detected) {
+        if (!cfg.sdkBin && detected.sdkBin) sdkPathInput.value = detected.sdkBin;
+        if (!cfg.devKey && detected.devKey) devKeyInput.value = detected.devKey;
+      }
+    }
+  }
+
+  loadSettings().catch(() => {});
 
   // Browse button handlers
   sdkBrowseBtn?.addEventListener('click', async () => {

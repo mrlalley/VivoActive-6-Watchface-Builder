@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Settings IPC
   getConfig: () => ipcRenderer.invoke('settings:getConfig'),
   saveConfig: (config) => ipcRenderer.invoke('settings:saveConfig', config),
+  autoDetect: () => ipcRenderer.invoke('settings:autoDetect'),
   onSettingsShow: (callback) => ipcRenderer.on('settings:showOverlay', callback),
 
   // File menu events
