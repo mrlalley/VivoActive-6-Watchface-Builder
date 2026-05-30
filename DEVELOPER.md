@@ -565,6 +565,73 @@ const el = {
 
 ---
 
+## Color Format Specification
+
+### Input Format
+
+Colors must be in **hexadecimal `#RRGGBB` format** (case-insensitive):
+- **Format**: `#RRGGBB` where RR, GG, BB are two hex digits (0-9, A-F)
+- **Valid examples**: `#FF0000` (red), `#00FF00` (green), `#0000FF` (blue), `#ffffff` (white)
+- **Validation regex**: `^#[0-9A-Fa-f]{6}$` (exactly 6 hex digits required)
+
+### Validation Rules
+
+| Input | Valid? | Reason |
+|-------|--------|--------|
+| `#FF0000` | ✅ Yes | Standard 6-digit hex |
+| `#ffffff` | ✅ Yes | Case-insensitive |
+| `#AbCdEf` | ✅ Yes | Mixed case allowed |
+| `#FFF` | ❌ No | Only 3 digits (CSS shorthand not supported) |
+| `#FF00` | ❌ No | Only 4 digits |
+| `#FFFFFFFF` | ❌ No | 8 digits (RGBA not supported, only RGB) |
+| `FFFFFF` | ❌ No | Missing hash symbol |
+| `#GGGGGG` | ❌ No | Invalid hex characters |
+| `rgb(255,255,255)` | ❌ No | Wrong format entirely |
+
+### Data Flow
+
+```
+1. User picks color in UI
+   builder/modules/properties.js (HTML5 color picker)
+   ↓
+2. Serialized in design JSON
+   element.color: "#FF0000"
+   ↓
+3. Validated on export
+   lib/validation.js validateColor() ← Regex: ^#[0-9A-Fa-f]{6}$
+   ✓ Rejected if invalid
+   ↓
+4. Converted to Monkey C format
+   lib/generators/monkeyc.js colorLiteral("#FF0000") → "0xFF0000"
+   ↓
+5. Generated in Monkey C source
+   WatchFaceView.mc:
+   dc.setColor(0xFF0000, Gfx.COLOR_TRANSPARENT);
+   dc.drawText(100, 100, font, "Text", 0xFF0000);
+```
+
+### Why Strict Validation Matters
+
+- **No silent failures**: `#FF` wouldn't partially match; `^#[0-9A-Fa-f]{6}$` requires exactly 6 digits
+- **Monkey C compatibility**: Monkey C requires `0xRRGGBB` format (exactly 6 hex digits)
+- **Consistency**: Same color renders identically across all devices
+- **User experience**: Clear error messages if user pastes invalid color
+
+### Implementation Notes
+
+**Validation** ([lib/validation.js:35-43](lib/validation.js#L35-L43)):
+- Function: `validateColor(color)`
+- Throws: `Error` with message if invalid
+- Called by: `validateElement()` when processing each element
+
+**Conversion** ([lib/generators/monkeyc.js:8-11](lib/generators/monkeyc.js#L8-L11)):
+- Function: `colorLiteral(hexColor)`
+- Input: `#RRGGBB` or null
+- Output: `0xRRGGBB` string
+- Assumes: Input is already validated by `validateColor()`
+
+---
+
 ## Dependency Management
 
 ### Version Pinning Strategy

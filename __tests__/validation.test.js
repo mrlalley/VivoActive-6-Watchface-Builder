@@ -57,6 +57,44 @@ describe('Validation', () => {
       expect(() => validateColor(0xFFFFFF)).toThrow('must be a string');
       expect(() => validateColor(null)).toThrow('must be a string');
     });
+
+    it('accepts all uppercase hex', () => {
+      expect(validateColor('#ABCDEF')).toBe(true);
+    });
+
+    it('accepts all lowercase hex', () => {
+      expect(validateColor('#abcdef')).toBe(true);
+    });
+
+    it('accepts black (#000000)', () => {
+      expect(validateColor('#000000')).toBe(true);
+    });
+
+    it('accepts all single-digit variations', () => {
+      expect(validateColor('#000001')).toBe(true);
+      expect(validateColor('#00000F')).toBe(true);
+      expect(validateColor('#0000F0')).toBe(true);
+    });
+
+    it('rejects colors with spaces', () => {
+      expect(() => validateColor('# FFFFFF')).toThrow('invalid color format');
+      expect(() => validateColor('#FFFFFF ')).toThrow('invalid color format');
+    });
+
+    it('rejects 3-digit CSS shorthand', () => {
+      expect(() => validateColor('#FFF')).toThrow('invalid color format');
+      expect(() => validateColor('#000')).toThrow('invalid color format');
+    });
+
+    it('rejects 4-digit colors', () => {
+      expect(() => validateColor('#FF00')).toThrow('invalid color format');
+      expect(() => validateColor('#ABCD')).toThrow('invalid color format');
+    });
+
+    it('rejects 8-digit RGBA colors', () => {
+      expect(() => validateColor('#FFFFFFFF')).toThrow('invalid color format');
+      expect(() => validateColor('#00000000')).toThrow('invalid color format');
+    });
   });
 
   describe('validateElement', () => {

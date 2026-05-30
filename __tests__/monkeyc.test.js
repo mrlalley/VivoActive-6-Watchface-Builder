@@ -28,6 +28,26 @@ describe('Monkey C Generator', () => {
       expect(colorLiteral('#FFF')).toBe('0x000FFF');
       expect(colorLiteral('#F')).toBe('0x00000F');
     });
+
+    it('handles edge case colors (min/max valid)', () => {
+      expect(colorLiteral('#000000')).toBe('0x000000'); // Black
+      expect(colorLiteral('#FFFFFF')).toBe('0xFFFFFF'); // White
+    });
+
+    it('preserves color precision for all hex combinations', () => {
+      expect(colorLiteral('#123456')).toBe('0x123456');
+      expect(colorLiteral('#ABCDEF')).toBe('0xABCDEF');
+      expect(colorLiteral('#abcdef')).toBe('0xABCDEF');
+    });
+
+    it('is case-insensitive and normalizes to uppercase', () => {
+      const red1 = colorLiteral('#ff0000');
+      const red2 = colorLiteral('#FF0000');
+      const red3 = colorLiteral('#Ff0000');
+      expect(red1).toBe(red2);
+      expect(red2).toBe(red3);
+      expect(red1).toBe('0xFF0000');
+    });
   });
 
   describe('generateDataFetch', () => {
