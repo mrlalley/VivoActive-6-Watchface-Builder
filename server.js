@@ -14,10 +14,12 @@ const { waitForSimulator } = require('./lib/simulator');
 const { generateProjectFiles } = require('./lib/generators');
 
 // ─── Server factory ────────────────────────────────────────────────────────────
-// Creates and returns an Express app with all routes configured
+// Creates and returns an Express app with all routes configured.
+// config: user config object with overrides (from electron-store or params)
+// detectors: optional detector functions { detectSdkPath, getDefaultKeyPath } for auto-detection
 
-function createServer(config = {}) {
-  const cfg = getConfig(config);
+function createServer(config = {}, detectors = {}) {
+  const cfg = getConfig(config, detectors);
   const app = express();
 
   app.use(express.json({ limit: '10mb' }));

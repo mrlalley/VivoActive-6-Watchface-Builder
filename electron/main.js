@@ -1,9 +1,11 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const Store = require('electron-store');
 const { createServer } = require('../server');
 const { generateKey, getDefaultKeyPath, validateKeyFile } = require('../lib/keygen');
+const { getDefaultSdkBasePath, scanForLatestSdk } = require('../lib/config');
 
 let mainWindow;
 let expressServer;
@@ -69,7 +71,8 @@ function createWindow() {
   });
 }
 
-// Start the Express server with stored config
+// Start the Express server with stored config.
+// Uses electron-store values if available, otherwise auto-detects or uses platform defaults.
 function startServer() {
   return new Promise((resolve) => {
     const cfg = {
@@ -78,7 +81,14 @@ function startServer() {
       exportDir: path.join(app.getPath('documents'), 'WatchFaceBuilder', 'exported'),
       tempDir: path.join(app.getPath('temp'), 'CIQPreview'),
     };
-    const expressApp = createServer(cfg);
+
+    // Pass detector functions to config layer for platform-aware auto-detection
+    const detectors = {
+      detectSdkPath: detectSdkPath,
+      getDefaultKeyPath: getDefaultKeyPath,
+    };
+
+    const expressApp = createServer(cfg, detectors);
     expressServer = expressApp.listen(0, '127.0.0.1', () => {
       const addr = expressServer.address();
       serverPort = addr.port;
@@ -131,30 +141,33 @@ ipcMain.handle('settings:autoDetect', () => {
   };
 });
 
-// Scan for Garmin SDK installation
+// Detect Garmin SDK installation across Windows, macOS, and Linux.
+// Uses platform-aware defaults from config.js and scans for latest SDK version.
 function detectSdkPath() {
-  const appData = process.env.APPDATA;
-  if (!appData) return null;
+  const platform = process.platform;
+  let basePaths = [];
 
-  const garminPath = path.join(appData, 'Garmin', 'ConnectIQ', 'Sdks');
-  try {
-    if (!fs.existsSync(garminPath)) return null;
-
-    // Find the latest SDK version (highest version number)
-    const dirs = fs.readdirSync(garminPath);
-    const sdkDirs = dirs
-      .filter(d => d.startsWith('connectiq-sdk-'))
-      .sort((a, b) => b.localeCompare(a)); // reverse sort for latest first
-
-    if (sdkDirs.length === 0) return null;
-
-    const latestSdk = path.join(garminPath, sdkDirs[0], 'bin');
-    if (fs.existsSync(latestSdk)) {
-      return latestSdk;
+  if (platform === 'win32') {
+    // Windows: %APPDATA%\Garmin\ConnectIQ\Sdks\
+    const appData = process.env.APPDATA;
+    if (appData) {
+      basePaths.push(path.join(appData, 'Garmin', 'ConnectIQ', 'Sdks'));
     }
-  } catch (err) {
-    // silently fail, return null
+  } else if (platform === 'darwin') {
+    // macOS: ~/Library/Application Support/Garmin/ConnectIQ/Sdks/
+    basePaths.push(path.join(os.homedir(), 'Library', 'Application Support', 'Garmin', 'ConnectIQ', 'Sdks'));
+  } else {
+    // Linux: ~/.local/share/Garmin/ConnectIQ/Sdks/ (preferred) or /opt/garmin/connectiq/sdk
+    basePaths.push(path.join(os.homedir(), '.local', 'share', 'Garmin', 'ConnectIQ', 'Sdks'));
+    basePaths.push('/opt/garmin/connectiq/sdk');
   }
+
+  // Try each path in order, using scanForLatestSdk from config.js
+  for (const basePath of basePaths) {
+    const found = scanForLatestSdk(basePath);
+    if (found) return found;
+  }
+
   return null;
 }
 

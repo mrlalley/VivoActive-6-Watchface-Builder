@@ -41,3 +41,4 @@ CONFIGURATION FILES:
   jest.config.js:                    17 lines
 
 TOTAL PROJECT SIZE (excluding node_modules, build artifacts):
+1.3G	.
