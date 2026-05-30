@@ -149,4 +149,71 @@ describe('Design Store Module', () => {
       expect(Array.isArray(design.elements)).toBe(true);
     });
   });
+
+  describe('Concurrent saves', () => {
+    it('handles rapid concurrent saves to the same file without data corruption', () => {
+      const elem1 = {
+        id: 1,
+        fieldId: 'hours',
+        label: 'Hours',
+        x: 100,
+        y: 100,
+        width: 50,
+        height: 50,
+        zIndex: 0
+      };
+
+      const elem2 = {
+        id: 2,
+        fieldId: 'minutes',
+        label: 'Minutes',
+        x: 150,
+        y: 150,
+        width: 50,
+        height: 50,
+        zIndex: 1
+      };
+
+      // Launch two concurrent saves to the same project
+      // (no await/Promise here - they execute nearly simultaneously)
+      saveDesign(testDir, 'ConcurrentFace', [elem1]);
+      saveDesign(testDir, 'ConcurrentFace', [elem2]);
+
+      // Load the final design - should have second save's data
+      const design = loadDesign(testDir, 'ConcurrentFace.json');
+      expect(design.projectName).toBe('ConcurrentFace');
+      expect(design.elements).toHaveLength(1);
+      expect(design.elements[0].id).toBe(2);
+      expect(design.elements[0].fieldId).toBe('minutes');
+    });
+
+    it('does not leave stray temp files after concurrent saves', () => {
+      const elem = {
+        id: 1,
+        fieldId: 'hours',
+        label: 'Hours',
+        x: 100,
+        y: 100,
+        width: 50,
+        height: 50,
+        zIndex: 0
+      };
+
+      // Perform 5 rapid saves
+      for (let i = 0; i < 5; i++) {
+        saveDesign(testDir, `Face${i}`, [elem]);
+      }
+
+      // List all files in testDir
+      const files = fs.readdirSync(testDir);
+
+      // Should only have 5 .json files (one per save)
+      const jsonFiles = files.filter(f => f.endsWith('.json'));
+      expect(jsonFiles).toHaveLength(5);
+
+      // Should have no .tmp files remaining
+      const tmpFiles = files.filter(f => f.endsWith('.tmp'));
+      expect(tmpFiles).toHaveLength(0);
+    });
+  });
 });
