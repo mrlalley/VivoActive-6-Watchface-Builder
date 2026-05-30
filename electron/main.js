@@ -19,6 +19,19 @@ const store = new Store({
   },
 });
 
+// Rate limiter for IPC handlers: prevents rapid-fire calls causing resource exhaustion
+function withRateLimit(handlerName, handler, delayMs = 1000) {
+  let lastCall = 0;
+  ipcMain.handle(handlerName, async (event, ...args) => {
+    const now = Date.now();
+    if (now - lastCall < delayMs) {
+      throw new Error(`Rate limited: please wait ${Math.ceil((delayMs - (now - lastCall)) / 1000)}s before retrying`);
+    }
+    lastCall = now;
+    return handler(event, ...args);
+  });
+}
+
 // Helper to resolve binary paths in both dev and packaged modes
 function resolveBinaryPath(relativePath) {
   if (process.env.ELECTRON_IS_DEV) {
@@ -117,8 +130,8 @@ ipcMain.handle('settings:getConfig', () => {
   };
 });
 
-// Handle IPC: save config
-ipcMain.handle('settings:saveConfig', (event, config) => {
+// Handle IPC: save config (rate-limited to prevent config thrashing)
+withRateLimit('settings:saveConfig', (event, config) => {
   store.set('sdkBin', config.sdkBin);
   store.set('devKey', config.devKey);
   // Schedule app relaunch after a brief delay to allow response to reach renderer
@@ -127,10 +140,10 @@ ipcMain.handle('settings:saveConfig', (event, config) => {
     app.exit(0);
   }, 100);
   return { success: true };
-});
+}, 2000);
 
-// Handle IPC: auto-detect SDK and dev key paths
-ipcMain.handle('settings:autoDetect', () => {
+// Handle IPC: auto-detect SDK and dev key paths (rate-limited to prevent filesystem spam)
+withRateLimit('settings:autoDetect', (event) => {
   const sdkPath = detectSdkPath();
   const keyPath = getDefaultKeyPath();
   return {
@@ -139,7 +152,7 @@ ipcMain.handle('settings:autoDetect', () => {
     sdkFound: !!sdkPath,
     keyFound: fs.existsSync(keyPath),
   };
-});
+}, 2000);
 
 // Detect Garmin SDK installation across Windows, macOS, and Linux.
 // Uses platform-aware defaults from config.js and scans for latest SDK version.
@@ -171,8 +184,8 @@ function detectSdkPath() {
   return null;
 }
 
-// Handle IPC: generate developer key
-ipcMain.handle('key:generate', async (event, options = {}) => {
+// Handle IPC: generate developer key (rate-limited to prevent key generation spam)
+withRateLimit('key:generate', async (event, options = {}) => {
   const { outputPath = null, force = false } = options;
   const resolvedPath = outputPath ? path.resolve(outputPath) : getDefaultKeyPath();
 
@@ -187,7 +200,7 @@ ipcMain.handle('key:generate', async (event, options = {}) => {
   } catch (err) {
     return { success: false, error: err.message, path: resolvedPath };
   }
-});
+}, 5000);
 
 // Handle IPC: open folder in VS Code
 ipcMain.handle('shell:openVSCode', async (event, folderPath) => {
