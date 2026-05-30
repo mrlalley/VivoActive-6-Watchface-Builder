@@ -7,8 +7,9 @@
   "main": "electron/main.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js",
+    "start": "electron .",
     "dev": "electron .",
+    "server": "node server.js",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "test": "jest",
