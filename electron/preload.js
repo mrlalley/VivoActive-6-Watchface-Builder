@@ -4,7 +4,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   // Return the port the Express server is listening on
   getPort: async () => {
-    // The port is passed as a query parameter by main.js
     const params = new URLSearchParams(window.location.search);
     return params.get('port') || null;
   },
@@ -13,6 +12,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openFileDialog: (options) => {
     return ipcRenderer.invoke('dialog:open', options);
   },
+
+  // Settings IPC
+  getConfig: () => ipcRenderer.invoke('settings:getConfig'),
+  saveConfig: (config) => ipcRenderer.invoke('settings:saveConfig', config),
+  onSettingsShow: (callback) => ipcRenderer.on('settings:showOverlay', callback),
 
   // Return the platform (win32, darwin, linux)
   platform: process.platform,

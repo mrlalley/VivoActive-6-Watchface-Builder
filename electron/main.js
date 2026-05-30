@@ -1,10 +1,19 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
 const path = require('path');
+const Store = require('electron-store');
 const { createServer } = require('../server');
 
 let mainWindow;
 let expressServer;
 let serverPort;
+
+// Initialize persistent config store
+const store = new Store({
+  defaults: {
+    sdkBin: '',
+    devKey: '',
+  },
+});
 
 // Create and show the main window
 function createWindow() {
@@ -41,10 +50,14 @@ function createWindow() {
   });
 }
 
-// Start the Express server and wait for it to be listening
+// Start the Express server with stored config
 function startServer() {
   return new Promise((resolve) => {
-    const expressApp = createServer();
+    const cfg = {
+      sdkBin: store.get('sdkBin'),
+      devKey: store.get('devKey'),
+    };
+    const expressApp = createServer(cfg);
     expressServer = expressApp.listen(0, '127.0.0.1', () => {
       const addr = expressServer.address();
       serverPort = addr.port;
@@ -54,10 +67,30 @@ function startServer() {
   });
 }
 
+// Check if config is complete
+function hasCompleteConfig() {
+  return store.get('sdkBin') && store.get('devKey');
+}
+
 // Handle IPC: open file dialog
 ipcMain.handle('dialog:open', async (event, options) => {
   const result = await dialog.showOpenDialog(mainWindow, options);
   return result;
+});
+
+// Handle IPC: get current config
+ipcMain.handle('settings:getConfig', () => {
+  return {
+    sdkBin: store.get('sdkBin') || '',
+    devKey: store.get('devKey') || '',
+  };
+});
+
+// Handle IPC: save config
+ipcMain.handle('settings:saveConfig', (event, config) => {
+  store.set('sdkBin', config.sdkBin);
+  store.set('devKey', config.devKey);
+  return { success: true };
 });
 
 // App lifecycle
@@ -65,6 +98,11 @@ app.on('ready', async () => {
   await startServer();
   createWindow();
   createMenu();
+
+  // Show Settings if config is incomplete
+  if (!hasCompleteConfig()) {
+    mainWindow.webContents.send('settings:showOverlay');
+  }
 });
 
 app.on('window-all-closed', () => {
@@ -106,8 +144,7 @@ function createMenu() {
           label: 'Settings',
           accelerator: 'Ctrl+,',
           click: () => {
-            // TODO: In Phase 4, open Settings window or overlay
-            console.log('[Menu] Settings clicked');
+            mainWindow.webContents.send('settings:showOverlay');
           },
         },
         { type: 'separator' },

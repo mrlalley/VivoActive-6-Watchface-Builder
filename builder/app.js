@@ -36,9 +36,90 @@ function tryRestore() {
   }
 }
 
+// ─── Settings ────────────────────────────────────────────────────────────────
+
+function initSettings() {
+  // Listen for Settings overlay show event from main process
+  if (window.electronAPI?.onSettingsShow) {
+    window.electronAPI.onSettingsShow(() => showSettings());
+  }
+
+  const settingsOverlay = document.getElementById('settings-overlay');
+  const saveBtn = document.getElementById('settings-save');
+  const cancelBtn = document.getElementById('settings-cancel');
+  const sdkPathInput = document.getElementById('settings-sdk-path');
+  const devKeyInput = document.getElementById('settings-dev-key');
+  const sdkBrowseBtn = document.getElementById('settings-sdk-browse');
+  const keyBrowseBtn = document.getElementById('settings-key-browse');
+
+  if (!settingsOverlay) return;
+
+  // Load config on init
+  window.electronAPI?.getConfig?.().then(cfg => {
+    if (cfg.sdkBin) sdkPathInput.value = cfg.sdkBin;
+    if (cfg.devKey) devKeyInput.value = cfg.devKey;
+  }).catch(() => {});
+
+  // Browse button handlers
+  sdkBrowseBtn?.addEventListener('click', async () => {
+    const result = await window.electronAPI?.openFileDialog?.({
+      title: 'Select SDK bin directory',
+      properties: ['openDirectory'],
+    });
+    if (result?.filePaths?.[0]) {
+      sdkPathInput.value = result.filePaths[0];
+    }
+  });
+
+  keyBrowseBtn?.addEventListener('click', async () => {
+    const result = await window.electronAPI?.openFileDialog?.({
+      title: 'Select developer_key.der',
+      properties: ['openFile'],
+      filters: [{ name: 'DER Files', extensions: ['der'] }],
+    });
+    if (result?.filePaths?.[0]) {
+      devKeyInput.value = result.filePaths[0];
+    }
+  });
+
+  // Save button
+  saveBtn?.addEventListener('click', async () => {
+    if (!sdkPathInput.value.trim() || !devKeyInput.value.trim()) {
+      alert('Please fill in both SDK path and developer key path.');
+      return;
+    }
+    const result = await window.electronAPI?.saveConfig?.({
+      sdkBin: sdkPathInput.value.trim(),
+      devKey: devKeyInput.value.trim(),
+    });
+    if (result?.success) {
+      hideSettings();
+    }
+  });
+
+  // Cancel button
+  cancelBtn?.addEventListener('click', hideSettings);
+
+  // Click overlay to close (on backdrop only)
+  settingsOverlay?.addEventListener('click', (e) => {
+    if (e.target === settingsOverlay) hideSettings();
+  });
+}
+
+function showSettings() {
+  const overlay = document.getElementById('settings-overlay');
+  if (overlay) overlay.classList.remove('hidden');
+}
+
+function hideSettings() {
+  const overlay = document.getElementById('settings-overlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 function init() {
+  initSettings();
   buildPalette();
 
   initCanvas(
@@ -54,6 +135,7 @@ function init() {
   document.getElementById('btn-grid').addEventListener('click', toggleGrid);
   document.getElementById('btn-bring-forward').addEventListener('click', () => { bringForward(); scheduleAutoSave(); });
   document.getElementById('btn-send-backward').addEventListener('click', () => { sendBackward(); scheduleAutoSave(); });
+  document.getElementById('btn-settings').addEventListener('click', showSettings);
 
   // ── Toolbar: save/load ──
   document.getElementById('btn-new').addEventListener('click', handleNew);

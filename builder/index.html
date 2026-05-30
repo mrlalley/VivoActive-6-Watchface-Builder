@@ -26,6 +26,7 @@
       <div class="spacer"></div>
       <div class="toolbar-group">
         <span id="save-indicator" class="save-indicator" title="Design auto-saved">● Saved</span>
+        <button id="btn-settings" class="btn" title="SDK configuration (Ctrl+,)">⚙ Settings</button>
         <button id="btn-new" class="btn" title="Start a new design">New</button>
         <button id="btn-save-json" class="btn" title="Download design as JSON file">💾 Save</button>
         <button id="btn-load-json" class="btn" title="Load a previously saved JSON file">📂 Load</button>
@@ -87,6 +88,43 @@
       <pre id="log-content"></pre>
       <div class="log-actions">
         <button id="log-open-vscode" class="btn">Open in VS Code</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Settings Overlay ──────────────────────────────────────────────── -->
+  <div id="settings-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Settings — Garmin SDK Configuration</h3>
+      </div>
+      <div style="padding: 20px; overflow-y: auto; max-height: 60vh;">
+        <p style="margin-bottom: 16px; color: #aaa; font-size: 13px;">
+          Configure the Garmin Connect IQ SDK paths so the builder can export and build watch faces.
+        </p>
+
+        <label style="display: flex; flex-direction: column; margin-bottom: 16px;">
+          <span style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #ccc;">SDK Bin Directory</span>
+          <span style="font-size: 11px; color: #888; margin-bottom: 6px;">
+            Path to monkeyc.bat (e.g., C:\Users\...\Garmin\ConnectIQ\Sdks\...\bin)
+          </span>
+          <input id="settings-sdk-path" type="text" placeholder="C:\..." style="padding: 8px; background: #2e2e2e; border: 1px solid #3a3a3a; border-radius: 3px; color: #fff; font-size: 12px;">
+          <button id="settings-sdk-browse" class="btn" style="margin-top: 6px; width: 100%;">Browse…</button>
+        </label>
+
+        <label style="display: flex; flex-direction: column; margin-bottom: 16px;">
+          <span style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #ccc;">Developer Key</span>
+          <span style="font-size: 11px; color: #888; margin-bottom: 6px;">
+            Path to developer_key.der (usually C:\Users\...\\.garmin\developer_key.der)
+          </span>
+          <input id="settings-dev-key" type="text" placeholder="C:\..." style="padding: 8px; background: #2e2e2e; border: 1px solid #3a3a3a; border-radius: 3px; color: #fff; font-size: 12px;">
+          <button id="settings-key-browse" class="btn" style="margin-top: 6px; width: 100%;">Browse…</button>
+        </label>
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #3a3a3a; display: flex; gap: 8px;">
+          <button id="settings-save" class="btn btn-primary" style="flex: 1;">Save Settings</button>
+          <button id="settings-cancel" class="btn" style="flex: 1;">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
