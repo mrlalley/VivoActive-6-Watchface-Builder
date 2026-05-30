@@ -74,7 +74,14 @@ function createServer(config = {}) {
 
     logInfo('export:building', { prgName, outPrg });
 
-    execFile(cfg.monkeyc, ['-o', outPrg, '-f', jungle, '-y', cfg.devKey, '-d', 'vivoactive6', '--warn'], { timeout: 60000 }, (err, stdout, stderr) => {
+    // On Windows, use cmd.exe to run .bat files; on Unix, run directly
+    const isWindows = process.platform === 'win32';
+    const cmd = isWindows ? 'cmd.exe' : cfg.monkeyc;
+    const args = isWindows
+      ? ['/c', cfg.monkeyc, '-o', outPrg, '-f', jungle, '-y', cfg.devKey, '-d', 'vivoactive6', '--warn']
+      : ['-o', outPrg, '-f', jungle, '-y', cfg.devKey, '-d', 'vivoactive6', '--warn'];
+
+    execFile(cmd, args, { timeout: 60000 }, (err, stdout, stderr) => {
       const log = [stdout, stderr].filter(Boolean).join('\n').trim();
       if (err) {
         logError('export:build-failed', { code: err.code, signal: err.signal, message: err.message });
@@ -172,7 +179,14 @@ function createServer(config = {}) {
 
     logInfo('preview:building', { outPrg });
 
-    execFile(cfg.monkeyc, ['-o', outPrg, '-f', jungle, '-y', cfg.devKey, '-d', 'vivoactive6', '--warn'], { timeout: 60000 }, (buildErr, stdout, stderr) => {
+    // On Windows, use cmd.exe to run .bat files; on Unix, run directly
+    const isWindows = process.platform === 'win32';
+    const cmd = isWindows ? 'cmd.exe' : cfg.monkeyc;
+    const args = isWindows
+      ? ['/c', cfg.monkeyc, '-o', outPrg, '-f', jungle, '-y', cfg.devKey, '-d', 'vivoactive6', '--warn']
+      : ['-o', outPrg, '-f', jungle, '-y', cfg.devKey, '-d', 'vivoactive6', '--warn'];
+
+    execFile(cmd, args, { timeout: 60000 }, (buildErr, stdout, stderr) => {
       const log = [stdout, stderr].filter(Boolean).join('\n').trim();
       if (buildErr) {
         logError('preview:build-failed', { code: buildErr.code, signal: buildErr.signal });
