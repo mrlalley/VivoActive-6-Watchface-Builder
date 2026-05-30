@@ -2,6 +2,9 @@
 // HTTP routing layer for the watch face builder backend.
 // Complex business logic extracted to lib/build.js, lib/preview.js, and lib/design-store.js
 
+// Load environment variables from .env file (if present)
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const fs = require('fs');

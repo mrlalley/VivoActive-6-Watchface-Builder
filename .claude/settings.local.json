@@ -16,7 +16,10 @@
       "Bash(kill %1)",
       "Bash(netstat -ano)",
       "Bash(findstr \"LISTEN\")",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(git fetch *)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --tree-filter 'rm -rf dist-final' --force HEAD)",
+      "Bash(grep -n \"app\\\\\\\\.get\\\\|app\\\\\\\\.post\\\\|app\\\\\\\\.listen\\\\|return app\\\\|module.exports\" server.js)"
     ]
   }
 }

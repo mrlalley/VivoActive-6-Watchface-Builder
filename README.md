@@ -24,6 +24,51 @@ npm run dev
 
 ---
 
+## Setup: Configure the Garmin SDK
+
+The builder needs to know where your Garmin Connect IQ SDK and developer key are located. Configuration is loaded in this priority order:
+
+1. **Environment variables** (from `.env` file or shell environment)
+2. **Auto-detection** from standard installation paths
+3. **Platform defaults** (Windows, macOS, Linux)
+
+### Configure with .env (recommended for custom paths)
+
+If your SDK or developer key is in a non-standard location, copy `.env.example` to `.env` and fill in the paths:
+
+```powershell
+# Windows PowerShell
+Copy-Item .env.example .env
+notepad .env
+# Edit and save with your actual paths
+
+# Or on macOS/Linux
+cp .env.example .env
+nano .env
+```
+
+### Environment variables
+
+| Variable | Purpose | Example |
+|----------|---------|---------|
+| `GARMIN_SDK_BIN` | Path to SDK `/bin` directory | `C:\Users\you\…\connectiq-sdk-9.1.0-…\bin` |
+| `GARMIN_DEV_KEY` | Path to developer key `.der` file | `C:\Users\you\.garmin\developer_key.der` |
+| `GARMIN_EXPORT_DIR` | Where to write exported projects | `C:\MyProjects\exports` |
+| `GARMIN_TEMP_DIR` | Temp directory for build artifacts | (uses system temp by default) |
+
+Leave these blank (or omit `.env`) to use auto-detection and platform defaults.
+
+### Health check
+
+On startup, the app checks if the SDK and developer key exist. If either is missing, a warning banner appears:
+
+- **"SDK not found"** → Install from https://developer.garmin.com/connect-iq/sdk/
+- **"Developer key not found"** → Generate in Settings → Generate New Key
+
+The app still launches; export/preview will fail with a clear error if dependencies are missing.
+
+---
+
 ## Environment
 
 | Component | Version / Path |
