@@ -11,6 +11,7 @@ const { logInfo, logError } = require('./lib/logger');
 const { buildProject } = require('./lib/build');
 const { previewInSimulator } = require('./lib/preview');
 const { saveDesign, listDesigns, loadDesign } = require('./lib/design-store');
+const { buildQueue, designSaveQueue } = require('./lib/queue');
 
 // ─── Server factory ────────────────────────────────────────────────────────────
 // Creates and returns an Express app with all routes configured.
@@ -24,11 +25,27 @@ function createServer(config = {}, detectors = {}) {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.static(path.join(__dirname, 'builder')));
 
+  // ─── Content Security Policy: restrict fetch/script/style origins ───────────────
+  app.use((req, res, next) => {
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+    );
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    next();
+  });
+
   // ── POST /api/export – Export and build .prg file ──
   app.post('/api/export', async (req, res) => {
     const { elements = [], projectName = 'MyWatchFace' } = req.body;
     try {
-      const result = await buildProject(cfg, projectName, elements);
+      // Serialize builds: only one at a time (prevents file contention)
+      const result = await buildQueue.add(
+        () => buildProject(cfg, projectName, elements),
+        `export:${projectName}`
+      );
       res.json(result);
     } catch (err) {
       logError('export:error', { reason: err.message });
@@ -37,11 +54,15 @@ function createServer(config = {}, detectors = {}) {
   });
 
   // ── POST /api/save-design – Save design to disk ──
-  app.post('/api/save-design', (req, res) => {
+  app.post('/api/save-design', async (req, res) => {
     const { projectName = 'MyWatchFace', elements = [] } = req.body;
     try {
       const designsDir = path.join(__dirname, 'designs');
-      const result = saveDesign(designsDir, projectName, elements);
+      // Serialize design saves: only one at a time (prevents overwrite loss)
+      const result = await designSaveQueue.add(
+        () => saveDesign(designsDir, projectName, elements),
+        `save-design:${projectName}`
+      );
       res.json(result);
     } catch (err) {
       logError('save-design:error', { reason: err.message });
@@ -77,13 +98,18 @@ function createServer(config = {}, detectors = {}) {
   app.post('/api/preview', async (req, res) => {
     const { elements = [], projectName = 'WatchFacePreview' } = req.body;
     try {
-      const buildResult = await buildProject(cfg, projectName, elements);
+      // Serialize builds: only one at a time (prevents file contention)
+      const buildResult = await buildQueue.add(
+        () => buildProject(cfg, projectName, elements),
+        `preview:${projectName}`
+      );
       if (!buildResult.success) {
         return res.json(buildResult);
       }
       // Fire off preview work asynchronously (simulator launch, .prg loading)
-      previewInSimulator(cfg, buildResult.prgPath);
-      res.json({ success: true, message: 'Starting simulator…', log: buildResult.log });
+      // Pass requestId to ensure temp files don't collide if multiple previews run
+      previewInSimulator(cfg, buildResult.prgPath, buildResult.requestId);
+      res.json({ success: true, message: 'Starting simulator…', log: buildResult.log, requestId: buildResult.requestId });
     } catch (err) {
       logError('preview:error', { reason: err.message });
       res.json({ success: false, error: err.message, log: '' });
@@ -106,8 +132,8 @@ if (require.main === module) {
     const actualPort = addr.port;
     const cfg = getConfig();
     console.log(`Watch Face Builder  →  http://127.0.0.1:${actualPort}`);
-    console.log(`SDK bin:            ${cfg.sdkBin}`);
-    console.log(`Developer key:      ${cfg.devKey}`);
-    console.log(`Export dir:         ${cfg.exportDir}`);
+    console.log(`SDK bin:            ${path.basename(path.dirname(cfg.sdkBin))}`);
+    console.log(`Developer key:      ${path.basename(cfg.devKey)}`);
+    console.log(`Export dir:         ${path.basename(cfg.exportDir)}`);
   });
 }
