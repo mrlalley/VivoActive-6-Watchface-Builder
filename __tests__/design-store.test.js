@@ -121,14 +121,17 @@ describe('Design Store Module', () => {
       expect(() => loadDesign(testDir, 'bad-elements.json')).toThrow('must be an array');
     });
 
-    it('rejects invalid element structure', () => {
+    it('returns warning for invalid element structure', () => {
       fs.mkdirSync(testDir, { recursive: true });
       fs.writeFileSync(path.join(testDir, 'bad-elem.json'), JSON.stringify({
         projectName: 'Test',
         elements: [{ id: 'not-number' }]
       }));
 
-      expect(() => loadDesign(testDir, 'bad-elem.json')).toThrow('Invalid design elements');
+      const design = loadDesign(testDir, 'bad-elem.json');
+      expect(design.projectName).toBe('Test');
+      expect(design.validationWarning).toBeDefined();
+      expect(design.requiresConfirmation).toBe(true);
     });
 
     it('rejects negative nextId', () => {

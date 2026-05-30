@@ -221,7 +221,12 @@ function createServer(config = {}, detectors = {}) {
     try {
       const designsDir = path.join(__dirname, 'designs');
       const design = loadDesign(designsDir, req.params.filename);
-      res.json({ success: true, design });
+      res.json({
+        success: true,
+        design,
+        validationWarning: design.validationWarning || null,
+        requiresConfirmation: design.requiresConfirmation || false,
+      });
     } catch (err) {
       logError('designs:load-error', { reason: err.message });
       res.json({ success: false, error: err.message });

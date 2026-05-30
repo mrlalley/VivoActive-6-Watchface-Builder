@@ -128,7 +128,19 @@
       "Bash(Stop-Process -Force -ErrorAction SilentlyContinue)",
       "Bash(Start-Sleep -Milliseconds 500)",
       "Bash(Select-String -Path C:\\\\Users\\\\mr_la\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-mr-la-WatchFace-Builder\\\\2738f29a-725f-4486-97a5-522b15075998\\\\tasks\\\\bj0t4u0nl.output -Pattern \"http://\" -ErrorAction SilentlyContinue)",
-      "Bash(Write-Host \"Server ready\")"
+      "Bash(Write-Host \"Server ready\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\mr_la\\\\WatchFace Builder\" -Recurse -File)",
+      "Bash(Select-Object FullName, Length)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\mr_la\\\\WatchFace Builder\" -Recurse -File | Select-Object FullName, @{Name=\"SizeKB\";Expression={[math]::Round\\($_.Length/1KB, 2\\)}} | Sort-Object FullName | Format-Table -AutoSize)",
+      "Bash(wc -l \"C:\\\\Users\\\\mr_la\\\\WatchFace Builder\"\\\\lib\\\\*.js \"C:\\\\Users\\\\mr_la\\\\WatchFace Builder\"\\\\builder\\\\*.js \"C:\\\\Users\\\\mr_la\\\\WatchFace Builder\"\\\\electron\\\\*.js)",
+      "Read(//c/Users/mr_la/**)",
+      "Bash(xargs wc -l)",
+      "Bash(curl -s \"http://127.0.0.1:60007/api/designs/CorruptedFace.json\")",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s \"http://127.0.0.1:60007/api/designs/DaFace.json\")",
+      "Bash(python -c \"import sys, json; d=json.load\\(sys.stdin\\); print\\(f'requiresConfirmation: {d.get\\(\\\\\"requiresConfirmation\\\\\"\\)}'\\); print\\(f'validationWarning: {d.get\\(\\\\\"validationWarning\\\\\"\\)}'\\)\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project",

@@ -474,6 +474,111 @@ function handleLoadJSON(e) {
 
 // ─── Load Design ──────────────────────────────────────────────────────────────
 
+/**
+ * Show a confirmation dialog for design validation warnings.
+ * @param {string} warning - The validation warning message
+ * @returns {Promise<boolean>} True if user clicks "Load Anyway", false if "Cancel"
+ */
+async function showValidationWarningDialog(warning) {
+  return new Promise((resolve) => {
+    const dialog = document.createElement('div');
+    dialog.className = 'validation-warning-dialog';
+    dialog.innerHTML = `
+      <div class="validation-warning-overlay" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+      ">
+        <div style="
+          background: #1e1e1e;
+          border: 1px solid #e05050;
+          border-radius: 5px;
+          padding: 24px;
+          max-width: 500px;
+          color: #fff;
+          font-family: system-ui, -apple-system, sans-serif;
+        ">
+          <h2 style="margin: 0 0 12px 0; color: #e05050; font-size: 18px;">
+            ⚠️ Design Validation Warning
+          </h2>
+          <p style="margin: 0 0 16px 0; color: #ccc; line-height: 1.5; white-space: pre-wrap;">
+            ${warning}
+          </p>
+          <p style="margin: 0 0 20px 0; color: #888; font-size: 12px;">
+            This design has elements positioned outside the safe display area. Loading it may cause export failures.
+          </p>
+          <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="cancel-btn" style="
+              padding: 8px 16px;
+              background: #3a3a3a;
+              border: 1px solid #4a4a4a;
+              border-radius: 3px;
+              color: #fff;
+              cursor: pointer;
+              font-size: 14px;
+              transition: background 0.2s;
+            ">Cancel</button>
+            <button class="load-anyway-btn" style="
+              padding: 8px 16px;
+              background: #e05050;
+              border: 1px solid #e05050;
+              border-radius: 3px;
+              color: #fff;
+              cursor: pointer;
+              font-size: 14px;
+              transition: background 0.2s;
+            ">Load Anyway</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(dialog);
+
+    const overlay = dialog.querySelector('.validation-warning-overlay');
+    const cancelBtn = dialog.querySelector('.cancel-btn');
+    const loadBtn = dialog.querySelector('.load-anyway-btn');
+
+    // Hover effects
+    cancelBtn.addEventListener('mouseover', () => cancelBtn.style.background = '#4a4a4a');
+    cancelBtn.addEventListener('mouseout', () => cancelBtn.style.background = '#3a3a3a');
+    loadBtn.addEventListener('mouseover', () => loadBtn.style.background = '#f05050');
+    loadBtn.addEventListener('mouseout', () => loadBtn.style.background = '#e05050');
+
+    const cleanup = () => {
+      dialog.remove();
+    };
+
+    cancelBtn.addEventListener('click', () => {
+      cleanup();
+      resolve(false);
+    });
+
+    loadBtn.addEventListener('click', () => {
+      cleanup();
+      resolve(true);
+    });
+
+    // Close on overlay click (outside the dialog box)
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        cleanup();
+        resolve(false);
+      }
+    });
+
+    // Focus on cancel button for keyboard accessibility
+    cancelBtn.focus();
+  });
+}
+
 async function handleLoadDesignDialog() {
   const overlay = document.getElementById('load-overlay');
   const list = document.getElementById('load-list');
@@ -516,6 +621,15 @@ async function loadDesign(filename) {
     if (!result.success) {
       alert(`Error loading design: ${result.error}`);
       return;
+    }
+
+    // Gate on validation warning before loading
+    if (result.requiresConfirmation && result.validationWarning) {
+      const userConfirmed = await showValidationWarningDialog(result.validationWarning);
+      if (!userConfirmed) {
+        console.info('Design load aborted by user:', filename);
+        return; // Abort load, canvas remains unchanged
+      }
     }
 
     try {
