@@ -408,15 +408,19 @@ async function handleLoadDesignDialog() {
       return;
     }
 
-    list.innerHTML = result.designs.map(design => `
-      <button style="padding: 12px; background: #2e2e2e; border: 1px solid #3a3a3a; border-radius: 3px; color: #fff; text-align: left; cursor: pointer; transition: background 0.2s;"
-              onmouseover="this.style.background='#383838'"
-              onmouseout="this.style.background='#2e2e2e'"
-              onclick="loadDesign('${design.file}')">
+    list.innerHTML = result.designs.map((design, idx) => `
+      <button class="design-item" data-file="${design.file}" data-idx="${idx}" style="padding: 12px; background: #2e2e2e; border: 1px solid #3a3a3a; border-radius: 3px; color: #fff; text-align: left; cursor: pointer; transition: background 0.2s;">
         <div style="font-weight: 600; margin-bottom: 4px;">${design.name}</div>
         <div style="font-size: 11px; color: #aaa;">${design.elementCount} elements • ${new Date(design.savedAt).toLocaleString()}</div>
       </button>
     `).join('');
+
+    // Add event listeners
+    list.querySelectorAll('.design-item').forEach(btn => {
+      btn.addEventListener('mouseover', () => btn.style.background = '#383838');
+      btn.addEventListener('mouseout', () => btn.style.background = '#2e2e2e');
+      btn.addEventListener('click', () => loadDesign(btn.dataset.file));
+    });
   } catch (err) {
     list.innerHTML = `<p style="color: #e05050; font-size: 12px;">Error loading designs: ${err.message}</p>`;
   }
