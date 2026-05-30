@@ -329,11 +329,11 @@ async function handleSaveDesign() {
   if (!projectName) return;
 
   try {
-    const elements = getElements();
+    const state = JSON.parse(exportState());
     const res = await fetch('/api/save-design', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ projectName, elements }),
+      body: JSON.stringify({ projectName, elements: state.elements }),
     });
 
     const result = await res.json();
