@@ -1,9 +1,7 @@
 import { getElements, updateElement, commitHistory, FONT_HEIGHTS } from './elements.js';
+import { CANVAS_SIZE, CANVAS_CENTER, SAFE_AREA_RADIUS as SAFE_RADIUS, EDGE_WARN_DISTANCE as EDGE_WARN_DIST, MIN_ELEMENT_SIZE, ANALOG_RENDER_INTERVAL } from '../constants.js';
 
-export const CANVAS_SIZE = 390;
-const CANVAS_CENTER = 195;
-const SAFE_RADIUS = 185;   // 370/2 — safe area inner circle
-const EDGE_WARN_DIST = 20; // px from safe boundary before red highlight
+export { CANVAS_SIZE }; // Re-export for backward compatibility
 
 // CSS font-size in pixels for each Garmin font, calibrated to the exact TTF metrics.
 // Number fonts use Yantramanav-Regular; system fonts use Roboto-Regular.
@@ -56,7 +54,7 @@ function scheduleAnalogRender() {
   // Only render if analog elements exist
   if (hasAnalogElements()) {
     render();
-    analogRenderTimer = setTimeout(scheduleAnalogRender, 1000);
+    analogRenderTimer = setTimeout(scheduleAnalogRender, ANALOG_RENDER_INTERVAL);
   }
 }
 
@@ -518,7 +516,7 @@ function onMouseMove(e) {
     updateElement(el.id, clamped);
   } else if (dragState.corner === 'tick-radius') {
     // Dragging the top handle changes outer radius
-    const newRadius = Math.max(20, Math.min(CANVAS_CENTER, orig.width - dy));
+    const newRadius = Math.max(MIN_ELEMENT_SIZE, Math.min(CANVAS_CENTER, orig.width - dy));
     updateElement(el.id, { width: Math.round(newRadius) });
   } else {
     let { x, y, width, height } = orig;

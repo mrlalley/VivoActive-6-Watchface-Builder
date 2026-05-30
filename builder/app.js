@@ -3,6 +3,7 @@ import { addElement, createElement, exportState, importState, undo, redo, getEle
 import { initCanvas, render, setSelectedId, toggleSafeArea, toggleGrid, bringForward, sendBackward } from './modules/canvas.js';
 import { showProperties } from './modules/properties.js';
 import { exportProject, previewInSimulator } from './modules/export.js';
+import { DEFAULT_ELEMENT_X, DEFAULT_ELEMENT_Y, MAX_DESIGN_ELEMENTS, SAVE_INDICATOR_HIDE_DELAY } from './constants.js';
 
 const LS_KEY = 'wfb-design';
 let saveTimer = null;
@@ -23,7 +24,7 @@ function flashSaveIndicator() {
   if (!el) return;
   el.classList.add('visible');
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('visible'), 2000);
+  el._t = setTimeout(() => el.classList.remove('visible'), SAVE_INDICATOR_HIDE_DELAY);
 }
 
 function tryRestore() {
@@ -311,7 +312,7 @@ function buildPalette() {
     sideDetails.appendChild(sideSummary);
     const sideItems = document.createElement('div');
     sideItems.className = 'category-items';
-    fields.forEach(f => sideItems.appendChild(fieldItem(f, 'palette-item', () => addFieldAt(f.id, 195, 195))));
+    fields.forEach(f => sideItems.appendChild(fieldItem(f, 'palette-item', () => addFieldAt(f.id, DEFAULT_ELEMENT_X, DEFAULT_ELEMENT_Y))));
     sideDetails.appendChild(sideItems);
     palette.appendChild(sideDetails);
 

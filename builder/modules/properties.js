@@ -1,5 +1,6 @@
 import { updateElement, removeElement, commitHistory, FONT_HEIGHTS } from './elements.js';
 import { render, setSelectedId } from './canvas.js';
+import { CANVAS_SIZE, CANVAS_CENTER } from '../constants.js';
 
 const GARMIN_FONTS = [
   'FONT_XTINY', 'FONT_TINY', 'FONT_SMALL', 'FONT_MEDIUM', 'FONT_LARGE',
@@ -43,12 +44,12 @@ export function showProperties(el, onDelete, onAnyChange) {
     ` : ''}
 
     <div class="prop-group">
-      <label>X (px)<input type="number" id="p-x" value="${Math.round(el.x)}" min="0" max="390"></label>
-      <label>Y (px)<input type="number" id="p-y" value="${Math.round(el.y)}" min="0" max="390"></label>
+      <label>X (px)<input type="number" id="p-x" value="${Math.round(el.x)}" min="0" max="${CANVAS_SIZE}"></label>
+      <label>Y (px)<input type="number" id="p-y" value="${Math.round(el.y)}" min="0" max="${CANVAS_SIZE}"></label>
     </div>
     <div class="prop-group">
-      <label>${widthLabel}<input type="number" id="p-w" value="${Math.round(el.width)}"  min="1" max="390"></label>
-      <label>${heightLabel}<input type="number" id="p-h" value="${Math.round(el.height)}" min="1" max="195"></label>
+      <label>${widthLabel}<input type="number" id="p-w" value="${Math.round(el.width)}"  min="1" max="${CANVAS_SIZE}"></label>
+      <label>${heightLabel}<input type="number" id="p-h" value="${Math.round(el.height)}" min="1" max="${CANVAS_CENTER}"></label>
     </div>
     <div class="prop-group">
       <label>Color<input type="color" id="p-color" value="${el.color || '#ffffff'}"></label>
