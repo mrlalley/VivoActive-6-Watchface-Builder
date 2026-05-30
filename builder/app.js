@@ -32,7 +32,9 @@ function tryRestore() {
   try {
     importState(saved);
     return true;
-  } catch {
+  } catch (err) {
+    console.warn('Failed to restore design from localStorage:', err.message);
+    // Silently fail and start with empty canvas (graceful degradation)
     return false;
   }
 }
@@ -436,7 +438,13 @@ async function loadDesign(filename) {
       return;
     }
 
-    importState(JSON.stringify(result.design));
+    try {
+      importState(JSON.stringify(result.design));
+    } catch (validationErr) {
+      alert(`Design file is corrupted: ${validationErr.message}`);
+      return;
+    }
+
     setSelectedId(null);
     showProperties(null);
     render();

@@ -89,8 +89,61 @@ export function exportState() {
 }
 
 export function importState(json) {
-  const state = JSON.parse(json);
-  elements = state.elements || [];
+  // Validate and parse JSON safely
+  let state;
+  try {
+    state = JSON.parse(json);
+  } catch (parseErr) {
+    throw new Error(`Invalid JSON: ${parseErr.message}`);
+  }
+
+  // Validate state structure
+  if (!state || typeof state !== 'object') {
+    throw new Error('Design data is not an object');
+  }
+
+  // Validate elements array
+  const elementsToLoad = state.elements || [];
+  if (!Array.isArray(elementsToLoad)) {
+    throw new Error('Design elements must be an array');
+  }
+
+  // Validate elements array structure
+  if (elementsToLoad.length > 200) {
+    throw new Error('Design has too many elements (max 200)');
+  }
+
+  // Validate each element has required fields
+  elementsToLoad.forEach((el, idx) => {
+    if (!el || typeof el !== 'object') {
+      throw new Error(`Element ${idx} is not an object`);
+    }
+    if (!Number.isInteger(el.id) || el.id < 0) {
+      throw new Error(`Element ${idx}: id must be a non-negative integer`);
+    }
+    if (typeof el.fieldId !== 'string' || !el.fieldId) {
+      throw new Error(`Element ${idx}: fieldId must be a non-empty string`);
+    }
+    if (typeof el.x !== 'number' || typeof el.y !== 'number') {
+      throw new Error(`Element ${idx}: x and y must be numbers`);
+    }
+    if (typeof el.width !== 'number' || typeof el.height !== 'number') {
+      throw new Error(`Element ${idx}: width and height must be numbers`);
+    }
+    if (!Number.isInteger(el.zIndex) || el.zIndex < 0) {
+      throw new Error(`Element ${idx}: zIndex must be a non-negative integer`);
+    }
+  });
+
+  // Validate nextId if present
+  if (state.nextId !== undefined) {
+    if (!Number.isInteger(state.nextId) || state.nextId < 0) {
+      throw new Error('nextId must be a non-negative integer');
+    }
+  }
+
+  // Load validated state
+  elements = elementsToLoad;
   nextId = state.nextId !== undefined
     ? state.nextId
     : (elements.length > 0 ? Math.max(...elements.map(e => e.id)) + 1 : 1);

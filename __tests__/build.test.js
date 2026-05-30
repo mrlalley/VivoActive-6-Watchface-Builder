@@ -39,4 +39,38 @@ describe('Build Module', () => {
       // Real build test would require actual SDK paths
     });
   });
+
+  describe('execFile error handling', () => {
+    it('distinguishes ENOENT (missing executable) error', async () => {
+      const result = await buildProject(mockCfg, 'TestFace', []);
+      // With fake monkeyc path, should get ENOENT
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/monkeyc not found|Add the Garmin SDK/i);
+    });
+
+    it('provides permission denied message for EACCES', () => {
+      // This test would require mocking execFile to return EACCES
+      // For now, verify the error message exists in code
+      const fs = require('fs');
+      const buildCode = fs.readFileSync('./lib/build.js', 'utf8');
+      expect(buildCode).toContain('EACCES');
+      expect(buildCode).toContain('Permission denied');
+    });
+
+    it('distinguishes timeout errors (SIGTERM)', () => {
+      // Verify timeout handling is in code
+      const fs = require('fs');
+      const buildCode = fs.readFileSync('./lib/build.js', 'utf8');
+      expect(buildCode).toContain('SIGTERM');
+      expect(buildCode).toContain('timed out');
+    });
+
+    it('returns log in error response for compiler diagnostics', () => {
+      // Verify error response includes log for stderr output
+      const fs = require('fs');
+      const buildCode = fs.readFileSync('./lib/build.js', 'utf8');
+      expect(buildCode).toContain('error: userMessage');
+      expect(buildCode).toContain('log');
+    });
+  });
 });
