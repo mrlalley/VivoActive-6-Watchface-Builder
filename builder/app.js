@@ -1,5 +1,5 @@
 import { DATA_FIELDS, CATEGORIES } from './modules/data-fields.js';
-import { addElement, createElement, exportState, importState, undo, redo } from './modules/elements.js';
+import { addElement, createElement, exportState, importState, undo, redo, getElements } from './modules/elements.js';
 import { initCanvas, render, setSelectedId, toggleSafeArea, toggleGrid, bringForward, sendBackward } from './modules/canvas.js';
 import { showProperties } from './modules/properties.js';
 import { exportProject, previewInSimulator } from './modules/export.js';
@@ -329,11 +329,11 @@ async function handleSaveDesign() {
   if (!projectName) return;
 
   try {
-    const state = JSON.parse(exportState());
+    const elements = getElements();
     const res = await fetch('/api/save-design', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ projectName, elements: state.elements }),
+      body: JSON.stringify({ projectName, elements }),
     });
 
     const result = await res.json();
