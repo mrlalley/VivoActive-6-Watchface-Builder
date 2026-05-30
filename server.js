@@ -278,7 +278,9 @@ function createServer(config = {}) {
 
           const prgArg = fs.existsSync(tmpPrg) ? tmpPrg : outPrg;
           logInfo('preview:loading-prg', { prgPath: prgArg });
-          execFile(cfg.monkeydo, [prgArg, 'vivoactive6'], (mdErr, mdOut, mdErr2) => {
+          const mdoCmd = process.platform === 'win32' ? 'cmd.exe' : cfg.monkeydo;
+          const mdoArgs = process.platform === 'win32' ? ['/c', cfg.monkeydo, prgArg, 'vivoactive6'] : [prgArg, 'vivoactive6'];
+          execFile(mdoCmd, mdoArgs, (mdErr, mdOut, mdErr2) => {
             const mdLog = [mdOut, mdErr2].filter(Boolean).join('\n').trim();
             if (mdErr) {
               logError('preview:monkeydo-failed', { code: mdErr.code, message: mdErr.message });

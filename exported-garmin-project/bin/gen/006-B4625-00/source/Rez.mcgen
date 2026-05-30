@@ -11,9 +11,7 @@ module Rez {
 
     module Layouts {
         function WatchFace(dc as Graphics.Dc) as Array<WatchUi.Drawable> {
-            var rez_cmp_local_custom_drawable_WatchFaceDrawable = new WatchFaceView({:identifier=>"WatchFaceDrawable"});
-
-            return [rez_cmp_local_custom_drawable_WatchFaceDrawable] as Array<WatchUi.Drawable>;
+            return [] as Array<WatchUi.Drawable>;
         }
     } // Layouts
 

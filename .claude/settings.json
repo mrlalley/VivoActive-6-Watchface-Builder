@@ -105,7 +105,9 @@
       "Bash(npm start *)",
       "Bash(npm run *)",
       "PowerShell(ls \"c:\\\\Users\\\\mr_la\\\\WatchFace Builder\\\\exported-garmin-project\\\\source\\\\WatchFaceView.mc\" -ErrorAction SilentlyContinue | % { \"File exists: {0} \\({1} bytes\\)\" -f $_.FullName, $_.Length })",
-      "Read(//c/Users/mr_la/WatchFace Builder/node_modules/.bin/**)"
+      "Read(//c/Users/mr_la/WatchFace Builder/node_modules/.bin/**)",
+      "PowerShell(taskkill /F /IM node.exe 2>$null)",
+      "PowerShell(npm run server 2>&1)"
     ],
     "additionalDirectories": [
       "c:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project",
