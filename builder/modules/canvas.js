@@ -37,25 +37,47 @@ let gridLevel = 0; // 0 = off, 1 = 20px, 2 = 10px, 3 = 5px
 let dragState = null;
 let onSelectCb = null;
 let onChangeCb = null;
+let analogRenderTimer = null; // Adaptive analog rendering timer
 
 const ANALOG_SHAPES = new Set(['analogHour', 'analogMinute', 'analogSecond', 'analogCenter']);
 function isAnalogShape(el) { return el.shapeType && ANALOG_SHAPES.has(el.shapeType); }
+
+function hasAnalogElements() {
+  return getElements().some(e => ANALOG_SHAPES.has(e.shapeType));
+}
+
+function scheduleAnalogRender() {
+  // Clear any existing timer to prevent duplicates
+  if (analogRenderTimer) {
+    clearTimeout(analogRenderTimer);
+    analogRenderTimer = null;
+  }
+
+  // Only render if analog elements exist
+  if (hasAnalogElements()) {
+    render();
+    analogRenderTimer = setTimeout(scheduleAnalogRender, 1000);
+  }
+}
 
 export function initCanvas(canvasEl, onSelect, onChange) {
   canvas = canvasEl;
   ctx = canvas.getContext('2d');
   onSelectCb = onSelect;
-  onChangeCb = onChange;
+
+  // Wrap onChange to detect when analog elements are added/removed
+  onChangeCb = (elements) => {
+    if (onChange) onChange(elements);
+    scheduleAnalogRender(); // Restart render loop based on current elements
+  };
 
   canvas.addEventListener('mousedown', onMouseDown);
   canvas.addEventListener('mousemove', onMouseMove);
   canvas.addEventListener('mouseup',   onMouseUp);
   canvas.addEventListener('mouseleave', onMouseUp);
 
-  // Redraw every second so analog hands stay current
-  setInterval(() => {
-    if (getElements().some(e => ANALOG_SHAPES.has(e.shapeType))) render();
-  }, 1000);
+  // Start adaptive analog rendering (only if analog elements exist)
+  scheduleAnalogRender();
 }
 
 export function render() {
@@ -546,6 +568,14 @@ function mousePos(e) {
 
 export function setSelectedId(id) { selectedId = id; render(); }
 export function getSelectedId() { return selectedId; }
+
+export function cleanupCanvas() {
+  // Stop the adaptive render loop when canvas is destroyed or re-initialized
+  if (analogRenderTimer) {
+    clearTimeout(analogRenderTimer);
+    analogRenderTimer = null;
+  }
+}
 
 export function toggleSafeArea() {
   showSafeArea = !showSafeArea;
