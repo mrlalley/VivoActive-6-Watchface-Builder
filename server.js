@@ -76,6 +76,46 @@ function createServer(config = {}, detectors = {}) {
     index: false // Disable default index.html serving
   }));
 
+  // ── GET /api/export/check/:projectName – Check if project exists ──
+  app.get('/api/export/check/:projectName', (req, res) => {
+    try {
+      const { safePrgName } = require('./lib/naming');
+      const projectName = req.params.projectName;
+      const prgName = safePrgName(projectName);
+      const expectedFileName = `${prgName}.prg`;
+
+      // Search for the .prg file in the export directory (recursively)
+      // Files are saved in request-scoped subdirectories, so we need to search
+      let exists = false;
+      try {
+        const findFile = (dir) => {
+          const files = fs.readdirSync(dir);
+          for (const file of files) {
+            const filePath = path.join(dir, file);
+            const stat = fs.statSync(filePath);
+            if (stat.isDirectory()) {
+              if (findFile(filePath)) return true;
+            } else if (file === expectedFileName) {
+              return true;
+            }
+          }
+          return false;
+        };
+
+        if (fs.existsSync(cfg.exportDir)) {
+          exists = findFile(cfg.exportDir);
+        }
+      } catch (searchErr) {
+        // If search fails, assume file doesn't exist (fail open)
+        exists = false;
+      }
+
+      res.json({ success: true, exists, projectName });
+    } catch (err) {
+      res.json({ success: false, error: err.message });
+    }
+  });
+
   // ── POST /api/export – Export and build .prg file ──
   app.post('/api/export', async (req, res) => {
     const { elements = [], projectName = 'MyWatchFace' } = req.body;
@@ -87,8 +127,16 @@ function createServer(config = {}, detectors = {}) {
       );
       res.json(result);
     } catch (err) {
-      logError('export:error', { reason: err.message });
-      res.json({ success: false, error: err.message, log: '' });
+      logError('export:queue-error', { reason: err.message });
+      // Standardize error response to match success response structure
+      res.json({
+        success: false,
+        error: err.message,
+        log: '',
+        requestId: 'unknown',
+        projectPath: cfg.exportDir,
+        projectExists: false,
+      });
     }
   });
 
@@ -104,8 +152,9 @@ function createServer(config = {}, detectors = {}) {
       );
       res.json(result);
     } catch (err) {
-      logError('save-design:error', { reason: err.message });
-      res.json({ success: false, error: err.message });
+      logError('save-design:queue-error', { reason: err.message });
+      // Standardize error response to match success response structure
+      res.json({ success: false, error: err.message, log: '' });
     }
   });
 
@@ -117,6 +166,26 @@ function createServer(config = {}, detectors = {}) {
       res.json({ success: true, designs });
     } catch (err) {
       logError('designs:list-error', { reason: err.message });
+      res.json({ success: false, error: err.message });
+    }
+  });
+
+  // ── GET /api/designs/check/:projectName – Check if design exists ──
+  app.get('/api/designs/check/:projectName', (req, res) => {
+    try {
+      const { safePrgName } = require('./lib/naming');
+      const projectName = req.params.projectName;
+      const fileName = `${safePrgName(projectName)}.json`;
+      const designsDir = path.join(__dirname, 'designs');
+      const filePath = path.join(designsDir, fileName);
+
+      // Sanitize filename to prevent path traversal
+      const sanitized = fileName.replace(/[^a-zA-Z0-9._-]/g, '');
+      const safeFilePath = path.join(designsDir, sanitized);
+      const exists = fs.existsSync(safeFilePath);
+
+      res.json({ success: true, exists, projectName });
+    } catch (err) {
       res.json({ success: false, error: err.message });
     }
   });
@@ -151,8 +220,16 @@ function createServer(config = {}, detectors = {}) {
       previewInSimulator(cfg, buildResult.prgPath, buildResult.requestId);
       res.json({ success: true, message: 'Starting simulator…', log: buildResult.log, requestId: buildResult.requestId });
     } catch (err) {
-      logError('preview:error', { reason: err.message });
-      res.json({ success: false, error: err.message, log: '' });
+      logError('preview:queue-error', { reason: err.message });
+      // Standardize error response to match success response structure
+      res.json({
+        success: false,
+        error: err.message,
+        log: '',
+        requestId: 'unknown',
+        projectPath: cfg.exportDir,
+        projectExists: false,
+      });
     }
   });
 

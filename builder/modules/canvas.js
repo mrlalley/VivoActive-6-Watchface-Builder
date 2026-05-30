@@ -1,6 +1,25 @@
 import { getElements, updateElement, commitHistory, FONT_HEIGHTS } from './elements.js';
 import { CANVAS_SIZE, CANVAS_CENTER, SAFE_AREA_RADIUS as SAFE_RADIUS, EDGE_WARN_DISTANCE as EDGE_WARN_DIST, MIN_ELEMENT_SIZE, ANALOG_RENDER_INTERVAL } from '../constants.js';
 
+/**
+ * @typedef {Object} Element
+ * @property {number} id - Unique element identifier
+ * @property {string} fieldId - Data field binding (e.g., 'time', 'heartRate', 'battery')
+ * @property {string} label - Human-readable element name
+ * @property {number} x - Center X coordinate (0-390)
+ * @property {number} y - Center Y coordinate (0-390)
+ * @property {number} width - Element width in pixels
+ * @property {number} height - Element height in pixels
+ * @property {string} font - Garmin font name
+ * @property {string} color - Hex color '#RRGGBB'
+ * @property {'left'|'center'|'right'} align - Text alignment
+ * @property {'always'|'awake'|'sleep'} visibility - Visibility state
+ * @property {string} format - Format string for data display
+ * @property {number} zIndex - Layer order (higher = on top)
+ * @property {string|null} shapeType - Shape type for shape elements: 'analogHour'|'analogMinute'|'analogSecond'|'analogCenter'|'tickHour'|'tickMinute'|'tickMixed'|'tickDots'|'circle'|'rectangle'|'ring'|'hrGraph' or null for text
+ * @property {string} preview - Preview text for editing
+ */
+
 export { CANVAS_SIZE }; // Re-export for backward compatibility
 
 // CSS font-size in pixels for each Garmin font, calibrated to the exact TTF metrics.

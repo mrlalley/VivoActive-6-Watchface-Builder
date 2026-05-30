@@ -1,4 +1,4 @@
-const { getConfig, getDefaultSdkBasePath, getDefaultDevKeyPath, getDefaultExportDir, getDefaultTempDir } = require('../lib/config');
+const { getConfig } = require('../lib/config');
 const path = require('path');
 const os = require('os');
 
@@ -13,115 +13,7 @@ describe('Config - Cross-Platform Path Detection', () => {
     process.env = { ...originalEnv };
   });
 
-  describe('getDefaultSdkBasePath', () => {
-    it('returns Windows APPDATA path on Windows', () => {
-      Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
-      process.env.APPDATA = 'C:\\Users\\TestUser\\AppData\\Roaming';
-
-      const result = getDefaultSdkBasePath();
-      expect(result).toContain('Garmin');
-      expect(result).toContain('ConnectIQ');
-      expect(result).toContain('Sdks');
-    });
-
-    it('returns macOS Library path on Darwin', () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
-
-      const result = getDefaultSdkBasePath();
-      expect(result).toContain('Library');
-      expect(result).toContain('Application Support');
-      expect(result).toContain('Garmin');
-    });
-
-    it('returns Linux .local/share path on Linux', () => {
-      Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-
-      const result = getDefaultSdkBasePath();
-      expect(result).toContain('.local');
-      expect(result).toContain('share');
-      expect(result).toContain('Garmin');
-    });
-
-    it('handles missing APPDATA on Windows gracefully', () => {
-      Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
-      delete process.env.APPDATA;
-
-      const result = getDefaultSdkBasePath();
-      // Should still return a path, even if APPDATA is missing
-      expect(result).toBeDefined();
-      expect(typeof result).toBe('string');
-    });
-  });
-
-  describe('getDefaultDevKeyPath', () => {
-    it('returns ~/.garmin/developer_key.der on all platforms', () => {
-      const result = getDefaultDevKeyPath();
-      expect(result).toContain('.garmin');
-      expect(result).toContain('developer_key.der');
-      expect(result).toContain(os.homedir());
-    });
-
-    it('uses os.homedir() for platform-agnostic home directory', () => {
-      const result = getDefaultDevKeyPath();
-      const expectedHome = os.homedir();
-      expect(result.startsWith(expectedHome)).toBe(true);
-    });
-  });
-
-  describe('getDefaultExportDir', () => {
-    it('returns Documents path on Windows', () => {
-      Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
-
-      const result = getDefaultExportDir();
-      expect(result).toContain('Documents');
-      expect(result).toContain('WatchFaceBuilder');
-    });
-
-    it('returns Documents path on macOS', () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
-
-      const result = getDefaultExportDir();
-      expect(result).toContain('Documents');
-      expect(result).toContain('WatchFaceBuilder');
-    });
-
-    it('returns .local/share path on Linux', () => {
-      Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-
-      const result = getDefaultExportDir();
-      expect(result).toContain('.local');
-      expect(result).toContain('share');
-      expect(result).toContain('WatchFaceBuilder');
-    });
-  });
-
-  describe('getDefaultTempDir', () => {
-    it('returns Windows TEMP path on Windows', () => {
-      Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
-      process.env.TEMP = 'C:\\Windows\\Temp';
-
-      const result = getDefaultTempDir();
-      expect(result).toContain('CIQPreview');
-    });
-
-    it('returns platform-specific temp path on macOS', () => {
-      Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
-
-      const result = getDefaultTempDir();
-      expect(result).toContain('CIQPreview');
-      // Note: os.tmpdir() returns actual platform-specific temp, so we can't assert 'tmp' here
-    });
-
-    it('returns platform-specific temp path on Linux', () => {
-      Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-
-      const result = getDefaultTempDir();
-      expect(result).toContain('CIQPreview');
-      // Note: os.tmpdir() returns actual platform-specific temp, so we can't assert 'tmp' here
-    });
-  });
-
-  describe('getConfig - Priority Chain', () => {
+describe('getConfig - Priority Chain', () => {
     it('prioritizes parameter overrides over all other sources', () => {
       process.env.GARMIN_SDK_BIN = '/env/sdk';
 

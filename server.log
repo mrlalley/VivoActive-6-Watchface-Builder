@@ -1,29 +1,8 @@
-Watch Face Builder  →  http://127.0.0.1:63675
+
+> watchface-builder@1.0.0 server
+> node server.js
+
+Watch Face Builder  →  http://127.0.0.1:54418
 SDK bin:            connectiq-sdk-win-9.1.0-2026-03-09-6a872a80b
 Developer key:      developer_key.der
 Export dir:         exported
-{"timestamp":"2026-05-30T14:13:45.905Z","level":"INFO","message":"design-store:listed","count":2}
-{"timestamp":"2026-05-30T14:13:47.596Z","level":"INFO","message":"design-store:loaded","file":"RefactoredFace.json"}
-{"timestamp":"2026-05-30T14:13:50.065Z","level":"INFO","message":"design-store:listed","count":2}
-{"timestamp":"2026-05-30T14:13:51.463Z","level":"INFO","message":"design-store:loaded","file":"DaFace.json"}
-{"timestamp":"2026-05-30T14:13:54.309Z","level":"INFO","message":"queue:task-start","label":"preview:WatchFacePreview"}
-{"timestamp":"2026-05-30T14:13:54.309Z","level":"INFO","message":"build:request-isolated","requestId":"lqoqdifs","exportDir":"C:\\Users\\mr_la\\Documents\\WatchFaceBuilder\\exported\\lqoqdifs"}
-{"timestamp":"2026-05-30T14:13:54.309Z","level":"INFO","message":"build:start","elementCount":18,"projectName":"WatchFacePreview","requestId":"lqoqdifs"}
-{"timestamp":"2026-05-30T14:13:54.331Z","level":"INFO","message":"build:files-generated","projectName":"WatchFacePreview","requestId":"lqoqdifs"}
-{"timestamp":"2026-05-30T14:13:54.332Z","level":"INFO","message":"build:compiling","prgName":"WatchFacePreview","outPrg":"C:\\Users\\mr_la\\Documents\\WatchFaceBuilder\\exported\\lqoqdifs\\bin\\WatchFacePreview.prg","requestId":"lqoqdifs"}
-{"timestamp":"2026-05-30T14:13:59.346Z","level":"INFO","message":"build:design-saved","designPath":"C:\\Users\\mr_la\\Documents\\WatchFaceBuilder\\exported\\lqoqdifs\\design.json","requestId":"lqoqdifs"}
-{"timestamp":"2026-05-30T14:13:59.346Z","level":"INFO","message":"build:success","prgPath":"C:\\Users\\mr_la\\Documents\\WatchFaceBuilder\\exported\\lqoqdifs\\bin\\WatchFacePreview.prg","designPath":"C:\\Users\\mr_la\\Documents\\WatchFaceBuilder\\exported\\lqoqdifs\\design.json","requestId":"lqoqdifs"}
-{"timestamp":"2026-05-30T14:13:59.346Z","level":"INFO","message":"queue:task-end","label":"preview:WatchFacePreview"}
-{"timestamp":"2026-05-30T14:13:59.505Z","level":"INFO","message":"preview:launching-simulator"}
-[sim] simulator.exe is running — waiting 8s for init
-{"timestamp":"2026-05-30T14:14:07.753Z","level":"INFO","message":"preview:prg-copied","from":"C:\\Users\\mr_la\\Documents\\WatchFaceBuilder\\exported\\lqoqdifs\\bin\\WatchFacePreview.prg","to":"C:\\Users\\mr_la\\AppData\\Local\\Temp\\CIQPreview\\preview-lqoqdifs\\WatchFace.prg","requestId":"lqoqdifs"}
-{"timestamp":"2026-05-30T14:14:07.753Z","level":"INFO","message":"preview:loading-prg","prgPath":"C:\\Users\\mr_la\\AppData\\Local\\Temp\\CIQPreview\\preview-lqoqdifs\\WatchFace.prg","requestId":"lqoqdifs"}
-{"timestamp":"2026-05-30T14:14:11.790Z","level":"INFO","message":"queue:task-start","label":"export:MyWatchFace"}
-{"timestamp":"2026-05-30T14:14:11.790Z","level":"INFO","message":"build:request-isolated","requestId":"9of15wms","exportDir":"C:\\Users\\mr_la\\Documents\\WatchFaceBuilder\\exported\\9of15wms"}
-{"timestamp":"2026-05-30T14:14:11.790Z","level":"INFO","message":"build:start","elementCount":18,"projectName":"MyWatchFace","requestId":"9of15wms"}
-{"timestamp":"2026-05-30T14:14:11.808Z","level":"INFO","message":"build:files-generated","projectName":"MyWatchFace","requestId":"9of15wms"}
-{"timestamp":"2026-05-30T14:14:11.809Z","level":"INFO","message":"build:compiling","prgName":"MyWatchFace","outPrg":"C:\\Users\\mr_la\\Documents\\WatchFaceBuilder\\exported\\9of15wms\\bin\\MyWatchFace.prg","requestId":"9of15wms"}
-{"timestamp":"2026-05-30T14:14:15.825Z","level":"INFO","message":"preview:monkeydo-success","requestId":"lqoqdifs"}
-{"timestamp":"2026-05-30T14:14:16.181Z","level":"INFO","message":"build:design-saved","designPath":"C:\\Users\\mr_la\\Documents\\WatchFaceBuilder\\exported\\9of15wms\\design.json","requestId":"9of15wms"}
-{"timestamp":"2026-05-30T14:14:16.181Z","level":"INFO","message":"build:success","prgPath":"C:\\Users\\mr_la\\Documents\\WatchFaceBuilder\\exported\\9of15wms\\bin\\MyWatchFace.prg","designPath":"C:\\Users\\mr_la\\Documents\\WatchFaceBuilder\\exported\\9of15wms\\design.json","requestId":"9of15wms"}
-{"timestamp":"2026-05-30T14:14:16.181Z","level":"INFO","message":"queue:task-end","label":"export:MyWatchFace"}

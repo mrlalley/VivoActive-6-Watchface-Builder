@@ -20,7 +20,16 @@
       "Bash(git fetch *)",
       "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --tree-filter 'rm -rf dist-final' --force HEAD)",
       "Bash(grep -n \"app\\\\\\\\.get\\\\|app\\\\\\\\.post\\\\|app\\\\\\\\.listen\\\\|return app\\\\|module.exports\" server.js)",
-      "Bash(npm ls *)"
+      "Bash(npm ls *)",
+      "Bash(curl -s http://127.0.0.1:62041/)",
+      "Bash(curl -s http://127.0.0.1:62042/health)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(curl -s http://127.0.0.1:62042/)",
+      "Bash(npm rebuild *)",
+      "Bash(npx electron *)",
+      "Bash(npx electron-builder *)",
+      "Bash(dir \"c:\\\\Users\\\\mr_la\\\\WatchFace Builder\\\\dist-final\")",
+      "Bash(\"c:\\\\Users\\\\mr_la\\\\WatchFace Builder\\\\dist-final\\\\WatchFace Builder 1.0.0.exe\")"
     ]
   }
 }

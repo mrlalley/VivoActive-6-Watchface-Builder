@@ -5,10 +5,10 @@ const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require('electron')
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const Store = require('electron-store');
+const { default: Store } = require('electron-store');
 const { createServer } = require('../server');
 const { generateKey, getDefaultKeyPath, validateKeyFile } = require('../lib/keygen');
-const { getDefaultSdkBasePath, scanForLatestSdk } = require('../lib/config');
+const { scanForLatestSdk } = require('../lib/config');
 
 let mainWindow;
 let expressServer;

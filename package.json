@@ -42,6 +42,7 @@
       "electron/**/*",
       "builder/**/*",
       "lib/**/*",
+      "src/**/*",
       "garmin-project-template/**/*",
       "assets/**/*",
       "server.js",

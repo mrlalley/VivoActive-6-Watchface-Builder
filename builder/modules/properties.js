@@ -2,11 +2,38 @@ import { updateElement, removeElement, commitHistory, FONT_HEIGHTS } from './ele
 import { render, setSelectedId } from './canvas.js';
 import { CANVAS_SIZE, CANVAS_CENTER } from '../constants.js';
 
+/**
+ * @typedef {Object} Element
+ * @property {number} id - Unique element identifier
+ * @property {string} fieldId - Data field binding (e.g., 'time', 'heartRate', 'customLabel')
+ * @property {string} label - Human-readable element name
+ * @property {number} x - Center X coordinate (0-390)
+ * @property {number} y - Center Y coordinate (0-390)
+ * @property {number} width - Element width in pixels
+ * @property {number} height - Element height in pixels
+ * @property {string} font - Garmin font: 'FONT_XTINY'|'FONT_TINY'|'FONT_SMALL'|'FONT_MEDIUM'|'FONT_LARGE'|'FONT_NUMBER_MILD'|'FONT_NUMBER_MEDIUM'|'FONT_NUMBER_HOT'|'FONT_NUMBER_THAI_HOT'
+ * @property {string} color - Hex color '#RRGGBB'
+ * @property {'left'|'center'|'right'} align - Text alignment
+ * @property {'always'|'awake'|'sleep'} visibility - Visibility state
+ * @property {string} format - Format string for custom labels
+ * @property {number} zIndex - Layer ordering
+ * @property {string|null} shapeType - Shape type: 'analogHour'|'analogMinute'|'analogSecond'|'analogCenter'|'tickHour'|'tickMinute'|'tickMixed'|'tickDots'|'circle'|'rectangle'|'ring'|'hrGraph' or null for text
+ * @property {string} preview - Preview text displayed on canvas
+ */
+
 const GARMIN_FONTS = [
   'FONT_XTINY', 'FONT_TINY', 'FONT_SMALL', 'FONT_MEDIUM', 'FONT_LARGE',
   'FONT_NUMBER_MILD', 'FONT_NUMBER_MEDIUM', 'FONT_NUMBER_HOT', 'FONT_NUMBER_THAI_HOT',
 ];
 
+/**
+ * Render the properties panel for editing an element.
+ * If el is null, shows "no selection" message.
+ * Dynamically adapts UI based on element type (shape vs text, specific shape types).
+ * @param {Element|null} el - Element to display properties for, or null to show empty state
+ * @param {Function} onDelete - Callback when delete button is clicked
+ * @param {Function} onAnyChange - Callback when any property changes
+ */
 export function showProperties(el, onDelete, onAnyChange) {
   const panel = document.getElementById('properties-panel');
   if (!el) {

@@ -1,5 +1,24 @@
 import { DATA_FIELDS } from './data-fields.js';
 
+/**
+ * @typedef {Object} Element
+ * @property {number} id - Unique element identifier (auto-incremented)
+ * @property {string} fieldId - Data field binding: 'time', 'date', 'steps', 'heartRate', 'battery', 'customLabel', 'analogHour', etc.
+ * @property {string} label - Human-readable element name (e.g., "Heart Rate", "Time")
+ * @property {number} x - Center X coordinate on canvas (0-390, constrained to safe area)
+ * @property {number} y - Center Y coordinate on canvas (0-390, constrained to safe area)
+ * @property {number} width - Element width in pixels (1-390)
+ * @property {number} height - Element height in pixels (1-390)
+ * @property {string} font - Garmin system font: 'FONT_XTINY'|'FONT_TINY'|'FONT_SMALL'|'FONT_MEDIUM'|'FONT_LARGE'|'FONT_NUMBER_MILD'|'FONT_NUMBER_MEDIUM'|'FONT_NUMBER_HOT'|'FONT_NUMBER_THAI_HOT'
+ * @property {string} color - Hex color string in format '#RRGGBB' (e.g., '#FFFFFF')
+ * @property {'left'|'center'|'right'} align - Text horizontal alignment
+ * @property {'always'|'awake'|'sleep'} visibility - When element is visible on watch
+ * @property {string} format - Format string or empty string (e.g., '%02d:%02d' for time)
+ * @property {number} zIndex - Layer ordering (higher values drawn on top)
+ * @property {string|null} shapeType - Shape type if element is a shape: 'hourHand'|'minuteHand'|'secondHand'|'analogCenter'|'tickHour'|'tickMinute'|'tickMixed'|'tickDots'|'circle'|'rectangle'|'ring'|'hrGraph' or null for text elements
+ * @property {string} preview - Preview text shown on canvas during edit (e.g., "12:34", "BPM")
+ */
+
 // Total line-height in device pixels for each Garmin font (vivoactive6 simulator.json).
 // Used for: (a) default element height at creation, (b) canvas font sizing, (c) auto-update on font change.
 export const FONT_HEIGHTS = {
@@ -19,6 +38,13 @@ let nextId = 1;
 let history = [];
 let historyIndex = -1;
 
+/**
+ * Create a new Element with default properties based on the field definition.
+ * @param {string} fieldId - Data field identifier from DATA_FIELDS
+ * @param {number} x - Initial X coordinate (0-390)
+ * @param {number} y - Initial Y coordinate (0-390)
+ * @returns {Element|null} New element with defaults applied, or null if fieldId not found
+ */
 export function createElement(fieldId, x, y) {
   const field = DATA_FIELDS.find(f => f.id === fieldId);
   if (!field) return null;
@@ -60,21 +86,39 @@ function estimateTextWidth(font, text) {
   return Math.min(380, Math.max(60, String(text || '').length * cw));
 }
 
+/**
+ * Add an element to the canvas and optionally save to history.
+ * @param {Element} el - Element to add
+ * @param {boolean} [saveHistory=true] - Whether to save this action to undo/redo history
+ */
 export function addElement(el, saveHistory = true) {
   elements.push(el);
   if (saveHistory) pushHistory();
 }
 
+/**
+ * Remove an element by ID and save to history.
+ * @param {number} id - Element ID to remove
+ */
 export function removeElement(id) {
   elements = elements.filter(e => e.id !== id);
   pushHistory();
 }
 
+/**
+ * Update an element's properties by ID.
+ * @param {number} id - Element ID to update
+ * @param {Partial<Element>} props - Properties to merge into the element
+ */
 export function updateElement(id, props) {
   const el = elements.find(e => e.id === id);
   if (el) Object.assign(el, props);
 }
 
+/**
+ * Get all elements currently on the canvas.
+ * @returns {Element[]} Array of all elements
+ */
 export function getElements() {
   return elements;
 }

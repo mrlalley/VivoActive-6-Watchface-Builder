@@ -49,29 +49,42 @@ function initHealthCheck() {
 
   if (!warningEl || !warningTextEl || !closeBtn) return;
 
-  // Handle health warning from main process
+  function displayHealthWarning(health) {
+    if (health.ok === false) {
+      let message = '';
+      if (!health.sdkFound && !health.keyFound) {
+        message = '⚠️ Garmin SDK and developer key not found. You can still design watch faces, but cannot export or build. ' +
+                  'Install SDK from https://developer.garmin.com/connect-iq/sdk/ and generate a key in Settings → Generate Key.';
+      } else if (!health.sdkFound) {
+        message = '⚠️ Garmin SDK not found. You can design and save watch faces, but cannot export or preview in simulator. ' +
+                  'Install from https://developer.garmin.com/connect-iq/sdk/';
+      } else if (!health.keyFound) {
+        message = '⚠️ Developer key not found. You can design watch faces, but cannot build for the watch. ' +
+                  'Generate a key in Settings → Generate Key.';
+      } else if (health.error) {
+        message = `⚠️ Server error: ${health.error}`;
+      } else {
+        message = '⚠️ Build dependencies are not configured properly. Design features are available, but export/build are disabled.';
+      }
+      warningTextEl.textContent = message;
+      warningEl.style.display = 'flex';
+    }
+  }
+
+  // Electron mode: listen for IPC health warnings
   if (window.electronAPI?.onHealthWarning) {
     window.electronAPI.onHealthWarning((event, health) => {
-      if (health.ok === false) {
-        let message = '';
-        if (!health.sdkFound && !health.keyFound) {
-          message = '⚠️ Garmin SDK and developer key not found. You can still design watch faces, but cannot export or build. ' +
-                    'Install SDK from https://developer.garmin.com/connect-iq/sdk/ and generate a key in Settings → Generate Key.';
-        } else if (!health.sdkFound) {
-          message = '⚠️ Garmin SDK not found. You can design and save watch faces, but cannot export or preview in simulator. ' +
-                    'Install from https://developer.garmin.com/connect-iq/sdk/';
-        } else if (!health.keyFound) {
-          message = '⚠️ Developer key not found. You can design watch faces, but cannot build for the watch. ' +
-                    'Generate a key in Settings → Generate Key.';
-        } else if (health.error) {
-          message = `⚠️ Server error: ${health.error}`;
-        } else {
-          message = '⚠️ Build dependencies are not configured properly. Design features are available, but export/build are disabled.';
-        }
-        warningTextEl.textContent = message;
-        warningEl.style.display = 'flex';
-      }
+      displayHealthWarning(health);
     });
+  } else {
+    // Web server mode: fetch health status via HTTP
+    fetch('/api/health')
+      .then(res => res.json())
+      .then(health => displayHealthWarning(health))
+      .catch(() => {
+        // If health check fails, just hide the warning (server is unavailable)
+        warningEl.style.display = 'none';
+      });
   }
 
   // Handle health status (for logging)
@@ -383,6 +396,24 @@ async function handleSaveDesign() {
   const projectName = prompt('Design name:', 'MyWatchFace');
   if (!projectName) return;
 
+  // Check if design already exists
+  try {
+    const checkRes = await fetch(`/api/designs/check/${encodeURIComponent(projectName)}`);
+    const checkResult = await checkRes.json();
+
+    if (checkResult.success && checkResult.exists) {
+      const confirmed = confirm(
+        `⚠️ A design named "${projectName}" already exists.\n\n` +
+        `Do you want to overwrite it?`
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn('Could not check if design exists:', err.message);
+  }
+
   try {
     const elements = getElements();
     const res = await fetch('/api/save-design', {
@@ -500,6 +531,23 @@ async function loadDesign(filename) {
     localStorage.setItem(LS_KEY, JSON.stringify(result.design));
     flashSaveIndicator();
 
+    // If there's a validation warning, highlight the problematic elements
+    if (result.design.validationWarning) {
+      const match = result.design.validationWarning.match(/element\[(\d+)\]/);
+      if (match) {
+        const elementIndex = parseInt(match[1], 10);
+        const elements = getElements();
+        if (elements[elementIndex]) {
+          setSelectedId(elements[elementIndex].id);
+          showProperties(elements[elementIndex]);
+          render();
+          showLog(`⚠️ Warning: ${result.design.validationWarning}\n\nThe element above is highlighted. You can resize or move it to fit within the safe display area.`);
+        }
+      } else {
+        showLog(`⚠️ Warning: ${result.design.validationWarning}`);
+      }
+    }
+
     document.getElementById('load-overlay').classList.add('hidden');
   } catch (err) {
     alert(`Error loading design: ${err.message}`);
@@ -518,7 +566,19 @@ async function handlePreview() {
       btn.textContent = '✓ Launched';
       if (result.log) showLog(`▶ Simulator launched\n\n${result.log}`);
     } else {
-      showLog(`✗ Preview failed\n\n${result.error || ''}\n\n${result.log || ''}`);
+      const errorMsg = result.error || '';
+      showLog(`✗ Preview failed\n\n${errorMsg}\n\n${result.log || ''}`);
+
+      // Try to highlight the offending element from error message
+      const match = errorMsg.match(/element\[(\d+)\]/);
+      if (match) {
+        const elementIndex = parseInt(match[1], 10);
+        const elements = getElements();
+        if (elements[elementIndex]) {
+          setSelectedId(elements[elementIndex].id);
+          render();
+        }
+      }
     }
   } catch (err) {
     showLog(`✗ Network error: ${err.message}`);
@@ -533,14 +593,50 @@ async function handlePreview() {
 async function handleExport() {
   const name = prompt('Project name (used in manifest.xml):', 'MyWatchFace');
   if (name === null) return;
+
+  const projectName = name.trim() || 'MyWatchFace';
+
+  // Check if project already exists
+  try {
+    const checkRes = await fetch(`/api/export/check/${encodeURIComponent(projectName)}`);
+    const checkResult = await checkRes.json();
+
+    if (checkResult.success && checkResult.exists) {
+      const confirmed = confirm(
+        `⚠️ A project named "${projectName}" already exists.\n\n` +
+        `Do you want to overwrite it?\n\n` +
+        `(Existing .prg file will be replaced)`
+      );
+      if (!confirmed) {
+        showLog('Export cancelled.');
+        return;
+      }
+    }
+  } catch (err) {
+    // If check fails, continue anyway (user can still export)
+    console.warn('Could not check if project exists:', err.message);
+  }
+
   showLog('Building project…\n');
   try {
-    const result = await exportProject(name.trim() || 'MyWatchFace');
+    const result = await exportProject(projectName);
     if (result.success) {
       lastExportedPath = result.projectPath;
       showLog(`✓ Build succeeded!\n\nOutput: ${result.prgPath}\n\n${result.log || '(no compiler output)'}`);
     } else {
-      showLog(`✗ Build failed\n\n${result.error || ''}\n\n${result.log || ''}\n\n──────────────────────────\nManual build:\n  Open exported-garmin-project/ in VS Code\n  Run: Monkey C: Build for Device → vivoactive6`);
+      const errorMsg = result.error || '';
+      showLog(`✗ Build failed\n\n${errorMsg}\n\n${result.log || ''}\n\n──────────────────────────\nManual build:\n  Open exported-garmin-project/ in VS Code\n  Run: Monkey C: Build for Device → vivoactive6`);
+
+      // Try to highlight the offending element from error message
+      const match = errorMsg.match(/element\[(\d+)\]/);
+      if (match) {
+        const elementIndex = parseInt(match[1], 10);
+        const elements = getElements();
+        if (elements[elementIndex]) {
+          setSelectedId(elements[elementIndex].id);
+          render();
+        }
+      }
     }
   } catch (err) {
     showLog(`✗ Network error: ${err.message}`);
