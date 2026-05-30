@@ -55,15 +55,18 @@ function initHealthCheck() {
       if (health.ok === false) {
         let message = '';
         if (!health.sdkFound && !health.keyFound) {
-          message = '⚠️ Garmin SDK and developer key not found. Install SDK and generate a key in Settings.';
+          message = '⚠️ Garmin SDK and developer key not found. You can still design watch faces, but cannot export or build. ' +
+                    'Install SDK from https://developer.garmin.com/connect-iq/sdk/ and generate a key in Settings → Generate Key.';
         } else if (!health.sdkFound) {
-          message = '⚠️ Garmin SDK not found. Install SDK from https://developer.garmin.com/connect-iq/sdk/';
+          message = '⚠️ Garmin SDK not found. You can design and save watch faces, but cannot export or preview in simulator. ' +
+                    'Install from https://developer.garmin.com/connect-iq/sdk/';
         } else if (!health.keyFound) {
-          message = '⚠️ Developer key not found. Generate a key in Settings → Generate Key.';
+          message = '⚠️ Developer key not found. You can design watch faces, but cannot build for the watch. ' +
+                    'Generate a key in Settings → Generate Key.';
         } else if (health.error) {
           message = `⚠️ Server error: ${health.error}`;
         } else {
-          message = '⚠️ Build dependencies are not configured properly.';
+          message = '⚠️ Build dependencies are not configured properly. Design features are available, but export/build are disabled.';
         }
         warningTextEl.textContent = message;
         warningEl.style.display = 'flex';
