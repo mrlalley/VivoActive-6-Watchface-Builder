@@ -1,3 +1,4 @@
-<strings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
-    <string id="AppName">Face3</string>
+<?xml version="1.0"?>
+<strings>
+  <string id="AppName">WatchFacePreview</string>
 </strings>

@@ -1,4 +1,4 @@
-<layouts xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
-    <layout id="WatchFace">
-    </layout>
-</layouts>
+<?xml version="1.0"?>
+<layout xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://developer.garmin.com/xsds/connectiq_layouts_v1_0.xsd">
+  <drawable id="WatchFace" class="WatchFaceView" />
+</layout>

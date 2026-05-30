@@ -12,7 +12,6 @@ using Toybox.Lang as Lang;
 using Toybox.Math as Math;
 using Toybox.SensorHistory as SensorHistory;
 
-// Entry point — manifest entry="WatchFaceApp"
 class WatchFaceApp extends App.AppBase {
     function initialize() { AppBase.initialize(); }
     function getInitialView() {
@@ -24,7 +23,6 @@ class WatchFaceApp extends App.AppBase {
     }
 }
 
-// Required in CIQ 3+ to receive onPowerBudgetExceeded callbacks
 class WatchFaceViewDelegate extends Ui.WatchFaceDelegate {
     function initialize(view as WatchFaceView) {
         WatchFaceDelegate.initialize();
@@ -41,16 +39,11 @@ class WatchFaceView extends Ui.WatchFace {
     }
 
     function onLayout(dc) {
-        // All rendering done programmatically in onUpdate
     }
 
-    // Returns local time (minutes past midnight) for sunrise or sunset using NOAA algorithm.
-    // Returns -1 for polar day/night or when location unavailable.
     function calcSunTimeMin(latDeg, lonDeg, isSunrise) {
-        // All arithmetic kept as Float to avoid Double/Float mixed-type errors
         var jd = 2440587.5 + Time.today().value().toFloat() / 86400.0;
         var D = jd - 2451545.0;
-        // Monkey C % only works on integers — simulate float modulo with floor division
         var g = (357.529 + 0.98560028 * D).toFloat();
         g -= (g / 360.0).toNumber() * 360.0;
         if (g < 0.0) { g += 360.0; }
@@ -77,7 +70,6 @@ class WatchFaceView extends Ui.WatchFace {
         if (localMin >= 1440) { localMin -= 1440; }
         return localMin;
     }
-    // Force initial render when view becomes visible
     function onShow() {
         Ui.requestUpdate();
     }
@@ -92,6 +84,7 @@ class WatchFaceView extends Ui.WatchFace {
         var info = Calendar.info(now, Time.FORMAT_MEDIUM);
             var _ai = Activity.getActivityInfo();
             var _ami = ActivityMonitor.getInfo();
+            var _up = UserProfile.getProfile();
             
         var _pos = Position.getInfo();
         var _lat = 0.0; var _lon = 0.0; var _hasPos = false;
@@ -101,7 +94,12 @@ class WatchFaceView extends Ui.WatchFace {
         }
         var _srMin = _hasPos ? calcSunTimeMin(_lat, _lon, true)  : -1;
         var _ssMin = _hasPos ? calcSunTimeMin(_lat, _lon, false) : -1;
-            var heartRate = (_ai != null && _ai.currentHeartRate != null) ? _ai.currentHeartRate.toString() : "--";
+            var _jdM = 2440587.5 + Time.now().value().toFloat() / 86400.0;
+        var _phs = (_jdM - 2451549.5) / 29.530589;
+        _phs -= _phs.toNumber().toFloat();
+        if (_phs < 0.0) { _phs += 1.0; }
+        _phs = 1.0 - _phs;
+        var heartRate = (_ai != null && _ai.currentHeartRate != null) ? _ai.currentHeartRate.toString() : "--";
         var battery = (Sys.getSystemStats().battery + 0.5).toNumber().toString() + "%";
         var sunriseTime = _srMin >= 0 ? (_srMin / 60).format("%d") + ":" + (_srMin % 60).format("%02d") : "--:--";
         var sunsetTime  = _ssMin >= 0 ? (_ssMin / 60).format("%d") + ":" + (_ssMin % 60).format("%02d") : "--:--";
@@ -111,18 +109,18 @@ class WatchFaceView extends Ui.WatchFace {
         else if (_ssMin >= 0 && _ssMin > _nowM) { _next = _ssMin - _nowM; }
         else if (_srMin >= 0) { _next = 1440 - _nowM + _srMin; }
         var timeTillSun = _next >= 0 ? (_next / 60).format("%d") + "h " + (_next % 60).format("%02d") + "m" : "--h --m";
-        var restingHR = "--"; // TODO: UserProfile.getProfile().restingHeartRate (SDK 3.2+)
         var notifications = Sys.getDeviceSettings().notificationCount.toString();
-        var _jdM = 2440587.5 + Time.now().value().toFloat() / 86400.0;
-        var _phs = (_jdM - 2451549.5) / 29.530589;
-        _phs -= _phs.toNumber().toFloat();
-        if (_phs < 0.0) { _phs += 1.0; }
-        _phs = 1.0 - _phs;
-        var trainReadiness = "--"; // TODO: not in public API
+        var weatherHiLo = "--/--°";
+        var steps    = (_ami != null && _ami.steps    != null) ? _ami.steps.toString()    : "--";
+        var moonPhasePercent = ((_phs < 0.5 ? _phs : 1.0 - _phs) * 200.0).toNumber().toString() + "%";
+        var restingHR = (_up != null && _up.restingHeartRate != null) ? _up.restingHeartRate.toString() : "--";
+        var _bbh = SensorHistory.getBodyBatteryHistory(null);
+        var _bbs = _bbh != null ? _bbh.next() : null;
+        var bodyBattery = (_bbs != null && _bbs.data != null) ? (_bbs.data.toNumber()).format("%d") : "--";
+        var trainReadiness = (_up != null && _up.trainingReadiness != null) ? _up.trainingReadiness.toString() : "--";
         var _ssh = SensorHistory.getStressHistory(null);
         var _sss = _ssh != null ? _ssh.next() : null;
         var stressLevel = (_sss != null && _sss.data != null) ? (_sss.data.toNumber()).format("%d") : "--";
-        var steps    = (_ami != null && _ami.steps    != null) ? _ami.steps.toString()    : "--";
 
             dc.setColor(0xFFFFFF, Gfx.COLOR_TRANSPARENT);
         dc.drawText(117, 137, Gfx.FONT_NUMBER_HOT, clockTime.hour.format("%02d"), Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
@@ -146,60 +144,56 @@ class WatchFaceView extends Ui.WatchFace {
         dc.drawText(290, 189, Gfx.FONT_TINY, sunsetTime, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
 
         dc.setColor(0xFFAA44, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(190, 168, Gfx.FONT_TINY, timeTillSun, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(186, 187, Gfx.FONT_TINY, timeTillSun, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
 
-        dc.setColor(0xFF8888, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(65, 279, Gfx.FONT_TINY, restingHR, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-
-        // Bluetooth indicator — only visible when phone is connected
         if (Sys.getDeviceSettings().phoneConnected) {
             dc.setColor(0x0077FF, Gfx.COLOR_TRANSPARENT);
-            dc.fillCircle(55, 145, 10);
+            dc.fillCircle(55, 137, 10);
         }
 
         dc.setColor(0xFFFFFF, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(48, 188, Gfx.FONT_TINY, notifications, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(38, 183, Gfx.FONT_TINY, notifications, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
 
-        // Moon phase graphic — lit circle + shadow showing illumination
-        // Uses _phs calculated in variable section above
-        dc.setColor(0xDDDDFF, Gfx.COLOR_TRANSPARENT);
-        dc.fillCircle(194, 63, 20);
-        // Draw shadow (dark part) based on phase
-        dc.setColor(Gfx.COLOR_BLACK, Gfx.COLOR_TRANSPARENT);
-        if (_phs < 0.5) {
-            // Waning: shadow on right
-            var _sxWan = 194 + (20 - 20 * 2.0 * _phs).toNumber();
-            dc.fillCircle(_sxWan, 63, 20);
-        } else {
-            // Waxing: shadow on left
-            var _sxWax = 194 - (20 - 20 * 2.0 * (_phs - 0.5)).toNumber();
-            dc.fillCircle(_sxWax, 63, 20);
-        }
+        dc.setColor(0xAADDFF, Gfx.COLOR_TRANSPARENT);
+        dc.drawText(201, 339, Gfx.FONT_SMALL, weatherHiLo, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
 
-        dc.setColor(0x44FF88, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(276, 325, Gfx.FONT_TINY, trainReadiness, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-
-        dc.setColor(0xFF8844, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(240, 324, Gfx.FONT_TINY, stressLevel, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
+        dc.setColor(0xFFFF00, Gfx.COLOR_TRANSPARENT);
+        dc.drawText(330, 131, Gfx.FONT_TINY, battery, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
 
         dc.setColor(0x00FF88, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(193, 202, Gfx.FONT_SMALL, steps, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(187, 60, Gfx.FONT_MEDIUM, steps, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
+
+        dc.setColor(0xDDDDFF, Gfx.COLOR_TRANSPARENT);
+        dc.drawText(282, 76, Gfx.FONT_TINY, moonPhasePercent, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
+
+        dc.setColor(0xFF8888, Gfx.COLOR_TRANSPARENT);
+        dc.drawText(65, 287, Gfx.FONT_TINY, restingHR, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
+
+        dc.setColor(0x00FF88, Gfx.COLOR_TRANSPARENT);
+        dc.drawText(168, 276, Gfx.FONT_TINY, bodyBattery, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
+
+        dc.setColor(0x44FF88, Gfx.COLOR_TRANSPARENT);
+        dc.drawText(204, 276, Gfx.FONT_TINY, trainReadiness, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
+
+        dc.setColor(0xFF8844, Gfx.COLOR_TRANSPARENT);
+        dc.drawText(184, 294, Gfx.FONT_TINY, stressLevel, Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
         } catch (ex instanceof Lang.Exception) {
-            // Render the exception message so we can see it in the simulator
             dc.setColor(Gfx.COLOR_RED, Gfx.COLOR_BLACK);
             dc.drawText(195, 195, Gfx.FONT_SMALL, ex.getErrorMessage(), Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
             Sys.println("WF onUpdate exception: " + ex.getErrorMessage());
         }
     }
 
-    // In sleep/ambient mode the dc is a partial-update context — only redraw the clock digits
-    // to avoid clearing/drawing outside the clip region.
+    function onTick(tickEvent) {
+        Ui.requestUpdate();
+    }
+
     function onPartialUpdate(dc) {
         try {
             var clockTime = Sys.getClockTime();
             dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_BLACK);
             dc.drawText(195, 195, Gfx.FONT_NUMBER_HOT,
-                clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d"),
+                clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d") + ":" + clockTime.sec.format("%02d"),
                 Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
         } catch (ex instanceof Lang.Exception) {
             Sys.println("WF onPartialUpdate exception: " + ex.getErrorMessage());

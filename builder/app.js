@@ -207,8 +207,12 @@ function init() {
   document.getElementById('btn-new').addEventListener('click', handleNew);
   document.getElementById('btn-save-design').addEventListener('click', handleSaveDesign);
   document.getElementById('btn-save-json').addEventListener('click', handleSaveJSON);
-  document.getElementById('btn-load-json').addEventListener('click', () => document.getElementById('file-input').click());
+  document.getElementById('btn-load-json').addEventListener('click', handleLoadDesignDialog);
   document.getElementById('file-input').addEventListener('change', handleLoadJSON);
+  document.getElementById('load-close').addEventListener('click', () => document.getElementById('load-overlay').classList.add('hidden'));
+  document.getElementById('load-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('load-overlay')) document.getElementById('load-overlay').classList.add('hidden');
+  });
 
   // ── Toolbar: export ──
   document.getElementById('btn-preview').addEventListener('click', handlePreview);
@@ -384,6 +388,61 @@ function handleLoadJSON(e) {
   };
   reader.readAsText(file);
   e.target.value = ''; // allow reloading same file
+}
+
+// ─── Load Design ──────────────────────────────────────────────────────────────
+
+async function handleLoadDesignDialog() {
+  const overlay = document.getElementById('load-overlay');
+  const list = document.getElementById('load-list');
+
+  overlay.classList.remove('hidden');
+  list.innerHTML = '<p style="color: #aaa; font-size: 12px;">Loading designs...</p>';
+
+  try {
+    const res = await fetch('/api/designs');
+    const result = await res.json();
+
+    if (!result.success || !result.designs || result.designs.length === 0) {
+      list.innerHTML = '<p style="color: #888; font-size: 12px;">No saved designs found.</p>';
+      return;
+    }
+
+    list.innerHTML = result.designs.map(design => `
+      <button style="padding: 12px; background: #2e2e2e; border: 1px solid #3a3a3a; border-radius: 3px; color: #fff; text-align: left; cursor: pointer; transition: background 0.2s;"
+              onmouseover="this.style.background='#383838'"
+              onmouseout="this.style.background='#2e2e2e'"
+              onclick="loadDesign('${design.file}')">
+        <div style="font-weight: 600; margin-bottom: 4px;">${design.name}</div>
+        <div style="font-size: 11px; color: #aaa;">${design.elementCount} elements • ${new Date(design.savedAt).toLocaleString()}</div>
+      </button>
+    `).join('');
+  } catch (err) {
+    list.innerHTML = `<p style="color: #e05050; font-size: 12px;">Error loading designs: ${err.message}</p>`;
+  }
+}
+
+async function loadDesign(filename) {
+  try {
+    const res = await fetch(`/api/designs/${encodeURIComponent(filename)}`);
+    const result = await res.json();
+
+    if (!result.success) {
+      alert(`Error loading design: ${result.error}`);
+      return;
+    }
+
+    importState(JSON.stringify(result.design));
+    setSelectedId(null);
+    showProperties(null);
+    render();
+    localStorage.setItem(LS_KEY, JSON.stringify(result.design));
+    flashSaveIndicator();
+
+    document.getElementById('load-overlay').classList.add('hidden');
+  } catch (err) {
+    alert(`Error loading design: ${err.message}`);
+  }
 }
 
 // ─── Export ───────────────────────────────────────────────────────────────────

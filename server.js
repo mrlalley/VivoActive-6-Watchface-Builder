@@ -141,6 +141,55 @@ function createServer(config = {}) {
     }
   });
 
+  // ── GET /api/designs – List saved designs ──
+  app.get('/api/designs', (req, res) => {
+    try {
+      const designsDir = path.join(__dirname, 'designs');
+      if (!fs.existsSync(designsDir)) {
+        return res.json({ success: true, designs: [] });
+      }
+
+      const files = fs.readdirSync(designsDir).filter(f => f.endsWith('.json'));
+      const designs = files.map(file => {
+        const filePath = path.join(designsDir, file);
+        try {
+          const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+          return {
+            name: data.projectName || file.replace('.json', ''),
+            file: file,
+            savedAt: data.savedAt || 'unknown',
+            elementCount: data.elements ? data.elements.length : 0,
+          };
+        } catch {
+          return null;
+        }
+      }).filter(Boolean);
+
+      res.json({ success: true, designs });
+    } catch (err) {
+      logError('designs:list-failed', { reason: err.message });
+      res.json({ success: false, error: err.message });
+    }
+  });
+
+  // ── GET /api/designs/:filename – Load a specific design ──
+  app.get('/api/designs/:filename', (req, res) => {
+    try {
+      const filename = req.params.filename.replace(/[^a-zA-Z0-9._-]/g, '');
+      const filePath = path.join(__dirname, 'designs', filename);
+
+      if (!fs.existsSync(filePath)) {
+        return res.json({ success: false, error: 'Design not found' });
+      }
+
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      res.json({ success: true, design: data });
+    } catch (err) {
+      logError('designs:load-failed', { reason: err.message });
+      res.json({ success: false, error: err.message });
+    }
+  });
+
   // ── POST /api/preview – Build and launch in simulator ──
   app.post('/api/preview', (req, res) => {
     const { elements = [], projectName = 'WatchFacePreview' } = req.body;

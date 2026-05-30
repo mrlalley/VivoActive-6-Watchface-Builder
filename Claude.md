@@ -3,6 +3,18 @@
 ## Project overview
 Build a local web-based visual design tool that lets me design a custom watch face for the Garmin Vivoactive 6 (390×390 round display), then export a valid Garmin Connect IQ Monkey C project that can be compiled into a .prg file for installation on the watch.
 
+## Quick start
+- **`npm start`** — Launch the desktop app (Electron) — automatically opens the watch face builder in a window
+- **`npm run server`** — Run just the Node.js backend server (for advanced use)
+- **`npm test`** — Run test suite
+
+## Tech stack
+- **Desktop**: Electron (cross-platform native window + IPC bridge to main process)
+- **Backend**: Node.js + Express (auto-detects Garmin SDK, generates Monkey C code)
+- **Frontend**: Vanilla JavaScript (canvas editor, property panel, element palette)
+- **Code generation**: Monkey C watch face → Garmin Connect IQ → .prg binary for device
+- **SDK**: Garmin Connect IQ 9.1.0+ (minApiLevel 4.2.0 for Vivoactive 6)
+
 ---
 
 ## Working style for this repo
