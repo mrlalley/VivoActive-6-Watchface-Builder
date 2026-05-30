@@ -1,4 +1,4 @@
-const { colorLiteral, generateDataFetch, generateDrawCall } = require('../lib/generators/monkeyc');
+const { colorLiteral, generateDataFetch, generateDrawCall, validateElement, validateGeneratorInputs } = require('../lib/generators/monkeyc');
 
 describe('Monkey C Generator', () => {
   describe('colorLiteral', () => {
@@ -171,6 +171,21 @@ describe('Monkey C Generator', () => {
       expect(result).toContain('Say \\"Hello\\"');
     });
 
+    it('escapes backslashes in custom labels before escaping quotes', () => {
+      const el = { ...baseElement, fieldId: 'customLabel', format: 'C:\\Users\\name' };
+      const result = generateDrawCall(el);
+      // Each \ becomes \\ in the output
+      expect(result).toContain('C:\\\\Users\\\\name');
+    });
+
+    it('collapses newlines in custom labels to spaces', () => {
+      const el = { ...baseElement, fieldId: 'customLabel', format: 'line1\nline2' };
+      const result = generateDrawCall(el);
+      expect(result).toContain('line1 line2');
+      // The raw newline must not appear inside the generated string literal
+      expect(result).not.toContain('"line1\nline2"');
+    });
+
     it('generates analog hand code', () => {
       const el = { ...baseElement, shapeType: 'analogHour', width: 75, height: 15 };
       const result = generateDrawCall(el);
@@ -185,6 +200,120 @@ describe('Monkey C Generator', () => {
       expect(result).toContain('for (var _i');
       expect(result).toContain('Math.PI');
       expect(result).toContain('dc.drawLine');
+    });
+  });
+
+  describe('validateElement', () => {
+    const valid = {
+      id: 1, fieldId: 'hours', label: 'Hours',
+      x: 100, y: 100, width: 50, height: 50,
+      font: 'FONT_MEDIUM', color: '#FFFFFF',
+      align: 'center', zIndex: 0, shapeType: null,
+    };
+
+    it('accepts a fully valid text element', () => {
+      expect(() => validateElement(valid, 0)).not.toThrow();
+    });
+
+    it('accepts a valid shape element without font', () => {
+      expect(() => validateElement({ ...valid, shapeType: 'circle', font: undefined }, 0)).not.toThrow();
+    });
+
+    it('rejects missing fieldId', () => {
+      expect(() => validateElement({ ...valid, fieldId: '' }, 0))
+        .toThrow('element[0].fieldId');
+    });
+
+    it('rejects fieldId with hyphen (not a valid identifier)', () => {
+      expect(() => validateElement({ ...valid, fieldId: 'heart-rate' }, 0))
+        .toThrow('element[0].fieldId');
+    });
+
+    it('rejects fieldId with spaces', () => {
+      expect(() => validateElement({ ...valid, fieldId: 'heart rate' }, 0))
+        .toThrow('element[0].fieldId');
+    });
+
+    it('rejects unknown shapeType', () => {
+      expect(() => validateElement({ ...valid, shapeType: 'rectangle' }, 0))
+        .toThrow('element[0].shapeType');
+    });
+
+    it('rejects unknown font for text elements', () => {
+      expect(() => validateElement({ ...valid, font: 'FONT_HUGE' }, 0))
+        .toThrow('element[0].font');
+    });
+
+    it('allows unknown font for shape elements (font is unused)', () => {
+      expect(() => validateElement({ ...valid, shapeType: 'circle', font: 'FONT_HUGE' }, 0))
+        .not.toThrow();
+    });
+
+    it('rejects invalid color (no hash)', () => {
+      expect(() => validateElement({ ...valid, color: 'FFFFFF' }, 0))
+        .toThrow('element[0].color');
+    });
+
+    it('rejects invalid color (3-digit shorthand)', () => {
+      expect(() => validateElement({ ...valid, color: '#FFF' }, 0))
+        .toThrow('element[0].color');
+    });
+
+    it('rejects NaN x coordinate', () => {
+      expect(() => validateElement({ ...valid, x: NaN }, 0))
+        .toThrow('element[0].x');
+    });
+
+    it('rejects Infinity height', () => {
+      expect(() => validateElement({ ...valid, height: Infinity }, 0))
+        .toThrow('element[0].height');
+    });
+
+    it('includes the element index in the error message', () => {
+      expect(() => validateElement({ ...valid, font: 'BAD_FONT' }, 5))
+        .toThrow('element[5]');
+    });
+
+    it('accepts all valid Garmin fonts', () => {
+      const fonts = [
+        'FONT_XTINY', 'FONT_TINY', 'FONT_SMALL', 'FONT_MEDIUM', 'FONT_LARGE',
+        'FONT_NUMBER_MILD', 'FONT_NUMBER_MEDIUM', 'FONT_NUMBER_HOT', 'FONT_NUMBER_THAI_HOT',
+      ];
+      fonts.forEach(font => {
+        expect(() => validateElement({ ...valid, font }, 0)).not.toThrow();
+      });
+    });
+  });
+
+  describe('validateGeneratorInputs', () => {
+    const validEl = {
+      id: 1, fieldId: 'hours', label: 'Hours',
+      x: 100, y: 100, width: 50, height: 50,
+      font: 'FONT_MEDIUM', color: '#FFFFFF',
+      align: 'center', zIndex: 0, shapeType: null,
+    };
+
+    it('accepts an empty array', () => {
+      expect(() => validateGeneratorInputs([])).not.toThrow();
+    });
+
+    it('accepts an array of valid elements', () => {
+      expect(() => validateGeneratorInputs([validEl, { ...validEl, id: 2 }])).not.toThrow();
+    });
+
+    it('rejects non-array input', () => {
+      expect(() => validateGeneratorInputs(null)).toThrow('elements must be an array');
+      expect(() => validateGeneratorInputs({})).toThrow('elements must be an array');
+    });
+
+    it('rejects array containing an invalid element', () => {
+      const bad = { ...validEl, color: 'not-a-color' };
+      expect(() => validateGeneratorInputs([validEl, bad])).toThrow('element[1].color');
+    });
+
+    it('reports the correct index for the failing element', () => {
+      const els = [validEl, { ...validEl, id: 2 }, { ...validEl, id: 3, font: 'BOGUS' }];
+      expect(() => validateGeneratorInputs(els)).toThrow('element[2]');
     });
   });
 });
