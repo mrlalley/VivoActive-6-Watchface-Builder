@@ -13,7 +13,10 @@
       "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --tree-filter 'rm -f exported-garmin-project/.vscode/settings.json' HEAD)",
       "Bash(git reset *)",
       "Bash(curl -s -i http://127.0.0.1:63601)",
-      "Bash(kill %1)"
+      "Bash(kill %1)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \"LISTEN\")",
+      "Bash(git rm *)"
     ]
   }
 }

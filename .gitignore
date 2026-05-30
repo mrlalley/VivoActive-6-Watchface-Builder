@@ -9,6 +9,7 @@ minimal-test/build/
 .env
 *.prg
 dist/
+dist-final/
 build/
 designs/
 .claude/settings.local.json
