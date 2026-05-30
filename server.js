@@ -43,6 +43,16 @@ function createServer(config = {}, detectors = {}) {
     }
   });
 
+  const healthLimiter = rateLimit({
+    windowMs: 10000, // 10 seconds
+    max: 5, // 5 requests per IP — enough for one window polling every 5s
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+      res.status(429).json({ success: false, error: 'Too many health checks' });
+    }
+  });
+
   // ─── Content Security Policy: nonce-based for stronger XSS protection ─────────
   app.use((req, res, next) => {
     // Generate a random nonce for this request
@@ -264,7 +274,7 @@ function createServer(config = {}, detectors = {}) {
   });
 
   // ── GET /api/health – Health check for Electron startup validation ──
-  app.get('/api/health', (req, res) => {
+  app.get('/api/health', healthLimiter, (req, res) => {
     const health = {
       ok: fs.existsSync(cfg.monkeyc) && fs.existsSync(cfg.devKey),
       sdkFound: fs.existsSync(cfg.monkeyc),
