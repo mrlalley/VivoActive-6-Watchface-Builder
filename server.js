@@ -1,26 +1,17 @@
+// Watch Face Builder Express server
+// Exports Monkey C projects for Garmin Vivoactive 6 watch faces
+
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { exec, spawn } = require('child_process');
+const { execFile, spawn } = require('child_process');
 
-// ─── Config ────────────────────────────────────────────────────────────────────
-// Returns configuration object with optional user overrides (used by Electron)
-
-function getConfig(overrides = {}) {
-  const SDK_BIN  = overrides.sdkBin  || 'C:\\Users\\mr_la\\AppData\\Roaming\\Garmin\\ConnectIQ\\Sdks\\connectiq-sdk-win-9.1.0-2026-03-09-6a872a80b\\bin';
-  const DEV_KEY  = overrides.devKey  || 'C:\\Users\\mr_la\\.garmin\\developer_key.der';
-  const EXPORT_DIR = overrides.exportDir || path.join(__dirname, 'exported-garmin-project');
-
-  return {
-    sdkBin: SDK_BIN,
-    monkeyc: path.join(SDK_BIN, 'monkeyc.bat'),
-    monkeydo: path.join(SDK_BIN, 'monkeydo.bat'),
-    simExe: path.join(SDK_BIN, 'simulator.exe'),
-    devKey: DEV_KEY,
-    exportDir: EXPORT_DIR,
-    tempDir: overrides.tempDir || 'C:\\Temp\\CIQPreview',
-  };
-}
+const { getConfig } = require('./lib/config');
+const { logInfo, logError, logWarn } = require('./lib/logger');
+const { validateProjectName, validateElements } = require('./lib/validation');
+const { safePrgName } = require('./lib/naming');
+const { waitForSimulator } = require('./lib/simulator');
+const { generateProjectFiles } = require('./lib/generators');
 
 // ─── Server factory ────────────────────────────────────────────────────────────
 // Creates and returns an Express app with all routes configured
@@ -32,16 +23,33 @@ function createServer(config = {}) {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.static(path.join(__dirname, 'builder')));
 
+  // ── POST /api/export – Export and build .prg file ──
   app.post('/api/export', (req, res) => {
     const { elements = [], projectName = 'MyWatchFace' } = req.body;
 
+    logInfo('export:start', { elementCount: elements.length, projectName });
+
+    // Validate input
     try {
-      generateProjectFiles(elements, projectName, cfg);
-    } catch (err) {
-      return res.json({ success: false, error: `File generation failed: ${err.message}`, log: '' });
+      validateProjectName(projectName);
+      validateElements(elements);
+    } catch (validationErr) {
+      logError('export:validation-failed', { reason: validationErr.message });
+      return res.json({ success: false, error: `Validation failed: ${validationErr.message}`, log: '' });
     }
 
+    // Generate project files
+    try {
+      generateProjectFiles(elements, projectName, cfg);
+      logInfo('export:files-generated', { projectName });
+    } catch (fileErr) {
+      logError('export:file-generation-failed', { reason: fileErr.message });
+      return res.json({ success: false, error: `File generation failed: ${fileErr.message}`, log: '' });
+    }
+
+    // Check dependencies
     if (!fs.existsSync(cfg.monkeyc)) {
+      logError('export:monkeyc-not-found', { path: cfg.monkeyc });
       return res.json({
         success: false,
         error: `monkeyc not found. Add the SDK bin directory to PATH:\n  ${cfg.sdkBin}\nThen restart this server, or open exported-garmin-project/ in VS Code and run "Monkey C: Build for Device".`,
@@ -51,6 +59,7 @@ function createServer(config = {}) {
     }
 
     if (!fs.existsSync(cfg.devKey)) {
+      logError('export:devkey-not-found', { path: cfg.devKey });
       return res.json({
         success: false,
         error: `Developer key not found at: ${cfg.devKey}\nGenerate one via VS Code Command Palette → "Monkey C: Generate a Developer Key".`,
@@ -60,55 +69,135 @@ function createServer(config = {}) {
     }
 
     const prgName = safePrgName(projectName);
-    const outPrg  = path.join(cfg.exportDir, 'bin', `${prgName}.prg`);
-    const jungle  = path.join(cfg.exportDir, 'monkey.jungle');
+    const outPrg = path.join(cfg.exportDir, 'bin', `${prgName}.prg`);
+    const jungle = path.join(cfg.exportDir, 'monkey.jungle');
 
-    const cmd = `"${cfg.monkeyc}" -o "${outPrg}" -f "${jungle}" -y "${cfg.devKey}" -d vivoactive6 --warn`;
+    logInfo('export:building', { prgName, outPrg });
 
-    exec(cmd, { timeout: 60000 }, (err, stdout, stderr) => {
+    execFile(cfg.monkeyc, ['-o', outPrg, '-f', jungle, '-y', cfg.devKey, '-d', 'vivoactive6', '--warn'], { timeout: 60000 }, (err, stdout, stderr) => {
       const log = [stdout, stderr].filter(Boolean).join('\n').trim();
       if (err) {
+        logError('export:build-failed', { code: err.code, signal: err.signal, message: err.message });
         return res.json({ success: false, error: 'Build failed — see log for details.', log, projectPath: cfg.exportDir });
       }
-      res.json({ success: true, log, prgPath: outPrg, projectPath: cfg.exportDir });
+
+      // Save design as JSON for future editing
+      const designJson = path.join(cfg.exportDir, 'design.json');
+      try {
+        fs.writeFileSync(designJson, JSON.stringify({ projectName, elements }, null, 2));
+        logInfo('export:design-saved', { designPath: designJson });
+      } catch (saveErr) {
+        logWarn('export:design-save-failed', { reason: saveErr.message });
+      }
+
+      logInfo('export:build-success', { prgPath: outPrg, designPath: designJson });
+      res.json({ success: true, log, prgPath: outPrg, designPath: designJson, projectPath: cfg.exportDir });
     });
   });
 
-  app.post('/api/open-vscode', (req, res) => {
-    exec(`code "${cfg.exportDir}"`, (err) => {
-      if (err) return res.json({ success: false, error: err.message });
-      res.json({ success: true });
-    });
+  // ── POST /api/save-design – Save design to local JSON file ──
+  app.post('/api/save-design', (req, res) => {
+    const { projectName = 'MyWatchFace', elements = [] } = req.body;
+
+    logInfo('save-design:start', { projectName, elementCount: elements.length });
+
+    try {
+      validateProjectName(projectName);
+      validateElements(elements);
+    } catch (validationErr) {
+      logError('save-design:validation-failed', { reason: validationErr.message });
+      return res.json({ success: false, error: validationErr.message });
+    }
+
+    try {
+      const designsDir = path.join(__dirname, 'designs');
+      if (!fs.existsSync(designsDir)) {
+        fs.mkdirSync(designsDir, { recursive: true });
+      }
+
+      const fileName = `${safePrgName(projectName)}.json`;
+      const filePath = path.join(designsDir, fileName);
+      const designData = { projectName, elements, savedAt: new Date().toISOString() };
+
+      fs.writeFileSync(filePath, JSON.stringify(designData, null, 2));
+      logInfo('save-design:success', { filePath });
+
+      res.json({
+        success: true,
+        filePath: filePath.replace(__dirname, '.'),
+        projectName,
+        elementCount: elements.length,
+      });
+    } catch (err) {
+      logError('save-design:failed', { reason: err.message });
+      res.json({ success: false, error: `Failed to save: ${err.message}` });
+    }
   });
 
+  // ── POST /api/preview – Build and launch in simulator ──
   app.post('/api/preview', (req, res) => {
     const { elements = [], projectName = 'WatchFacePreview' } = req.body;
 
+    logInfo('preview:start', { elementCount: elements.length, projectName });
+
+    // Validate input
     try {
-      generateProjectFiles(elements, projectName, cfg);
-    } catch (err) {
-      return res.json({ success: false, error: `File generation failed: ${err.message}`, log: '' });
+      validateProjectName(projectName);
+      validateElements(elements);
+    } catch (validationErr) {
+      logError('preview:validation-failed', { reason: validationErr.message });
+      return res.json({ success: false, error: `Validation failed: ${validationErr.message}`, log: '' });
     }
 
-    if (!fs.existsSync(cfg.monkeyc) || !fs.existsSync(cfg.devKey)) {
-      return res.json({ success: false, error: 'monkeyc or developer key not found.', log: '' });
+    // Generate project files
+    try {
+      generateProjectFiles(elements, projectName, cfg);
+      logInfo('preview:files-generated', { projectName });
+    } catch (fileErr) {
+      logError('preview:file-generation-failed', { reason: fileErr.message });
+      return res.json({ success: false, error: `File generation failed: ${fileErr.message}`, log: '' });
+    }
+
+    if (!fs.existsSync(cfg.monkeyc)) {
+      logError('preview:monkeyc-not-found', { path: cfg.monkeyc });
+      return res.json({ success: false, error: 'monkeyc not found.', log: '' });
+    }
+    if (!fs.existsSync(cfg.devKey)) {
+      logError('preview:devkey-not-found', { path: cfg.devKey });
+      return res.json({ success: false, error: 'Developer key not found.', log: '' });
     }
 
     const outPrg = path.join(cfg.exportDir, 'bin', 'WatchFace.prg');
     const jungle = path.join(cfg.exportDir, 'monkey.jungle');
-    const buildCmd = `"${cfg.monkeyc}" -o "${outPrg}" -f "${jungle}" -y "${cfg.devKey}" -d vivoactive6 --warn`;
 
-    exec(buildCmd, { timeout: 60000 }, (buildErr, stdout, stderr) => {
+    logInfo('preview:building', { outPrg });
+
+    execFile(cfg.monkeyc, ['-o', outPrg, '-f', jungle, '-y', cfg.devKey, '-d', 'vivoactive6', '--warn'], { timeout: 60000 }, (buildErr, stdout, stderr) => {
       const log = [stdout, stderr].filter(Boolean).join('\n').trim();
       if (buildErr) {
+        logError('preview:build-failed', { code: buildErr.code, signal: buildErr.signal });
         return res.json({ success: false, error: 'Build failed — see log.', log });
       }
 
-      exec('tasklist /FI "IMAGENAME eq simulator.exe" /NH', (_, taskOut) => {
+      logInfo('preview:build-success', {});
+
+      // Save design as JSON for future editing
+      const designJson = path.join(cfg.exportDir, 'design.json');
+      try {
+        fs.writeFileSync(designJson, JSON.stringify({ projectName, elements }, null, 2));
+        logInfo('preview:design-saved', { designPath: designJson });
+      } catch (saveErr) {
+        logWarn('preview:design-save-failed', { reason: saveErr.message });
+      }
+
+      execFile('tasklist.exe', ['/FI', 'IMAGENAME eq simulator.exe', '/NH'], (taskErr, taskOut) => {
         const simRunning = taskOut && taskOut.toLowerCase().includes('simulator.exe');
 
         if (!simRunning) {
+          logInfo('preview:launching-simulator', {});
           spawn(cfg.simExe, [], { detached: true, stdio: 'ignore' }).unref();
+        } else {
+          logInfo('preview:simulator-already-running', {});
         }
 
         res.json({ success: true, log, message: simRunning ? 'Reloading in simulator…' : 'Starting simulator…' });
@@ -116,14 +205,23 @@ function createServer(config = {}) {
         waitForSimulator(() => {
           const tmpDir = cfg.tempDir;
           const tmpPrg = path.join(tmpDir, 'WatchFace.prg');
-          try { fs.mkdirSync(tmpDir, { recursive: true }); fs.copyFileSync(outPrg, tmpPrg); } catch {}
+          try {
+            fs.mkdirSync(tmpDir, { recursive: true });
+            fs.copyFileSync(outPrg, tmpPrg);
+            logInfo('preview:prg-copied', { from: outPrg, to: tmpPrg });
+          } catch (copyErr) {
+            logWarn('preview:prg-copy-failed', { reason: copyErr.message });
+          }
 
           const prgArg = fs.existsSync(tmpPrg) ? tmpPrg : outPrg;
-          console.log('[monkeydo] loading:', prgArg);
-          exec(`"${cfg.monkeydo}" "${prgArg}" vivoactive6`, (mdErr, mdOut, mdErr2) => {
+          logInfo('preview:loading-prg', { prgPath: prgArg });
+          execFile(cfg.monkeydo, [prgArg, 'vivoactive6'], (mdErr, mdOut, mdErr2) => {
             const mdLog = [mdOut, mdErr2].filter(Boolean).join('\n').trim();
-            if (mdErr) console.error('[monkeydo] failed:', mdErr.message, '\n', mdLog);
-            else console.log('[monkeydo] OK:', mdLog || '(no output)');
+            if (mdErr) {
+              logError('preview:monkeydo-failed', { code: mdErr.code, message: mdErr.message });
+            } else {
+              logInfo('preview:monkeydo-success', {});
+            }
           });
         });
       });
@@ -131,582 +229,6 @@ function createServer(config = {}) {
   });
 
   return app;
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function safePrgName(name) {
-  return ((name || 'WatchFace')
-    .replace(/\s+/g, '_')
-    .replace(/[^a-zA-Z0-9_-]/g, '')
-    .slice(0, 30)) || 'WatchFace';
-}
-
-function waitForSimulator(callback, deadline) {
-  if (!deadline) deadline = Date.now() + 20000;
-  exec('tasklist /FI "IMAGENAME eq simulator.exe" /NH', (_, out) => {
-    if (out && out.toLowerCase().includes('simulator.exe')) {
-      console.log('[sim] simulator.exe is running — waiting 8s for init');
-      setTimeout(callback, 8000);
-    } else if (Date.now() < deadline) {
-      setTimeout(() => waitForSimulator(callback, deadline), 1000);
-    } else {
-      console.error('[sim] simulator never became ready within 20s');
-      callback();
-    }
-  });
-}
-
-// ─── Project file generators ──────────────────────────────────────────────────
-
-const TEMPLATE_DIR = path.join(__dirname, 'garmin-project-template');
-
-function generateProjectFiles(elements, projectName, cfg) {
-  const dirs = [
-    cfg.exportDir,
-    path.join(cfg.exportDir, 'source'),
-    path.join(cfg.exportDir, 'resources', 'layouts'),
-    path.join(cfg.exportDir, 'resources', 'drawables'),
-    path.join(cfg.exportDir, 'resources', 'strings'),
-    path.join(cfg.exportDir, 'resources', 'fonts'),
-    path.join(cfg.exportDir, 'bin'),
-  ];
-  dirs.forEach(d => fs.mkdirSync(d, { recursive: true }));
-
-  const iconSrc = path.join(TEMPLATE_DIR, 'resources', 'drawables', 'launcher_icon.png');
-  const iconDst = path.join(cfg.exportDir, 'resources', 'drawables', 'launcher_icon.png');
-  if (fs.existsSync(iconSrc)) fs.copyFileSync(iconSrc, iconDst);
-  fs.writeFileSync(
-    path.join(cfg.exportDir, 'resources', 'drawables', 'drawables.xml'),
-    `<drawables xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">\n    <bitmap id="LauncherIcon" filename="launcher_icon.png" />\n</drawables>\n`,
-  );
-
-  const vscodeDir = path.join(cfg.exportDir, '.vscode');
-  fs.mkdirSync(vscodeDir, { recursive: true });
-  fs.writeFileSync(path.join(vscodeDir, 'settings.json'),
-    JSON.stringify({ 'monkeyC.developerKeyPath': cfg.devKey }, null, 2) + '\n');
-
-  const permissions = getRequiredPermissions(elements);
-
-  fs.writeFileSync(path.join(cfg.exportDir, 'manifest.xml'),   generateManifest(projectName, permissions));
-  fs.writeFileSync(path.join(cfg.exportDir, 'monkey.jungle'),  generateJungle());
-  fs.writeFileSync(path.join(cfg.exportDir, 'source', 'WatchFaceView.mc'), generateMonkeyC(elements));
-  fs.writeFileSync(path.join(cfg.exportDir, 'resources', 'layouts', 'layout.xml'), generateLayout());
-  fs.writeFileSync(path.join(cfg.exportDir, 'resources', 'strings', 'strings.xml'), generateStrings(projectName));
-}
-
-function getRequiredPermissions(elements) {
-  const permMap = {
-    restingHeartRate: 'UserProfile',
-    steps:            'UserProfile',
-    stepGoal:         'UserProfile',
-    calories:         'UserProfile',
-    activeCalories:   'UserProfile',
-    intensityMins:    'UserProfile',
-    floorsClimbed:    'UserProfile',
-    distance:         'UserProfile',
-    hrGraph:          'SensorHistory',
-    spo2:             'SensorHistory',
-    respirationRate:  'SensorHistory',
-    hrvStatus:        'SensorHistory',
-    bodyBattery:      'SensorHistory',
-    stressLevel:      'SensorHistory',
-    vo2Max:           'UserProfile',
-    fitnessAge:       'UserProfile',
-    sunrise:          'Positioning',
-    sunset:           'Positioning',
-    timeTillSunEvent: 'Positioning',
-    weather:          'Positioning',
-    weatherHiLo:      'Positioning',
-  };
-  const perms = new Set();
-  elements.forEach(el => { const p = permMap[el.fieldId]; if (p) perms.add(p); });
-  return [...perms];
-}
-
-function generateManifest(projectName, permissions) {
-  const ts = Date.now().toString(16).padStart(12, '0').slice(-12);
-  const permXml = permissions.map(p => `            <iq:uses-permission id="${p}"/>`).join('\n');
-  const permBlock = permissions.length
-    ? `<iq:permissions>\n${permXml}\n        </iq:permissions>`
-    : `<iq:permissions/>`;
-
-  return `<?xml version="1.0"?>
-<iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
-    <iq:application id="a3872ef0-6346-4321-abcd-${ts}" type="watchface" name="@Strings.AppName" entry="WatchFaceApp" launcherIcon="@Drawables.LauncherIcon" minApiLevel="4.2.0">
-        <iq:products>
-            <iq:product id="vivoactive6"/>
-        </iq:products>
-        ${permBlock}
-        <iq:languages>
-            <iq:language>eng</iq:language>
-        </iq:languages>
-        <iq:barrels/>
-    </iq:application>
-</iq:manifest>
-`;
-}
-
-function generateJungle() {
-  return `project.manifest = manifest.xml
-
-base.sourcePath = source
-base.resourcePath = resources
-
-vivoactive6.resourcePath = $(base.resourcePath)
-vivoactive6.sourcePath = $(base.sourcePath)
-`;
-}
-
-const DATE_FIELDS     = new Set(['dateFullDate', 'dateMonthDay', 'dateDay', 'amPm']);
-const ACTIVITY_FIELDS = new Set(['heartRate','heartRateZone']);
-const MONITOR_FIELDS  = new Set(['steps','stepGoal','calories','activeCalories','intensityMins','floorsClimbed','distance']);
-const SOLAR_FIELDS    = new Set(['sunrise','sunset','timeTillSunEvent']);
-
-function generateMonkeyC(elements) {
-  const sorted = elements.slice().sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
-  const fieldIds = new Set(elements.map(e => e.fieldId));
-
-  const needsCalendar      = [...fieldIds].some(id => DATE_FIELDS.has(id));
-  const needsActivity      = [...fieldIds].some(id => ACTIVITY_FIELDS.has(id));
-  const needsMonitor       = [...fieldIds].some(id => MONITOR_FIELDS.has(id));
-  const needsUserProfile   = [...fieldIds].some(id => ['restingHeartRate'].includes(id));
-  const needsSolar         = [...fieldIds].some(id => SOLAR_FIELDS.has(id));
-  const needsMoonPhase     = fieldIds.has('moonPhase');
-  const needsMath          = needsSolar || elements.some(e => e.shapeType && (e.shapeType.startsWith('tick') || e.shapeType.startsWith('analog')));
-  const needsSensorHistory = [...fieldIds].some(id => ['hrGraph','bodyBattery','stressLevel','spo2','respirationRate','hrvStatus'].includes(id));
-
-  const seenFields = new Set();
-  let dataFetches = sorted
-    .filter(el => { if (seenFields.has(el.fieldId)) return false; seenFields.add(el.fieldId); return true; })
-    .map(generateDataFetch).filter(Boolean).join('\n        ');
-
-  if (fieldIds.has('moonPhasePercent') && !fieldIds.has('moonPhase')) {
-    dataFetches = generateDataFetch({fieldId: 'moonPhase'}) + '\n        ' + dataFetches;
-  }
-
-  const drawCalls = sorted.map(generateDrawCall).filter(Boolean).join('\n\n        ');
-
-  const calendarVars = needsCalendar
-    ? `var now = Time.now();\n        var info = Calendar.info(now, Time.FORMAT_MEDIUM);`
-    : '';
-  const activityVar = needsActivity ? `var _ai = Activity.getActivityInfo();` : '';
-  const monitorVar  = needsMonitor  ? `var _ami = ActivityMonitor.getInfo();` : '';
-  const solarVars = needsSolar ? `
-        var _pos = Position.getInfo();
-        var _lat = 0.0; var _lon = 0.0; var _hasPos = false;
-        if (_pos != null && _pos.position != null) {
-            var _coords = _pos.position.toDegrees();
-            _lat = _coords[0].toFloat(); _lon = _coords[1].toFloat(); _hasPos = true;
-        }
-        var _srMin = _hasPos ? calcSunTimeMin(_lat, _lon, true)  : -1;
-        ${fieldIds.has('sunset') || fieldIds.has('timeTillSunEvent') ? 'var _ssMin = _hasPos ? calcSunTimeMin(_lat, _lon, false) : -1;' : ''}` : '';
-
-  const sunMethodBody = needsSolar ? `
-    function calcSunTimeMin(latDeg, lonDeg, isSunrise) {
-        var jd = 2440587.5 + Time.today().value().toFloat() / 86400.0;
-        var D = jd - 2451545.0;
-        var g = (357.529 + 0.98560028 * D).toFloat();
-        g -= (g / 360.0).toNumber() * 360.0;
-        if (g < 0.0) { g += 360.0; }
-        var q = (280.459 + 0.98564736 * D).toFloat();
-        q -= (q / 360.0).toNumber() * 360.0;
-        if (q < 0.0) { q += 360.0; }
-        var gRad = g * Math.PI / 180.0;
-        var L = (q + 1.915 * Math.sin(gRad) + 0.020 * Math.sin(2.0 * gRad)) * Math.PI / 180.0;
-        var e = (23.439 - 0.00000036 * D) * Math.PI / 180.0;
-        var sinDec = Math.sin(e) * Math.sin(L);
-        var dec = Math.asin(sinDec);
-        var latRad = latDeg * Math.PI / 180.0;
-        var cosH = (Math.cos(90.833 * Math.PI / 180.0) - Math.sin(latRad) * sinDec)
-                   / (Math.cos(latRad) * Math.cos(dec));
-        if (cosH > 1.0 || cosH < -1.0) { return -1; }
-        var H = Math.acos(cosH) * 180.0 / Math.PI;
-        var RA = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L)) * 12.0 / Math.PI;
-        var eqTime = (q / 15.0 - RA) * 60.0;
-        var solarNoon = 720.0 - lonDeg * 4.0 - eqTime;
-        var sunUTC = solarNoon + (isSunrise ? -H : H) * 4.0;
-        var tzSec = Sys.getClockTime().timeZoneOffset;
-        var localMin = (sunUTC + tzSec.toFloat() / 60.0).toNumber();
-        if (localMin < 0) { localMin += 1440; }
-        if (localMin >= 1440) { localMin -= 1440; }
-        return localMin;
-    }` : '';
-
-  return `using Toybox.Application as App;
-using Toybox.WatchUi as Ui;
-using Toybox.Graphics as Gfx;
-using Toybox.System as Sys;
-${needsActivity               ? 'using Toybox.Activity as Activity;'               : ''}
-${needsMonitor                ? 'using Toybox.ActivityMonitor as ActivityMonitor;' : ''}
-${needsUserProfile            ? 'using Toybox.UserProfile as UserProfile;'         : ''}
-${(needsCalendar||needsSolar||needsMoonPhase) ? 'using Toybox.Time as Time;'           : ''}
-${needsCalendar               ? 'using Toybox.Time.Gregorian as Calendar;'         : ''}
-${needsSolar                  ? 'using Toybox.Position as Position;'               : ''}
-using Toybox.Lang as Lang;
-${needsMath                   ? 'using Toybox.Math as Math;'                       : ''}
-${needsSensorHistory          ? 'using Toybox.SensorHistory as SensorHistory;'     : ''}
-
-class WatchFaceApp extends App.AppBase {
-    function initialize() { AppBase.initialize(); }
-    function getInitialView() {
-        if (Ui has :WatchFaceDelegate) {
-            var view = new WatchFaceView();
-            return [view, new WatchFaceViewDelegate(view)];
-        }
-        return [new WatchFaceView()];
-    }
-}
-
-class WatchFaceViewDelegate extends Ui.WatchFaceDelegate {
-    function initialize(view as WatchFaceView) {
-        WatchFaceDelegate.initialize();
-    }
-    function onPowerBudgetExceeded(powerInfo as Ui.WatchFacePowerInfo) as Void {
-        Sys.println("Power budget exceeded: " + powerInfo.executionTimeAverage + "ms");
-    }
-}
-
-class WatchFaceView extends Ui.WatchFace {
-
-    function initialize() {
-        WatchFace.initialize();
-    }
-
-    function onLayout(dc) {
-    }
-${sunMethodBody}
-    function onShow() {
-        Ui.requestUpdate();
-    }
-
-    function onUpdate(dc) {
-        Sys.println("WF onUpdate called");
-        dc.setColor(Gfx.COLOR_BLACK, Gfx.COLOR_BLACK);
-        dc.clear();
-        try {
-            var clockTime = Sys.getClockTime();
-            ${calendarVars}
-            ${activityVar}
-            ${monitorVar}
-            ${solarVars}
-            ${dataFetches}
-
-            ${drawCalls}
-        } catch (ex instanceof Lang.Exception) {
-            dc.setColor(Gfx.COLOR_RED, Gfx.COLOR_BLACK);
-            dc.drawText(195, 195, Gfx.FONT_SMALL, ex.getErrorMessage(), Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-            Sys.println("WF onUpdate exception: " + ex.getErrorMessage());
-        }
-    }
-
-    function onPartialUpdate(dc) {
-        try {
-            var clockTime = Sys.getClockTime();
-            dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_BLACK);
-            dc.drawText(195, 195, Gfx.FONT_NUMBER_HOT,
-                clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d"),
-                Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER);
-        } catch (ex instanceof Lang.Exception) {
-            Sys.println("WF onPartialUpdate exception: " + ex.getErrorMessage());
-        }
-    }
-
-    function onHide() {}
-    function onExitSleep() { Ui.requestUpdate(); }
-    function onEnterSleep() { Ui.requestUpdate(); }
-}
-`;
-}
-
-function generateDataFetch(el) {
-  const map = {
-    altTimeZone:       `var altTimeZone = "--";`,
-    alarm:             `var alarmTime = "--";`,
-    sunrise:          `var sunriseTime = _srMin >= 0 ? (_srMin / 60).format("%d") + ":" + (_srMin % 60).format("%02d") : "--:--";`,
-    sunset:           `var sunsetTime  = _ssMin >= 0 ? (_ssMin / 60).format("%d") + ":" + (_ssMin % 60).format("%02d") : "--:--";`,
-    timeTillSunEvent: `var _nowM = Sys.getClockTime().hour * 60 + Sys.getClockTime().min;
-        var _next = -1;
-        if (_srMin >= 0 && _srMin > _nowM) { _next = _srMin - _nowM; }
-        else if (_ssMin >= 0 && _ssMin > _nowM) { _next = _ssMin - _nowM; }
-        else if (_srMin >= 0) { _next = 1440 - _nowM + _srMin; }
-        var timeTillSun = _next >= 0 ? (_next / 60).format("%d") + "h " + (_next % 60).format("%02d") + "m" : "--h --m";`,
-    moonPhase: `var _jdM = 2440587.5 + Time.now().value().toFloat() / 86400.0;
-        var _phs = (_jdM - 2451549.5) / 29.530589;
-        _phs -= _phs.toNumber().toFloat();
-        if (_phs < 0.0) { _phs += 1.0; }
-        _phs = 1.0 - _phs;`,
-    moonPhasePercent: `var moonPhasePercent = ((_phs < 0.5 ? _phs : 1.0 - _phs) * 200.0).toNumber().toString() + "%";`,
-    calendarEvent:     `var calendarEvent = "--";`,
-    heartRate:         `var heartRate = (_ai != null && _ai.currentHeartRate != null) ? _ai.currentHeartRate.toString() : "--";`,
-    restingHeartRate:  `var restingHR = "--";`,
-    heartRateZone:     `var hrZone = "--";`,
-    spo2:              `var _o2h = SensorHistory.getOxygenSaturationHistory(null);
-        var _o2s = _o2h != null ? _o2h.next() : null;
-        var spo2 = (_o2s != null && _o2s.data != null) ? (_o2s.data.toNumber()).format("%d") + "%" : "--";`,
-    respirationRate:   `var _rrh = SensorHistory.getRespirationRateHistory(null);
-        var _rrs = _rrh != null ? _rrh.next() : null;
-        var respirationRate = (_rrs != null && _rrs.data != null) ? (_rrs.data.toNumber()).format("%d") : "--";`,
-    hrvStatus:         `var _hrvh = SensorHistory.getHeartRateVariabilityHistory(null);
-        var _hrvs = _hrvh != null ? _hrvh.next() : null;
-        var hrvStatus = (_hrvs != null && _hrvs.data != null) ? (_hrvs.data.toNumber()).format("%d") : "--";`,
-    bodyBattery:       `var _bbh = SensorHistory.getBodyBatteryHistory(null);
-        var _bbs = _bbh != null ? _bbh.next() : null;
-        var bodyBattery = (_bbs != null && _bbs.data != null) ? (_bbs.data.toNumber()).format("%d") : "--";`,
-    stressLevel:       `var _ssh = SensorHistory.getStressHistory(null);
-        var _sss = _ssh != null ? _ssh.next() : null;
-        var stressLevel = (_sss != null && _sss.data != null) ? (_sss.data.toNumber()).format("%d") : "--";`,
-    recoveryTime:      `var recoveryTime = "--";`,
-    sleepScore:        `var sleepScore = "--";`,
-    sleepCoach:        `var sleepCoach = "--";`,
-    trainingReadiness: `var trainReadiness = "--";`,
-    steps:             `var steps    = (_ami != null && _ami.steps    != null) ? _ami.steps.toString()    : "--";`,
-    stepGoal:          `var stepGoal = (_ami != null && _ami.stepGoal != null) ? _ami.stepGoal.toString() : "--";`,
-    calories:          `var calories = (_ami != null && _ami.calories != null) ? _ami.calories.toString() : "--";`,
-    activeCalories:    `var activeCalories = "--";`,
-    intensityMins:     `var intensityMins = (_ami != null && _ami.activeMinutesWeek != null) ? _ami.activeMinutesWeek.total.toString() : "--";`,
-    floorsClimbed:     `var floors        = (_ami != null && _ami.floorsClimbed != null)    ? _ami.floorsClimbed.toString()             : "--";`,
-    distance:          `var distance      = (_ami != null && _ami.distance != null)          ? (_ami.distance / 100000.0).format("%.2f") + "km" : "--km";`,
-    vo2Max:            `var vo2Max = "--";`,
-    fitnessAge:        `var fitnessAge = "--";`,
-    acuteLoad:         `var acuteLoad = "--";`,
-    lastActivity:      `var lastActivity = "--";`,
-    weeklyRunning:     `var weeklyRunning = "--";`,
-    weeklyCycling:     `var weeklyCycling = "--";`,
-    weather:           `var weather = "--°";`,
-    weatherHiLo:       `var weatherHiLo = "--/--°";`,
-    battery:           `var battery = (Sys.getSystemStats().battery + 0.5).toNumber().toString() + "%";`,
-    notifications:     `var notifications = Sys.getDeviceSettings().notificationCount.toString();`,
-    eventCountdown:    `var eventCountdown = "--";`,
-    timer:             `var timerVal = "00:00";`,
-    utcTime:           `var utcTime = clockTime.hour.format("%02d") + ":" + clockTime.min.format("%02d");`,
-  };
-  return map[el.fieldId] || null;
-}
-
-function colorLiteral(hexColor) {
-  const n = parseInt((hexColor || '#ffffff').replace('#', ''), 16);
-  return `0x${n.toString(16).padStart(6, '0').toUpperCase()}`;
-}
-
-function generateDrawCall(el) {
-  const color  = colorLiteral(el.color);
-  const font   = `Gfx.${el.font || 'FONT_MEDIUM'}`;
-  const align  = el.align === 'center' ? 'Gfx.TEXT_JUSTIFY_CENTER | Gfx.TEXT_JUSTIFY_VCENTER'
-               : el.align === 'right'  ? 'Gfx.TEXT_JUSTIFY_RIGHT  | Gfx.TEXT_JUSTIFY_VCENTER'
-               : 'Gfx.TEXT_JUSTIFY_LEFT | Gfx.TEXT_JUSTIFY_VCENTER';
-
-  const textMap = {
-    hours:             `clockTime.hour.format("%02d")`,
-    minutes:           `clockTime.min.format("%02d")`,
-    seconds:           `clockTime.sec.format("%02d")`,
-    amPm:              `(clockTime.hour < 12) ? "AM" : "PM"`,
-    dateFullDate:      `info.day_of_week + ", " + info.month.toString() + "/" + info.day.toString()`,
-    dateMonthDay:      `info.month.toString() + "/" + info.day.toString()`,
-    dateDay:           `info.day_of_week`,
-    altTimeZone:       `altTimeZone`,
-    alarm:             `alarmTime`,
-    sunrise:           `sunriseTime`,
-    sunset:            `sunsetTime`,
-    timeTillSunEvent:  `timeTillSun`,
-    moonPhase:         `moonPhase`,
-    moonPhasePercent:  `moonPhasePercent`,
-    calendarEvent:     `calendarEvent`,
-    heartRate:         `heartRate`,
-    restingHeartRate:  `restingHR`,
-    heartRateZone:     `hrZone`,
-    spo2:              `spo2`,
-    respirationRate:   `respirationRate`,
-    hrvStatus:         `hrvStatus`,
-    bodyBattery:       `bodyBattery`,
-    stressLevel:       `stressLevel`,
-    recoveryTime:      `recoveryTime`,
-    sleepScore:        `sleepScore`,
-    sleepCoach:        `sleepCoach`,
-    trainingReadiness: `trainReadiness`,
-    steps:             `steps`,
-    stepGoal:          `stepGoal`,
-    calories:          `calories`,
-    activeCalories:    `activeCalories`,
-    intensityMins:     `intensityMins`,
-    floorsClimbed:     `floors`,
-    distance:          `distance`,
-    vo2Max:            `vo2Max`,
-    fitnessAge:        `fitnessAge`,
-    acuteLoad:         `acuteLoad`,
-    lastActivity:      `lastActivity`,
-    weeklyRunning:     `weeklyRunning`,
-    weeklyCycling:     `weeklyCycling`,
-    weather:           `weather`,
-    weatherHiLo:       `weatherHiLo`,
-    battery:           `battery`,
-    notifications:     `notifications`,
-    eventCountdown:    `eventCountdown`,
-    timer:             `timerVal`,
-    utcTime:           `utcTime`,
-    customLabel:       `"${(el.format || el.label || 'Label').replace(/"/g, '\\"')}"`,
-  };
-
-  if (el.shapeType === 'btIcon') {
-    const r = Math.round(Math.min(el.width, el.height) / 2);
-    return `if (Sys.getDeviceSettings().phoneConnected) {
-            dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
-            dc.fillCircle(${Math.round(el.x)}, ${Math.round(el.y)}, ${r});
-        }`;
-  }
-  if (el.shapeType === 'moonPhase') {
-    const r = Math.round(Math.min(el.width, el.height) / 2);
-    const cx = Math.round(el.x);
-    const cy = Math.round(el.y);
-    return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
-        dc.fillCircle(${cx}, ${cy}, ${r});
-        dc.setColor(Gfx.COLOR_BLACK, Gfx.COLOR_TRANSPARENT);
-        if (_phs < 0.5) {
-            var _sxWan = ${cx} + (${r} - ${r} * 2.0 * _phs).toNumber();
-            dc.fillCircle(_sxWan, ${cy}, ${r});
-        } else {
-            var _sxWax = ${cx} - (${r} - ${r} * 2.0 * (_phs - 0.5)).toNumber();
-            dc.fillCircle(_sxWax, ${cy}, ${r});
-        }`;
-  }
-  if (el.shapeType === 'circle') {
-    const r = Math.round(Math.min(el.width, el.height) / 2);
-    return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);\n        dc.drawCircle(${Math.round(el.x)}, ${Math.round(el.y)}, ${r});`;
-  }
-  if (el.shapeType === 'line') {
-    const lx1 = Math.round(el.x - el.width / 2), lx2 = Math.round(el.x + el.width / 2);
-    return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);\n        dc.drawLine(${lx1}, ${Math.round(el.y)}, ${lx2}, ${Math.round(el.y)});`;
-  }
-  if (el.shapeType === 'arc') {
-    const r = Math.round(Math.min(el.width, el.height) / 2);
-    return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);\n        dc.drawArc(${Math.round(el.x)}, ${Math.round(el.y)}, ${r}, Gfx.ARC_CLOCKWISE, 0, 180);`;
-  }
-  if (el.shapeType === 'tickHour')    return generateTickCode(el, 12, false, el.height, el.height, 2);
-  if (el.shapeType === 'tickMinute')  return generateTickCode(el, 60, false, el.height, el.height, 1);
-  if (el.shapeType === 'tickMixed')   return generateTickCode(el, 60, true,  el.height, Math.max(2, Math.round(el.height * 0.45)), 3);
-  if (el.shapeType === 'tickDots')    return generateTickDotsCode(el, 12, el.height);
-  if (el.shapeType === 'analogHour')   return generateAnalogHandCode(el, 'hour');
-  if (el.shapeType === 'analogMinute') return generateAnalogHandCode(el, 'minute');
-  if (el.shapeType === 'analogSecond') return generateAnalogHandCode(el, 'second');
-  if (el.shapeType === 'analogCenter') return generateAnalogCenterCode(el);
-  if (el.shapeType === 'hrGraph')      return generateHRGraphCode(el);
-
-  const textExpr = textMap[el.fieldId] || `"${el.label}"`;
-  return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);\n        dc.drawText(${Math.round(el.x)}, ${Math.round(el.y)}, ${font}, ${textExpr}, ${align});`;
-}
-
-function generateTickCode(el, count, hasMajorMinor, majorLen, minorLen, majorPen) {
-  const color = colorLiteral(el.color);
-  const cx = Math.round(el.x), cy = Math.round(el.y);
-  const outerR = Math.round(el.width);
-  const minorInnerR = outerR - minorLen;
-  const majorInnerR = outerR - majorLen;
-
-  if (!hasMajorMinor) {
-    return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
-        dc.setPenWidth(${majorPen});
-        for (var _i = 0; _i < ${count}; _i++) {
-            var _a = (_i.toDouble() / ${count}.0) * 2.0 * Math.PI - Math.PI / 2.0;
-            var _ox = ${cx} + (${outerR}.0 * Math.cos(_a)).toNumber();
-            var _oy = ${cy} + (${outerR}.0 * Math.sin(_a)).toNumber();
-            var _ix = ${cx} + (${minorInnerR}.0 * Math.cos(_a)).toNumber();
-            var _iy = ${cy} + (${minorInnerR}.0 * Math.sin(_a)).toNumber();
-            dc.drawLine(_ox, _oy, _ix, _iy);
-        }`;
-  }
-
-  return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
-        for (var _i = 0; _i < ${count}; _i++) {
-            var _a = (_i.toDouble() / ${count}.0) * 2.0 * Math.PI - Math.PI / 2.0;
-            var _isMaj = (_i % 5) == 0;
-            var _innerR = _isMaj ? ${majorInnerR}.0 : ${minorInnerR}.0;
-            dc.setPenWidth(_isMaj ? ${majorPen} : 1);
-            var _ox = ${cx} + (${outerR}.0 * Math.cos(_a)).toNumber();
-            var _oy = ${cy} + (${outerR}.0 * Math.sin(_a)).toNumber();
-            var _ix = ${cx} + (_innerR * Math.cos(_a)).toNumber();
-            var _iy = ${cy} + (_innerR * Math.sin(_a)).toNumber();
-            dc.drawLine(_ox, _oy, _ix, _iy);
-        }`;
-}
-
-function generateTickDotsCode(el, count, dotR) {
-  const color = colorLiteral(el.color);
-  const cx = Math.round(el.x), cy = Math.round(el.y);
-  const outerR = Math.round(el.width);
-  const r = Math.max(1, Math.round(dotR));
-  return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
-        for (var _i = 0; _i < ${count}; _i++) {
-            var _a = (_i.toDouble() / ${count}.0) * 2.0 * Math.PI - Math.PI / 2.0;
-            var _px = ${cx} + (${outerR}.0 * Math.cos(_a)).toNumber();
-            var _py = ${cy} + (${outerR}.0 * Math.sin(_a)).toNumber();
-            dc.fillCircle(_px, _py, ${r});
-        }`;
-}
-
-function generateAnalogHandCode(el, type) {
-  const color  = colorLiteral(el.color);
-  const cx     = Math.round(el.x), cy = Math.round(el.y);
-  const len    = el.width,  tail = el.height;
-  const penW   = type === 'hour' ? 5 : type === 'minute' ? 4 : 2;
-  const angleExpr =
-    type === 'hour'   ? `((clockTime.hour % 12) * 30 + clockTime.min * 0.5) * Math.PI / 180.0 - Math.PI / 2.0`
-  : type === 'minute' ? `(clockTime.min * 6 + clockTime.sec * 0.1) * Math.PI / 180.0 - Math.PI / 2.0`
-  :                     `clockTime.sec * Math.PI / 30.0 - Math.PI / 2.0`;
-
-  return `{ var _a = ${angleExpr};
-          var _cos = Math.cos(_a); var _sin = Math.sin(_a);
-          dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
-          dc.setPenWidth(${penW});
-          dc.drawLine(
-              (${cx}.0 - ${tail}.0 * _cos).toNumber(), (${cy}.0 - ${tail}.0 * _sin).toNumber(),
-              (${cx}.0 + ${len}.0  * _cos).toNumber(), (${cy}.0 + ${len}.0  * _sin).toNumber()
-          ); }`;
-}
-
-function generateAnalogCenterCode(el) {
-  const color = colorLiteral(el.color);
-  const r = Math.max(2, Math.round(el.width));
-  return `dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
-        dc.fillCircle(${Math.round(el.x)}, ${Math.round(el.y)}, ${r});`;
-}
-
-function generateHRGraphCode(el) {
-  const color = colorLiteral(el.color);
-  const gx = Math.round(el.x - el.width / 2),  gy = Math.round(el.y - el.height / 2);
-  const gw = Math.round(el.width),              gh = Math.round(el.height);
-  return `{ var _hrIt = SensorHistory.getHeartRateHistory({:period => 180, :order => SensorHistory.ORDER_OLDEST_FIRST});
-          if (_hrIt != null) {
-              var _MAX = 60; var _idx = 0;
-              var _px = -1; var _py = -1;
-              dc.setColor(${color}, Gfx.COLOR_TRANSPARENT);
-              dc.setPenWidth(2);
-              var _s = _hrIt.next();
-              while (_s != null && _idx < _MAX) {
-                  var _hr = _s.data;
-                  if (_hr instanceof Number) {
-                      var _nx = ${gx} + _idx * ${gw} / _MAX;
-                      var _ny = ${gy + gh} - (_hr - 50) * ${gh} / 80;
-                      if (_px >= 0) { dc.drawLine(_px, _py, _nx, _ny); }
-                      _px = _nx; _py = _ny;
-                  }
-                  _idx++; _s = _hrIt.next();
-              }
-          } }`;
-}
-
-function generateLayout() {
-  return `<layouts xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
-    <layout id="WatchFace">
-    </layout>
-</layouts>
-`;
-}
-
-function generateStrings(projectName) {
-  return `<strings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
-    <string id="AppName">${projectName}</string>
-</strings>
-`;
 }
 
 // ─── Exports and direct invocation ────────────────────────────────────────────

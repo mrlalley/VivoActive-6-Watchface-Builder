@@ -21,9 +21,3 @@ export async function previewInSimulator() {
   if (!res.ok) throw new Error(`Server error ${res.status}`);
   return res.json();
 }
-
-export async function openInVSCode() {
-  const res = await fetch('/api/open-vscode', { method: 'POST' });
-  if (!res.ok) throw new Error(`Server error ${res.status}`);
-  return res.json();
-}

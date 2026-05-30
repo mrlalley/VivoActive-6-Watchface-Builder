@@ -6,7 +6,8 @@ module.exports = {
     // App metadata
     appVersion: '1.0.0',
     name: 'WatchFace Builder',
-    appBundleId: 'com.garmin.watchfacebuilder',
+    appBundleId: 'com.watchfacebuilder.app',
+    icon: './assets/icon',
 
     // Files to exclude from the packaged app
     ignore: [
@@ -15,6 +16,7 @@ module.exports = {
       /^\/\.claude$/,
       /^\/exported-garmin-project$/,
       /^\/minimal-test$/,
+      /^\/designs$/,
       /^\/\.env$/,
       /^\/.*\.log$/,
       /^\/forge\.config\.js$/,

@@ -10,4 +10,5 @@ minimal-test/build/
 *.prg
 dist/
 build/
+designs/
 .claude/settings.local.json

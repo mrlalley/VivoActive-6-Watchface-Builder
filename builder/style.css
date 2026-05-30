@@ -37,13 +37,34 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 /* ── Toolbar ───────────────────────────────────────────────────────────────── */
 #toolbar {
   display: flex; align-items: center; gap: 6px;
-  height: var(--toolbar-h); min-height: var(--toolbar-h);
-  padding: 0 12px;
+  flex-wrap: wrap;
+  min-height: var(--toolbar-h);
+  padding: 6px 12px;
   background: var(--surface); border-bottom: 1px solid var(--border);
 }
 .app-title { font-weight: 700; font-size: 14px; letter-spacing: .02em; margin-right: 8px; white-space: nowrap; }
-.toolbar-group { display: flex; gap: 4px; }
-.spacer { flex: 1; }
+.toolbar-group { display: flex; gap: 4px; flex-wrap: wrap; }
+.spacer { flex: 1; min-width: 8px; }
+
+/* Responsive button sizing */
+@media (max-width: 1366px) {
+  .btn {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+/* On very small viewports, hide non-critical buttons */
+@media (max-width: 900px) {
+  .app-title { display: none; }
+  #btn-save-json, #btn-load-json { display: none; }
+}
+
+/* Ensure export button stays visible */
+#btn-export {
+  order: 100; /* Push to end */
+  margin-left: auto; /* Right-align */
+}
 
 /* ── Buttons ───────────────────────────────────────────────────────────────── */
 .btn {

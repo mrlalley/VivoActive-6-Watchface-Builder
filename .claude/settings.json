@@ -92,10 +92,22 @@
       "Bash(timeout 8 npm run dev)",
       "Bash(node -c electron/main.js)",
       "Bash(node -c electron/preload.js)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(unzip \"/c/Users/mr_la/AppData/Local/electron/Cache/bc80a13ebe4734629db853b3fc870b18ba9e388b795710fdbbd075694e548d03/electron-v42.3.0-win32-x64.zip\" -d \"/c/Users/mr_la/WatchFace Builder/node_modules/electron/dist/\")",
+      "Bash(rm -rf \"/c/Users/mr_la/AppData/Local/electron/Cache/bc80a13ebe4734629db853b3fc870b18ba9e388b795710fdbbd075694e548d03\" && rm -rf \"/c/Users/mr_la/WatchFace Builder/node_modules/electron/dist\" && echo \"Cache cleared\")",
+      "Bash(npm test *)",
+      "Bash(node -e \"const {createServer, getConfig} = require\\('./server.js'\\); const app = createServer\\(\\); console.log\\('✓ Server module loads successfully'\\); console.log\\('✓ Config:', getConfig\\(\\).exportDir\\);\")",
+      "Bash(npm exec *)",
+      "Bash(grep -n '${activityVar}' \"c:\\\\Users\\\\mr_la\\\\WatchFace Builder\\\\lib\\\\generators\\\\monkeyc.js\")",
+      "Bash(Select-String -Pattern \"handleOpenVSCode\" \"c:\\\\Users\\\\mr_la\\\\WatchFace Builder\\\\builder\\\\app.js\" -Context 0,10)",
+      "Bash(Select-Object -First 5)",
+      "PowerShell(cd \"c:\\\\Users\\\\mr_la\\\\WatchFace Builder\" && timeout /t 5 /nobreak && npm start 2>&1 | Select-Object -First 20 &)",
+      "Bash(npm start *)",
+      "Bash(npm run *)"
     ],
     "additionalDirectories": [
-      "c:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project"
+      "c:\\Users\\mr_la\\WatchFace Builder\\exported-garmin-project",
+      "C:\\Users\\mr_la\\AppData\\Local\\electron\\Cache\\bc80a13ebe4734629db853b3fc870b18ba9e388b795710fdbbd075694e548d03"
     ]
   }
 }

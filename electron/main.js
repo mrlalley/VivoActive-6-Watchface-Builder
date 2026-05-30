@@ -1,7 +1,9 @@
-const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const Store = require('electron-store');
 const { createServer } = require('../server');
+const { generateKey, getDefaultKeyPath, validateKeyFile } = require('../lib/keygen');
 
 let mainWindow;
 let expressServer;
@@ -43,6 +45,12 @@ function createWindow() {
   // Open DevTools in dev mode
   if (process.env.ELECTRON_IS_DEV) {
     mainWindow.webContents.openDevTools();
+  } else {
+    // Block DevTools shortcuts in production
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+      if (input.control && input.shift && input.key.toLowerCase() === 'i') event.preventDefault();
+      if (input.key === 'F12') event.preventDefault();
+    });
   }
 
   mainWindow.on('closed', () => {
@@ -56,6 +64,8 @@ function startServer() {
     const cfg = {
       sdkBin: store.get('sdkBin'),
       devKey: store.get('devKey'),
+      exportDir: path.join(app.getPath('documents'), 'WatchFaceBuilder', 'exported'),
+      tempDir: path.join(app.getPath('temp'), 'CIQPreview'),
     };
     const expressApp = createServer(cfg);
     expressServer = expressApp.listen(0, '127.0.0.1', () => {
@@ -90,7 +100,40 @@ ipcMain.handle('settings:getConfig', () => {
 ipcMain.handle('settings:saveConfig', (event, config) => {
   store.set('sdkBin', config.sdkBin);
   store.set('devKey', config.devKey);
+  // Schedule app relaunch after a brief delay to allow response to reach renderer
+  setTimeout(() => {
+    app.relaunch();
+    app.exit(0);
+  }, 100);
   return { success: true };
+});
+
+// Handle IPC: generate developer key
+ipcMain.handle('key:generate', async (event, options = {}) => {
+  const { outputPath = null, force = false } = options;
+  const resolvedPath = outputPath ? path.resolve(outputPath) : getDefaultKeyPath();
+
+  // Check if file already exists (unless force is true)
+  if (!force && fs.existsSync(resolvedPath)) {
+    return { success: false, exists: true, path: resolvedPath };
+  }
+
+  try {
+    await generateKey(resolvedPath);
+    return { success: true, path: resolvedPath };
+  } catch (err) {
+    return { success: false, error: err.message, path: resolvedPath };
+  }
+});
+
+// Handle IPC: open folder in VS Code
+ipcMain.handle('shell:openVSCode', async (event, folderPath) => {
+  try {
+    await shell.openExternal(`vscode://file/${folderPath}`);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 });
 
 // App lifecycle
@@ -140,6 +183,13 @@ function createMenu() {
     {
       label: 'File',
       submenu: [
+        {
+          label: 'New Design',
+          accelerator: 'Ctrl+N',
+          click: () => {
+            mainWindow.webContents.send('file:newDesign');
+          },
+        },
         {
           label: 'Settings',
           accelerator: 'Ctrl+,',

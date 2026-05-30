@@ -6,8 +6,22 @@ using Toybox.WatchUi as :Ui;
 using Toybox.Graphics as :Gfx;
 [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 4; @symbol_usingdef<0> = [Toybox,4,6,12]; @symbol_usingdef<1> = [System,4,13,19]; @symbol_usingAlias = [Sys,4,23,26]; ]
 using Toybox.System as :Sys;
+[ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 5; @symbol_usingdef<0> = [Toybox,5,6,12]; @symbol_usingdef<1> = [Activity,5,13,21]; @symbol_usingAlias = [Activity,5,25,33]; ]
+using Toybox.Activity as :Activity;
+[ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 6; @symbol_usingdef<0> = [Toybox,6,6,12]; @symbol_usingdef<1> = [ActivityMonitor,6,13,28]; @symbol_usingAlias = [ActivityMonitor,6,32,47]; ]
+using Toybox.ActivityMonitor as :ActivityMonitor;
+[ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 7; @symbol_usingdef<0> = [Toybox,7,6,12]; @symbol_usingdef<1> = [UserProfile,7,13,24]; @symbol_usingAlias = [UserProfile,7,28,39]; ]
+using Toybox.UserProfile as :UserProfile;
+[ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 8; @symbol_usingdef<0> = [Toybox,8,6,12]; @symbol_usingdef<1> = [Time,8,13,17]; @symbol_usingAlias = [Time,8,21,25]; ]
+using Toybox.Time as :Time;
+[ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 9; @symbol_usingdef<0> = [Toybox,9,6,12]; @symbol_usingdef<1> = [Time,9,13,17]; @symbol_usingdef<2> = [Gregorian,9,18,27]; @symbol_usingAlias = [Calendar,9,31,39]; ]
+using Toybox.Time.Gregorian as :Calendar;
+[ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 10; @symbol_usingdef<0> = [Toybox,10,6,12]; @symbol_usingdef<1> = [Position,10,13,21]; @symbol_usingAlias = [Position,10,25,33]; ]
+using Toybox.Position as :Position;
 [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 11; @symbol_usingdef<0> = [Toybox,11,6,12]; @symbol_usingdef<1> = [Lang,11,13,17]; @symbol_usingAlias = [Lang,11,21,25]; ]
 using Toybox.Lang as :Lang;
+[ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 12; @symbol_usingdef<0> = [Toybox,12,6,12]; @symbol_usingdef<1> = [Math,12,13,17]; @symbol_usingAlias = [Math,12,21,25]; ]
+using Toybox.Math as :Math;
 [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 13; @symbol_usingdef<0> = [Toybox,13,6,12]; @symbol_usingdef<1> = [SensorHistory,13,13,26]; @symbol_usingAlias = [SensorHistory,13,30,43]; ]
 using Toybox.SensorHistory as :SensorHistory;
 [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 16; @symbol_classdef = [WatchFaceApp,16,6,18]; @symbol_extends<0> = [App,16,27,30]; @symbol_extends<1> = [AppBase,16,31,38]; ]
@@ -143,453 +157,2157 @@ C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc
     [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 43; @symbol_functiondef = [onLayout,43,13,21]; @symbol_param<0> = [dc,43,22,24]; ]
     function onLayout(dc) {
     }
-    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 48; @symbol_functiondef = [onShow,48,13,19]; ]
+    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 49; @symbol_functiondef = [calcSunTimeMin,49,13,27]; @symbol_param<0> = [latDeg,49,28,34]; @symbol_param<1> = [lonDeg,49,36,42]; @symbol_param<2> = [isSunrise,49,44,53]; ]
+    function calcSunTimeMin(latDeg, lonDeg, isSunrise) {
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 51 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %jd.1 = local;
+        symbol [ jd %jd.1 51 12 14 ];
+        %tmp.1 = 2440587.5;
+        symbol [ Time %tmp.2 51 29 33 ];
+        %tmp.2 = getm $.Toybox.Time;
+        symbol [ today %tmp.3 51 34 39 ];
+        %tmp.3 = getv function %tmp.2 :today;
+        %tmp.4 = invoke %tmp.2 %tmp.3();
+        symbol [ value %tmp.5 51 42 47 ];
+        %tmp.5 = getv function %tmp.4 :value;
+        %tmp.6 = invoke %tmp.4 %tmp.5();
+        symbol [ toFloat %tmp.7 51 50 57 ];
+        %tmp.7 = getv function %tmp.6 :toFloat;
+        %tmp.8 = invoke %tmp.6 %tmp.7();
+        %tmp.9 = 86400.0;
+        %tmp.10 = div %tmp.8 %tmp.9;
+        %tmp.11 = add %tmp.1 %tmp.10;
+        lputv %jd.1 %tmp.11;
+        symbol [ jd %jd.1 51 12 14 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 52 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %D.2 = local;
+        symbol [ D %D.2 52 12 13 ];
+        %tmp.12 = lgetv %jd.1;
+        symbol [ jd %tmp.12 52 16 18 ];
+        %tmp.13 = 2451545.0;
+        %tmp.14 = sub %tmp.12 %tmp.13;
+        lputv %D.2 %tmp.14;
+        symbol [ D %D.2 52 12 13 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 54 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %g.3 = local;
+        symbol [ g %g.3 54 12 13 ];
+        %tmp.15 = 357.529;
+        %tmp.16 = 0.98560028;
+        %tmp.17 = lgetv %D.2;
+        symbol [ D %tmp.17 54 40 41 ];
+        %tmp.18 = mul %tmp.16 %tmp.17;
+        %tmp.19 = add %tmp.15 %tmp.18;
+        symbol [ toFloat %tmp.20 54 43 50 ];
+        %tmp.20 = getv function %tmp.19 :toFloat;
+        %tmp.21 = invoke %tmp.19 %tmp.20();
+        lputv %g.3 %tmp.21;
+        symbol [ g %g.3 54 12 13 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 55 8 ]
+        %tmp.22 = lgetv %g.3;
+        symbol [ g %tmp.22 55 8 9 ];
+        %tmp.23 = lgetv %g.3;
+        symbol [ g %tmp.23 55 14 15 ];
+        %tmp.24 = 360.0;
+        %tmp.25 = div %tmp.23 %tmp.24;
+        symbol [ toNumber %tmp.26 55 25 33 ];
+        %tmp.26 = getv function %tmp.25 :toNumber;
+        %tmp.27 = invoke %tmp.25 %tmp.26();
+        %tmp.28 = 360.0;
+        %tmp.29 = mul %tmp.27 %tmp.28;
+        %tmp.30 = sub %tmp.22 %tmp.29;
+        lputv %g.3 %tmp.30;
+        symbol [ g %g.3 55 8 9 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 56 8 ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_56_35_if_stmt:
+        %tmp.31 = lgetv %g.3;
+        symbol [ g %tmp.31 56 12 13 ];
+        %tmp.32 = 0.0;
+        %tmp.33 = lt %tmp.31 %tmp.32;
+        bf %tmp.33 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_56_35_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_56_35_if_true:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_21_56_35_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 56 23 ]
+        %tmp.34 = lgetv %g.3;
+        symbol [ g %tmp.34 56 23 24 ];
+        %tmp.35 = 360.0;
+        %tmp.36 = add %tmp.34 %tmp.35;
+        lputv %g.3 %tmp.36;
+        symbol [ g %g.3 56 23 24 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_21_56_35_stop:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_56_35_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_56_35_if_end:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 57 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %q.4 = local;
+        symbol [ q %q.4 57 12 13 ];
+        %tmp.37 = 280.459;
+        %tmp.38 = 0.98564736;
+        %tmp.39 = lgetv %D.2;
+        symbol [ D %tmp.39 57 40 41 ];
+        %tmp.40 = mul %tmp.38 %tmp.39;
+        %tmp.41 = add %tmp.37 %tmp.40;
+        symbol [ toFloat %tmp.42 57 43 50 ];
+        %tmp.42 = getv function %tmp.41 :toFloat;
+        %tmp.43 = invoke %tmp.41 %tmp.42();
+        lputv %q.4 %tmp.43;
+        symbol [ q %q.4 57 12 13 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 58 8 ]
+        %tmp.44 = lgetv %q.4;
+        symbol [ q %tmp.44 58 8 9 ];
+        %tmp.45 = lgetv %q.4;
+        symbol [ q %tmp.45 58 14 15 ];
+        %tmp.46 = 360.0;
+        %tmp.47 = div %tmp.45 %tmp.46;
+        symbol [ toNumber %tmp.48 58 25 33 ];
+        %tmp.48 = getv function %tmp.47 :toNumber;
+        %tmp.49 = invoke %tmp.47 %tmp.48();
+        %tmp.50 = 360.0;
+        %tmp.51 = mul %tmp.49 %tmp.50;
+        %tmp.52 = sub %tmp.44 %tmp.51;
+        lputv %q.4 %tmp.52;
+        symbol [ q %q.4 58 8 9 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 59 8 ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_59_8_59_35_if_stmt:
+        %tmp.53 = lgetv %q.4;
+        symbol [ q %tmp.53 59 12 13 ];
+        %tmp.54 = 0.0;
+        %tmp.55 = lt %tmp.53 %tmp.54;
+        bf %tmp.55 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_59_8_59_35_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_59_8_59_35_if_true:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_59_21_59_35_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 59 23 ]
+        %tmp.56 = lgetv %q.4;
+        symbol [ q %tmp.56 59 23 24 ];
+        %tmp.57 = 360.0;
+        %tmp.58 = add %tmp.56 %tmp.57;
+        lputv %q.4 %tmp.58;
+        symbol [ q %q.4 59 23 24 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_59_21_59_35_stop:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_59_8_59_35_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_59_8_59_35_if_end:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 60 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %gRad.5 = local;
+        symbol [ gRad %gRad.5 60 12 16 ];
+        %tmp.59 = lgetv %g.3;
+        symbol [ g %tmp.59 60 19 20 ];
+        symbol [ Math %tmp.60 60 23 27 ];
+        %tmp.60 = getm $.Toybox.Math;
+        symbol [ PI %tmp.61 60 28 30 ];
+        %tmp.61 = getv %tmp.60 :PI;
+        %tmp.62 = mul %tmp.59 %tmp.61;
+        %tmp.63 = 180.0;
+        %tmp.64 = div %tmp.62 %tmp.63;
+        lputv %gRad.5 %tmp.64;
+        symbol [ gRad %gRad.5 60 12 16 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 61 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %L.6 = local;
+        symbol [ L %L.6 61 12 13 ];
+        %tmp.65 = lgetv %q.4;
+        symbol [ q %tmp.65 61 17 18 ];
+        %tmp.66 = 1.915;
+        symbol [ Math %tmp.67 61 29 33 ];
+        %tmp.67 = getm $.Toybox.Math;
+        symbol [ sin %tmp.68 61 34 37 ];
+        %tmp.68 = getv function %tmp.67 :sin;
+        %tmp.69 = lgetv %gRad.5;
+        symbol [ gRad %tmp.69 61 38 42 ];
+        %tmp.70 = invoke %tmp.67 %tmp.68(%tmp.69);
+        %tmp.71 = mul %tmp.66 %tmp.70;
+        %tmp.72 = add %tmp.65 %tmp.71;
+        %tmp.73 = 0.020;
+        symbol [ Math %tmp.74 61 54 58 ];
+        %tmp.74 = getm $.Toybox.Math;
+        symbol [ sin %tmp.75 61 59 62 ];
+        %tmp.75 = getv function %tmp.74 :sin;
+        %tmp.76 = 2.0;
+        %tmp.77 = lgetv %gRad.5;
+        symbol [ gRad %tmp.77 61 69 73 ];
+        %tmp.78 = mul %tmp.76 %tmp.77;
+        %tmp.79 = invoke %tmp.74 %tmp.75(%tmp.78);
+        %tmp.80 = mul %tmp.73 %tmp.79;
+        %tmp.81 = add %tmp.72 %tmp.80;
+        symbol [ Math %tmp.82 61 78 82 ];
+        %tmp.82 = getm $.Toybox.Math;
+        symbol [ PI %tmp.83 61 83 85 ];
+        %tmp.83 = getv %tmp.82 :PI;
+        %tmp.84 = mul %tmp.81 %tmp.83;
+        %tmp.85 = 180.0;
+        %tmp.86 = div %tmp.84 %tmp.85;
+        lputv %L.6 %tmp.86;
+        symbol [ L %L.6 61 12 13 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 62 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %e.7 = local;
+        symbol [ e %e.7 62 12 13 ];
+        %tmp.87 = 23.439;
+        %tmp.88 = 0.00000036;
+        %tmp.89 = lgetv %D.2;
+        symbol [ D %tmp.89 62 39 40 ];
+        %tmp.90 = mul %tmp.88 %tmp.89;
+        %tmp.91 = sub %tmp.87 %tmp.90;
+        symbol [ Math %tmp.92 62 44 48 ];
+        %tmp.92 = getm $.Toybox.Math;
+        symbol [ PI %tmp.93 62 49 51 ];
+        %tmp.93 = getv %tmp.92 :PI;
+        %tmp.94 = mul %tmp.91 %tmp.93;
+        %tmp.95 = 180.0;
+        %tmp.96 = div %tmp.94 %tmp.95;
+        lputv %e.7 %tmp.96;
+        symbol [ e %e.7 62 12 13 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 63 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %sinDec.8 = local;
+        symbol [ sinDec %sinDec.8 63 12 18 ];
+        symbol [ Math %tmp.97 63 21 25 ];
+        %tmp.97 = getm $.Toybox.Math;
+        symbol [ sin %tmp.98 63 26 29 ];
+        %tmp.98 = getv function %tmp.97 :sin;
+        %tmp.99 = lgetv %e.7;
+        symbol [ e %tmp.99 63 30 31 ];
+        %tmp.100 = invoke %tmp.97 %tmp.98(%tmp.99);
+        symbol [ Math %tmp.101 63 35 39 ];
+        %tmp.101 = getm $.Toybox.Math;
+        symbol [ sin %tmp.102 63 40 43 ];
+        %tmp.102 = getv function %tmp.101 :sin;
+        %tmp.103 = lgetv %L.6;
+        symbol [ L %tmp.103 63 44 45 ];
+        %tmp.104 = invoke %tmp.101 %tmp.102(%tmp.103);
+        %tmp.105 = mul %tmp.100 %tmp.104;
+        lputv %sinDec.8 %tmp.105;
+        symbol [ sinDec %sinDec.8 63 12 18 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 64 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %dec.9 = local;
+        symbol [ dec %dec.9 64 12 15 ];
+        symbol [ Math %tmp.106 64 18 22 ];
+        %tmp.106 = getm $.Toybox.Math;
+        symbol [ asin %tmp.107 64 23 27 ];
+        %tmp.107 = getv function %tmp.106 :asin;
+        %tmp.108 = lgetv %sinDec.8;
+        symbol [ sinDec %tmp.108 64 28 34 ];
+        %tmp.109 = invoke %tmp.106 %tmp.107(%tmp.108);
+        lputv %dec.9 %tmp.109;
+        symbol [ dec %dec.9 64 12 15 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 65 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %latRad.10 = local;
+        symbol [ latRad %latRad.10 65 12 18 ];
+        %tmp.110 = lgetv %latDeg;
+        symbol [ latDeg %tmp.110 65 21 27 ];
+        symbol [ Math %tmp.111 65 30 34 ];
+        %tmp.111 = getm $.Toybox.Math;
+        symbol [ PI %tmp.112 65 35 37 ];
+        %tmp.112 = getv %tmp.111 :PI;
+        %tmp.113 = mul %tmp.110 %tmp.112;
+        %tmp.114 = 180.0;
+        %tmp.115 = div %tmp.113 %tmp.114;
+        lputv %latRad.10 %tmp.115;
+        symbol [ latRad %latRad.10 65 12 18 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 66 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %cosH.11 = local;
+        symbol [ cosH %cosH.11 66 12 16 ];
+        symbol [ Math %tmp.116 66 20 24 ];
+        %tmp.116 = getm $.Toybox.Math;
+        symbol [ cos %tmp.117 66 25 28 ];
+        %tmp.117 = getv function %tmp.116 :cos;
+        %tmp.118 = 90.833;
+        symbol [ Math %tmp.119 66 38 42 ];
+        %tmp.119 = getm $.Toybox.Math;
+        symbol [ PI %tmp.120 66 43 45 ];
+        %tmp.120 = getv %tmp.119 :PI;
+        %tmp.121 = mul %tmp.118 %tmp.120;
+        %tmp.122 = 180.0;
+        %tmp.123 = div %tmp.121 %tmp.122;
+        %tmp.124 = invoke %tmp.116 %tmp.117(%tmp.123);
+        symbol [ Math %tmp.125 66 57 61 ];
+        %tmp.125 = getm $.Toybox.Math;
+        symbol [ sin %tmp.126 66 62 65 ];
+        %tmp.126 = getv function %tmp.125 :sin;
+        %tmp.127 = lgetv %latRad.10;
+        symbol [ latRad %tmp.127 66 66 72 ];
+        %tmp.128 = invoke %tmp.125 %tmp.126(%tmp.127);
+        %tmp.129 = lgetv %sinDec.8;
+        symbol [ sinDec %tmp.129 66 76 82 ];
+        %tmp.130 = mul %tmp.128 %tmp.129;
+        %tmp.131 = sub %tmp.124 %tmp.130;
+        symbol [ Math %tmp.132 67 22 26 ];
+        %tmp.132 = getm $.Toybox.Math;
+        symbol [ cos %tmp.133 67 27 30 ];
+        %tmp.133 = getv function %tmp.132 :cos;
+        %tmp.134 = lgetv %latRad.10;
+        symbol [ latRad %tmp.134 67 31 37 ];
+        %tmp.135 = invoke %tmp.132 %tmp.133(%tmp.134);
+        symbol [ Math %tmp.136 67 41 45 ];
+        %tmp.136 = getm $.Toybox.Math;
+        symbol [ cos %tmp.137 67 46 49 ];
+        %tmp.137 = getv function %tmp.136 :cos;
+        %tmp.138 = lgetv %dec.9;
+        symbol [ dec %tmp.138 67 50 53 ];
+        %tmp.139 = invoke %tmp.136 %tmp.137(%tmp.138);
+        %tmp.140 = mul %tmp.135 %tmp.139;
+        %tmp.141 = div %tmp.131 %tmp.140;
+        lputv %cosH.11 %tmp.141;
+        symbol [ cosH %cosH.11 66 12 16 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 68 8 ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_8_68_52_if_stmt:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_12_68_34_begin:
+        %tmp.142 = lgetv %cosH.11;
+        symbol [ cosH %tmp.142 68 12 16 ];
+        %tmp.143 = 1.0;
+        %tmp.144 = gt %tmp.142 %tmp.143;
+        bt %tmp.144 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_8_68_52_if_true;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_26_68_34_false:
+        %tmp.145 = lgetv %cosH.11;
+        symbol [ cosH %tmp.145 68 26 30 ];
+        %tmp.146 = -1.0;
+        %tmp.147 = lt %tmp.145 %tmp.146;
+        push %tmp.147;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_26_68_34_end:
+        %tmp.148 = phi [%tmp.144 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_12_68_34_begin] [%tmp.147 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_26_68_34_false] [%tmp.148 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_26_68_34_end];
+        bf %tmp.148 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_8_68_52_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_8_68_52_if_true:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_39_68_52_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 68 41 ]
+        %tmp.149 = -1;
+        ret %tmp.149;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_39_68_52_stop:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_8_68_52_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_68_8_68_52_if_end:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 69 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %H.12 = local;
+        symbol [ H %H.12 69 12 13 ];
+        symbol [ Math %tmp.150 69 16 20 ];
+        %tmp.150 = getm $.Toybox.Math;
+        symbol [ acos %tmp.151 69 21 25 ];
+        %tmp.151 = getv function %tmp.150 :acos;
+        %tmp.152 = lgetv %cosH.11;
+        symbol [ cosH %tmp.152 69 26 30 ];
+        %tmp.153 = invoke %tmp.150 %tmp.151(%tmp.152);
+        %tmp.154 = 180.0;
+        %tmp.155 = mul %tmp.153 %tmp.154;
+        symbol [ Math %tmp.156 69 42 46 ];
+        %tmp.156 = getm $.Toybox.Math;
+        symbol [ PI %tmp.157 69 47 49 ];
+        %tmp.157 = getv %tmp.156 :PI;
+        %tmp.158 = div %tmp.155 %tmp.157;
+        lputv %H.12 %tmp.158;
+        symbol [ H %H.12 69 12 13 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 70 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %RA.13 = local;
+        symbol [ RA %RA.13 70 12 14 ];
+        symbol [ Math %tmp.159 70 17 21 ];
+        %tmp.159 = getm $.Toybox.Math;
+        symbol [ atan2 %tmp.160 70 22 27 ];
+        %tmp.160 = getv function %tmp.159 :atan2;
+        symbol [ Math %tmp.161 70 28 32 ];
+        %tmp.161 = getm $.Toybox.Math;
+        symbol [ cos %tmp.162 70 33 36 ];
+        %tmp.162 = getv function %tmp.161 :cos;
+        %tmp.163 = lgetv %e.7;
+        symbol [ e %tmp.163 70 37 38 ];
+        %tmp.164 = invoke %tmp.161 %tmp.162(%tmp.163);
+        symbol [ Math %tmp.165 70 42 46 ];
+        %tmp.165 = getm $.Toybox.Math;
+        symbol [ sin %tmp.166 70 47 50 ];
+        %tmp.166 = getv function %tmp.165 :sin;
+        %tmp.167 = lgetv %L.6;
+        symbol [ L %tmp.167 70 51 52 ];
+        %tmp.168 = invoke %tmp.165 %tmp.166(%tmp.167);
+        %tmp.169 = mul %tmp.164 %tmp.168;
+        symbol [ Math %tmp.170 70 55 59 ];
+        %tmp.170 = getm $.Toybox.Math;
+        symbol [ cos %tmp.171 70 60 63 ];
+        %tmp.171 = getv function %tmp.170 :cos;
+        %tmp.172 = lgetv %L.6;
+        symbol [ L %tmp.172 70 64 65 ];
+        %tmp.173 = invoke %tmp.170 %tmp.171(%tmp.172);
+        %tmp.174 = invoke %tmp.159 %tmp.160(%tmp.169, %tmp.173);
+        %tmp.175 = 12.0;
+        %tmp.176 = mul %tmp.174 %tmp.175;
+        symbol [ Math %tmp.177 70 77 81 ];
+        %tmp.177 = getm $.Toybox.Math;
+        symbol [ PI %tmp.178 70 82 84 ];
+        %tmp.178 = getv %tmp.177 :PI;
+        %tmp.179 = div %tmp.176 %tmp.178;
+        lputv %RA.13 %tmp.179;
+        symbol [ RA %RA.13 70 12 14 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 71 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %eqTime.14 = local;
+        symbol [ eqTime %eqTime.14 71 12 18 ];
+        %tmp.180 = lgetv %q.4;
+        symbol [ q %tmp.180 71 22 23 ];
+        %tmp.181 = 15.0;
+        %tmp.182 = div %tmp.180 %tmp.181;
+        %tmp.183 = lgetv %RA.13;
+        symbol [ RA %tmp.183 71 33 35 ];
+        %tmp.184 = sub %tmp.182 %tmp.183;
+        %tmp.185 = 60.0;
+        %tmp.186 = mul %tmp.184 %tmp.185;
+        lputv %eqTime.14 %tmp.186;
+        symbol [ eqTime %eqTime.14 71 12 18 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 72 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %solarNoon.15 = local;
+        symbol [ solarNoon %solarNoon.15 72 12 21 ];
+        %tmp.187 = 720.0;
+        %tmp.188 = lgetv %lonDeg;
+        symbol [ lonDeg %tmp.188 72 32 38 ];
+        %tmp.189 = 4.0;
+        %tmp.190 = mul %tmp.188 %tmp.189;
+        %tmp.191 = sub %tmp.187 %tmp.190;
+        %tmp.192 = lgetv %eqTime.14;
+        symbol [ eqTime %tmp.192 72 47 53 ];
+        %tmp.193 = sub %tmp.191 %tmp.192;
+        lputv %solarNoon.15 %tmp.193;
+        symbol [ solarNoon %solarNoon.15 72 12 21 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 73 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %sunUTC.16 = local;
+        symbol [ sunUTC %sunUTC.16 73 12 18 ];
+        %tmp.194 = lgetv %solarNoon.15;
+        symbol [ solarNoon %tmp.194 73 21 30 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_73_34_73_51_begin:
+        %tmp.195 = lgetv %isSunrise;
+        symbol [ isSunrise %tmp.195 73 34 43 ];
+        bf %tmp.195 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_73_34_73_51_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_73_34_73_51_true:
+        %tmp.196 = lgetv %H.12;
+        symbol [ H %tmp.196 73 47 48 ];
+        %tmp.197 = sub 0 %tmp.196;
+        push %tmp.197;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_73_34_73_51_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_73_34_73_51_else_false:
+        %tmp.198 = lgetv %H.12;
+        symbol [ H %tmp.198 73 51 52 ];
+        push %tmp.198;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_73_34_73_51_end:
+        %tmp.199 = phi [%tmp.195 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_73_34_73_51_begin] [%tmp.197 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_73_34_73_51_true] [%tmp.198 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_73_34_73_51_else_false] [%tmp.199 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_73_34_73_51_end];
+        %tmp.200 = 4.0;
+        %tmp.201 = mul %tmp.199 %tmp.200;
+        %tmp.202 = add %tmp.194 %tmp.201;
+        lputv %sunUTC.16 %tmp.202;
+        symbol [ sunUTC %sunUTC.16 73 12 18 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 74 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %tzSec.17 = local;
+        symbol [ tzSec %tzSec.17 74 12 17 ];
+        symbol [ Sys %tmp.203 74 20 23 ];
+        %tmp.203 = getm $.Toybox.System;
+        symbol [ getClockTime %tmp.204 74 24 36 ];
+        %tmp.204 = getv function %tmp.203 :getClockTime;
+        %tmp.205 = invoke %tmp.203 %tmp.204();
+        symbol [ timeZoneOffset %tmp.206 74 39 53 ];
+        %tmp.206 = getv %tmp.205 :timeZoneOffset;
+        lputv %tzSec.17 %tmp.206;
+        symbol [ tzSec %tzSec.17 74 12 17 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 75 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop" ]
+        %localMin.18 = local;
+        symbol [ localMin %localMin.18 75 12 20 ];
+        %tmp.207 = lgetv %sunUTC.16;
+        symbol [ sunUTC %tmp.207 75 24 30 ];
+        %tmp.208 = lgetv %tzSec.17;
+        symbol [ tzSec %tmp.208 75 33 38 ];
+        symbol [ toFloat %tmp.209 75 39 46 ];
+        %tmp.209 = getv function %tmp.208 :toFloat;
+        %tmp.210 = invoke %tmp.208 %tmp.209();
+        %tmp.211 = 60.0;
+        %tmp.212 = div %tmp.210 %tmp.211;
+        %tmp.213 = add %tmp.207 %tmp.212;
+        symbol [ toNumber %tmp.214 75 57 65 ];
+        %tmp.214 = getv function %tmp.213 :toNumber;
+        %tmp.215 = invoke %tmp.213 %tmp.214();
+        lputv %localMin.18 %tmp.215;
+        symbol [ localMin %localMin.18 75 12 20 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 76 8 ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_76_8_76_46_if_stmt:
+        %tmp.216 = lgetv %localMin.18;
+        symbol [ localMin %tmp.216 76 12 20 ];
+        %tmp.217 = 0;
+        %tmp.218 = lt %tmp.216 %tmp.217;
+        bf %tmp.218 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_76_8_76_46_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_76_8_76_46_if_true:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_76_26_76_46_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 76 28 ]
+        %tmp.219 = lgetv %localMin.18;
+        symbol [ localMin %tmp.219 76 28 36 ];
+        %tmp.220 = 1440;
+        %tmp.221 = add %tmp.219 %tmp.220;
+        lputv %localMin.18 %tmp.221;
+        symbol [ localMin %localMin.18 76 28 36 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_76_26_76_46_stop:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_76_8_76_46_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_76_8_76_46_if_end:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 77 8 ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_77_8_77_50_if_stmt:
+        %tmp.222 = lgetv %localMin.18;
+        symbol [ localMin %tmp.222 77 12 20 ];
+        %tmp.223 = 1440;
+        %tmp.224 = gte %tmp.222 %tmp.223;
+        bf %tmp.224 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_77_8_77_50_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_77_8_77_50_if_true:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_77_30_77_50_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 77 32 ]
+        %tmp.225 = lgetv %localMin.18;
+        symbol [ localMin %tmp.225 77 32 40 ];
+        %tmp.226 = 1440;
+        %tmp.227 = sub %tmp.225 %tmp.226;
+        lputv %localMin.18 %tmp.227;
+        symbol [ localMin %localMin.18 77 32 40 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_77_30_77_50_stop:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_77_8_77_50_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_77_8_77_50_if_end:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 78 8 ]
+        %tmp.228 = lgetv %localMin.18;
+        symbol [ localMin %tmp.228 78 15 23 ];
+        ret %tmp.228;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_49_55_79_4_stop:
+    }
+    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 81; @symbol_functiondef = [onShow,81,13,19]; ]
     function onShow() {
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_48_22_50_4_start:
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 49 8 ]
-        symbol [ Ui %tmp.1 49 8 10 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_81_22_83_4_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 82 8 ]
+        symbol [ Ui %tmp.1 82 8 10 ];
         %tmp.1 = getm $.Toybox.WatchUi;
-        symbol [ requestUpdate %tmp.2 49 11 24 ];
+        symbol [ requestUpdate %tmp.2 82 11 24 ];
         %tmp.2 = getv function %tmp.1 :requestUpdate;
         invoke %tmp.1 %tmp.2();
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_48_22_50_4_stop:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_81_22_83_4_stop:
     }
-    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 52; @symbol_functiondef = [onUpdate,52,13,21]; @symbol_param<0> = [dc,52,22,24]; ]
+    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 85; @symbol_functiondef = [onUpdate,85,13,21]; @symbol_param<0> = [dc,85,22,24]; ]
     function onUpdate(dc) {
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_52_26_77_4_start:
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 53 8 ]
-        symbol [ Sys %tmp.1 53 8 11 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_85_26_193_4_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 86 8 ]
+        symbol [ Sys %tmp.1 86 8 11 ];
         %tmp.1 = getm $.Toybox.System;
-        symbol [ println %tmp.2 53 12 19 ];
+        symbol [ println %tmp.2 86 12 19 ];
         %tmp.2 = getv function %tmp.1 :println;
         %tmp.3 = "WF onUpdate called";
         invoke %tmp.1 %tmp.2(%tmp.3);
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 54 8 ]
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 87 8 ]
         %tmp.4 = lgetv %dc;
-        symbol [ dc %tmp.4 54 8 10 ];
-        symbol [ setColor %tmp.5 54 11 19 ];
+        symbol [ dc %tmp.4 87 8 10 ];
+        symbol [ setColor %tmp.5 87 11 19 ];
         %tmp.5 = getv function %tmp.4 :setColor;
-        symbol [ Gfx %tmp.6 54 20 23 ];
+        symbol [ Gfx %tmp.6 87 20 23 ];
         %tmp.6 = getm $.Toybox.Graphics;
-        symbol [ COLOR_BLACK %tmp.7 54 24 35 ];
+        symbol [ COLOR_BLACK %tmp.7 87 24 35 ];
         %tmp.7 = getv %tmp.6 :COLOR_BLACK;
-        symbol [ Gfx %tmp.8 54 37 40 ];
+        symbol [ Gfx %tmp.8 87 37 40 ];
         %tmp.8 = getm $.Toybox.Graphics;
-        symbol [ COLOR_BLACK %tmp.9 54 41 52 ];
+        symbol [ COLOR_BLACK %tmp.9 87 41 52 ];
         %tmp.9 = getv %tmp.8 :COLOR_BLACK;
         invoke %tmp.4 %tmp.5(%tmp.7, %tmp.9);
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 55 8 ]
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 88 8 ]
         %tmp.10 = lgetv %dc;
-        symbol [ dc %tmp.10 55 8 10 ];
-        symbol [ clear %tmp.11 55 11 16 ];
+        symbol [ dc %tmp.10 88 8 10 ];
+        symbol [ clear %tmp.11 88 11 16 ];
         %tmp.11 = getv function %tmp.10 :clear;
         invoke %tmp.10 %tmp.11();
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 56 8 ]
-        try @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_beginTry @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_endTry @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_catch @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_finally;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_beginTry:
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_12_71_8_start:
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 57 12 ]
-        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_12_71_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_12_71_8_stop" ]
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 89 8 ]
+        try @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_beginTry @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_endTry @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_catch @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_finally;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_beginTry:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 90 12 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
         %clockTime.1 = local;
-        symbol [ clockTime %clockTime.1 57 16 25 ];
-        symbol [ Sys %tmp.12 57 28 31 ];
+        symbol [ clockTime %clockTime.1 90 16 25 ];
+        symbol [ Sys %tmp.12 90 28 31 ];
         %tmp.12 = getm $.Toybox.System;
-        symbol [ getClockTime %tmp.13 57 32 44 ];
+        symbol [ getClockTime %tmp.13 90 32 44 ];
         %tmp.13 = getv function %tmp.12 :getClockTime;
         %tmp.14 = invoke %tmp.12 %tmp.13();
         lputv %clockTime.1 %tmp.14;
-        symbol [ clockTime %clockTime.1 57 16 25 ];
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 62 12 ]
-        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_12_71_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_12_71_8_stop" ]
-        %_bbh.2 = local;
-        symbol [ _bbh %_bbh.2 62 16 20 ];
-        symbol [ SensorHistory %tmp.15 62 23 36 ];
-        %tmp.15 = getm $.Toybox.SensorHistory;
-        symbol [ getBodyBatteryHistory %tmp.16 62 37 58 ];
-        %tmp.16 = getv function %tmp.15 :getBodyBatteryHistory;
-        %tmp.17 = null;
-        %tmp.18 = invoke %tmp.15 %tmp.16(%tmp.17);
-        lputv %_bbh.2 %tmp.18;
-        symbol [ _bbh %_bbh.2 62 16 20 ];
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 63 8 ]
-        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_12_71_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_12_71_8_stop" ]
-        %_bbs.3 = local;
-        symbol [ _bbs %_bbs.3 63 12 16 ];
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_63_19_63_48_begin:
-        %tmp.19 = lgetv %_bbh.2;
-        symbol [ _bbh %tmp.19 63 19 23 ];
-        %tmp.20 = null;
-        %tmp.21 = ne %tmp.19 %tmp.20;
-        bf %tmp.21 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_63_19_63_48_else_false;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_63_19_63_48_true:
-        %tmp.22 = lgetv %_bbh.2;
-        symbol [ _bbh %tmp.22 63 34 38 ];
-        %tmp.23 = as %tmp.22 { (!Null) };
-        symbol [ next %tmp.24 63 39 43 ];
-        %tmp.24 = getv function %tmp.23 :next;
-        %tmp.25 = invoke %tmp.23 %tmp.24();
-        push %tmp.25;
-        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_63_19_63_48_end;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_63_19_63_48_else_false:
-        %tmp.26 = null;
-        push %tmp.26;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_63_19_63_48_end:
-        %tmp.27 = phi [%tmp.21 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_63_19_63_48_begin] [%tmp.25 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_63_19_63_48_true] [%tmp.26 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_63_19_63_48_else_false] [%tmp.27 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_63_19_63_48_end];
-        lputv %_bbs.3 %tmp.27;
-        symbol [ _bbs %_bbs.3 63 12 16 ];
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 64 8 ]
-        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_12_71_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_12_71_8_stop" ]
-        %bodyBattery.4 = local;
-        symbol [ bodyBattery %bodyBattery.4 64 12 23 ];
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_26_64_102_begin:
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_27_64_56_begin:
-        %tmp.28 = lgetv %_bbs.3;
-        symbol [ _bbs %tmp.28 64 27 31 ];
-        %tmp.29 = null;
-        %tmp.30 = ne %tmp.28 %tmp.29;
-        bf %tmp.30 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_26_64_102_else_false;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_43_64_56_true:
-        %tmp.31 = lgetv %_bbs.3;
-        symbol [ _bbs %tmp.31 64 43 47 ];
-        %tmp.32 = as %tmp.31 { (!Null) };
-        symbol [ data %tmp.33 64 48 52 ];
-        %tmp.33 = getv %tmp.32 :data;
-        %tmp.34 = null;
-        %tmp.35 = ne %tmp.33 %tmp.34;
-        push %tmp.35;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_43_64_56_end:
-        %tmp.36 = phi [%tmp.30 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_27_64_56_begin] [%tmp.35 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_43_64_56_true] [%tmp.36 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_43_64_56_end];
-        bf %tmp.36 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_26_64_102_else_false;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_26_64_102_true:
-        %tmp.37 = lgetv %_bbs.3;
-        symbol [ _bbs %tmp.37 64 65 69 ];
-        %tmp.38 = as %tmp.37 { (!Null) };
-        symbol [ data %tmp.39 64 70 74 ];
-        %tmp.39 = getv %tmp.38 :data;
-        symbol [ toNumber %tmp.40 64 75 83 ];
-        %tmp.40 = getv function %tmp.39 :toNumber;
-        %tmp.41 = invoke %tmp.39 %tmp.40();
-        symbol [ format %tmp.42 64 87 93 ];
-        %tmp.42 = getv function %tmp.41 :format;
-        %tmp.43 = "%d";
-        %tmp.44 = invoke %tmp.41 %tmp.42(%tmp.43);
-        push %tmp.44;
-        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_26_64_102_end;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_26_64_102_else_false:
-        %tmp.45 = "--";
-        push %tmp.45;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_26_64_102_end:
-        %tmp.46 = phi [%tmp.36 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_26_64_102_begin] [%tmp.44 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_26_64_102_true] [%tmp.45 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_26_64_102_else_false] [%tmp.46 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_64_26_64_102_end];
-        lputv %bodyBattery.4 %tmp.46;
-        symbol [ bodyBattery %bodyBattery.4 64 12 23 ];
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 66 12 ]
-        %tmp.47 = lgetv %dc;
-        symbol [ dc %tmp.47 66 12 14 ];
-        symbol [ setColor %tmp.48 66 15 23 ];
-        %tmp.48 = getv function %tmp.47 :setColor;
-        %tmp.49 = 0xFFFFFF;
-        symbol [ Gfx %tmp.50 66 34 37 ];
-        %tmp.50 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.51 66 38 55 ];
-        %tmp.51 = getv %tmp.50 :COLOR_TRANSPARENT;
-        invoke %tmp.47 %tmp.48(%tmp.49, %tmp.51);
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 67 8 ]
-        %tmp.52 = lgetv %dc;
-        symbol [ dc %tmp.52 67 8 10 ];
-        symbol [ drawText %tmp.53 67 11 19 ];
-        %tmp.53 = getv function %tmp.52 :drawText;
-        %tmp.54 = 142;
-        %tmp.55 = 178;
-        symbol [ Gfx %tmp.56 67 30 33 ];
-        %tmp.56 = getm $.Toybox.Graphics;
-        symbol [ FONT_NUMBER_THAI_HOT %tmp.57 67 34 54 ];
-        %tmp.57 = getv %tmp.56 :FONT_NUMBER_THAI_HOT;
-        %tmp.58 = lgetv %clockTime.1;
-        symbol [ clockTime %tmp.58 67 56 65 ];
-        symbol [ hour %tmp.59 67 66 70 ];
-        %tmp.59 = getv %tmp.58 :hour;
-        symbol [ format %tmp.60 67 71 77 ];
-        %tmp.60 = getv function %tmp.59 :format;
-        %tmp.61 = "%02d";
-        %tmp.62 = invoke %tmp.59 %tmp.60(%tmp.61);
-        symbol [ Gfx %tmp.63 67 87 90 ];
-        %tmp.63 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_CENTER %tmp.64 67 91 110 ];
-        %tmp.64 = getv %tmp.63 :TEXT_JUSTIFY_CENTER;
-        symbol [ Gfx %tmp.65 67 113 116 ];
-        %tmp.65 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_VCENTER %tmp.66 67 117 137 ];
-        %tmp.66 = getv %tmp.65 :TEXT_JUSTIFY_VCENTER;
-        %tmp.67 = bitor %tmp.64 %tmp.66;
-        invoke %tmp.52 %tmp.53(%tmp.54, %tmp.55, %tmp.57, %tmp.62, %tmp.67);
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 69 8 ]
-        %tmp.68 = lgetv %dc;
-        symbol [ dc %tmp.68 69 8 10 ];
-        symbol [ setColor %tmp.69 69 11 19 ];
-        %tmp.69 = getv function %tmp.68 :setColor;
-        %tmp.70 = 0x00FF88;
-        symbol [ Gfx %tmp.71 69 30 33 ];
-        %tmp.71 = getm $.Toybox.Graphics;
-        symbol [ COLOR_TRANSPARENT %tmp.72 69 34 51 ];
-        %tmp.72 = getv %tmp.71 :COLOR_TRANSPARENT;
-        invoke %tmp.68 %tmp.69(%tmp.70, %tmp.72);
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 70 8 ]
-        %tmp.73 = lgetv %dc;
-        symbol [ dc %tmp.73 70 8 10 ];
-        symbol [ drawText %tmp.74 70 11 19 ];
-        %tmp.74 = getv function %tmp.73 :drawText;
-        %tmp.75 = 70;
-        %tmp.76 = 290;
-        symbol [ Gfx %tmp.77 70 29 32 ];
-        %tmp.77 = getm $.Toybox.Graphics;
-        symbol [ FONT_SMALL %tmp.78 70 33 43 ];
-        %tmp.78 = getv %tmp.77 :FONT_SMALL;
-        %tmp.79 = lgetv %bodyBattery.4;
-        symbol [ bodyBattery %tmp.79 70 45 56 ];
-        symbol [ Gfx %tmp.80 70 58 61 ];
-        %tmp.80 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_CENTER %tmp.81 70 62 81 ];
-        %tmp.81 = getv %tmp.80 :TEXT_JUSTIFY_CENTER;
-        symbol [ Gfx %tmp.82 70 84 87 ];
-        %tmp.82 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_VCENTER %tmp.83 70 88 108 ];
-        %tmp.83 = getv %tmp.82 :TEXT_JUSTIFY_VCENTER;
-        %tmp.84 = bitor %tmp.81 %tmp.83;
-        invoke %tmp.73 %tmp.74(%tmp.75, %tmp.76, %tmp.78, %tmp.79, %tmp.84);
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_12_71_8_stop:
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_endTry:
-        jsr @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_finally;
-        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_end;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_catch:
-        %tmp.85 = exception;
-        push %tmp.85;
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 71 10 ]
-        %tmp.86 = dup %tmp.85;
-        symbol [ Lang %tmp.87 71 31 35 ];
-        %tmp.87 = getm $.Toybox.Lang;
-        symbol [ Exception %tmp.88 71 36 45 ];
-        %tmp.88 = getv %tmp.87 :Exception;
-        %tmp.89 = isa %tmp.86 %tmp.88;
-        bf %tmp.89 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_71_10_76_8_next;
-        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_catch" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_71_10_76_8_next" ]
-        %ex.5 = local;
-        symbol [ ex %ex.5 71 17 19 ];
-        %tmp.90 = dup %tmp.85;
-        %tmp.91 = as %tmp.90 Lang.Exception;
-        lputv %ex.5 %tmp.91;
-        symbol [ ex %ex.5 71 17 19 ];
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_71_47_76_8_start:
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 73 12 ]
-        %tmp.92 = lgetv %dc;
-        symbol [ dc %tmp.92 73 12 14 ];
-        symbol [ setColor %tmp.93 73 15 23 ];
-        %tmp.93 = getv function %tmp.92 :setColor;
-        symbol [ Gfx %tmp.94 73 24 27 ];
-        %tmp.94 = getm $.Toybox.Graphics;
-        symbol [ COLOR_RED %tmp.95 73 28 37 ];
-        %tmp.95 = getv %tmp.94 :COLOR_RED;
-        symbol [ Gfx %tmp.96 73 39 42 ];
-        %tmp.96 = getm $.Toybox.Graphics;
-        symbol [ COLOR_BLACK %tmp.97 73 43 54 ];
-        %tmp.97 = getv %tmp.96 :COLOR_BLACK;
-        invoke %tmp.92 %tmp.93(%tmp.95, %tmp.97);
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 74 12 ]
-        %tmp.98 = lgetv %dc;
-        symbol [ dc %tmp.98 74 12 14 ];
-        symbol [ drawText %tmp.99 74 15 23 ];
-        %tmp.99 = getv function %tmp.98 :drawText;
-        %tmp.100 = 195;
-        %tmp.101 = 195;
-        symbol [ Gfx %tmp.102 74 34 37 ];
-        %tmp.102 = getm $.Toybox.Graphics;
-        symbol [ FONT_SMALL %tmp.103 74 38 48 ];
-        %tmp.103 = getv %tmp.102 :FONT_SMALL;
-        %tmp.104 = lgetv %ex.5;
-        symbol [ ex %tmp.104 74 50 52 ];
-        symbol [ getErrorMessage %tmp.105 74 53 68 ];
-        %tmp.105 = getv function %tmp.104 :getErrorMessage;
-        %tmp.106 = invoke %tmp.104 %tmp.105();
-        symbol [ Gfx %tmp.107 74 72 75 ];
-        %tmp.107 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_CENTER %tmp.108 74 76 95 ];
-        %tmp.108 = getv %tmp.107 :TEXT_JUSTIFY_CENTER;
-        symbol [ Gfx %tmp.109 74 98 101 ];
-        %tmp.109 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_VCENTER %tmp.110 74 102 122 ];
-        %tmp.110 = getv %tmp.109 :TEXT_JUSTIFY_VCENTER;
-        %tmp.111 = bitor %tmp.108 %tmp.110;
-        invoke %tmp.98 %tmp.99(%tmp.100, %tmp.101, %tmp.103, %tmp.106, %tmp.111);
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 75 12 ]
-        symbol [ Sys %tmp.112 75 12 15 ];
-        %tmp.112 = getm $.Toybox.System;
-        symbol [ println %tmp.113 75 16 23 ];
-        %tmp.113 = getv function %tmp.112 :println;
-        %tmp.114 = "WF onUpdate exception: ";
-        %tmp.115 = lgetv %ex.5;
-        symbol [ ex %tmp.115 75 52 54 ];
-        symbol [ getErrorMessage %tmp.116 75 55 70 ];
-        %tmp.116 = getv function %tmp.115 :getErrorMessage;
-        %tmp.117 = invoke %tmp.115 %tmp.116();
-        %tmp.118 = add %tmp.114 %tmp.117;
-        invoke %tmp.112 %tmp.113(%tmp.118);
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_71_47_76_8_stop:
-        jsr @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_finally;
+        symbol [ clockTime %clockTime.1 90 16 25 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 91 12 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %now.2 = local;
+        symbol [ now %now.2 91 16 19 ];
+        symbol [ Time %tmp.15 91 22 26 ];
+        %tmp.15 = getm $.Toybox.Time;
+        symbol [ now %tmp.16 91 27 30 ];
+        %tmp.16 = getv function %tmp.15 :now;
+        %tmp.17 = invoke %tmp.15 %tmp.16();
+        lputv %now.2 %tmp.17;
+        symbol [ now %now.2 91 16 19 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 92 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %info.3 = local;
+        symbol [ info %info.3 92 12 16 ];
+        symbol [ Calendar %tmp.18 92 19 27 ];
+        %tmp.18 = getm $.Toybox.Time.Gregorian;
+        symbol [ info %tmp.19 92 28 32 ];
+        %tmp.19 = getv function %tmp.18 :info;
+        %tmp.20 = lgetv %now.2;
+        symbol [ now %tmp.20 92 33 36 ];
+        symbol [ Time %tmp.21 92 38 42 ];
+        %tmp.21 = getm $.Toybox.Time;
+        symbol [ FORMAT_MEDIUM %tmp.22 92 43 56 ];
+        %tmp.22 = getv %tmp.21 :FORMAT_MEDIUM;
+        %tmp.23 = invoke %tmp.18 %tmp.19(%tmp.20, %tmp.22);
+        lputv %info.3 %tmp.23;
+        symbol [ info %info.3 92 12 16 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 93 12 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_ai.4 = local;
+        symbol [ _ai %_ai.4 93 16 19 ];
+        symbol [ Activity %tmp.24 93 22 30 ];
+        %tmp.24 = getm $.Toybox.Activity;
+        symbol [ getActivityInfo %tmp.25 93 31 46 ];
+        %tmp.25 = getv function %tmp.24 :getActivityInfo;
+        %tmp.26 = invoke %tmp.24 %tmp.25();
+        lputv %_ai.4 %tmp.26;
+        symbol [ _ai %_ai.4 93 16 19 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 94 12 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_ami.5 = local;
+        symbol [ _ami %_ami.5 94 16 20 ];
+        symbol [ ActivityMonitor %tmp.27 94 23 38 ];
+        %tmp.27 = getm $.Toybox.ActivityMonitor;
+        symbol [ getInfo %tmp.28 94 39 46 ];
+        %tmp.28 = getv function %tmp.27 :getInfo;
+        %tmp.29 = invoke %tmp.27 %tmp.28();
+        lputv %_ami.5 %tmp.29;
+        symbol [ _ami %_ami.5 94 16 20 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 96 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_pos.6 = local;
+        symbol [ _pos %_pos.6 96 12 16 ];
+        symbol [ Position %tmp.30 96 19 27 ];
+        %tmp.30 = getm $.Toybox.Position;
+        symbol [ getInfo %tmp.31 96 28 35 ];
+        %tmp.31 = getv function %tmp.30 :getInfo;
+        %tmp.32 = invoke %tmp.30 %tmp.31();
+        lputv %_pos.6 %tmp.32;
+        symbol [ _pos %_pos.6 96 12 16 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 97 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_lat.7 = local;
+        symbol [ _lat %_lat.7 97 12 16 ];
+        %tmp.33 = 0.0;
+        lputv %_lat.7 %tmp.33;
+        symbol [ _lat %_lat.7 97 12 16 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 97 24 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_lon.8 = local;
+        symbol [ _lon %_lon.8 97 28 32 ];
+        %tmp.34 = 0.0;
+        lputv %_lon.8 %tmp.34;
+        symbol [ _lon %_lon.8 97 28 32 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 97 40 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_hasPos.9 = local;
+        symbol [ _hasPos %_hasPos.9 97 44 51 ];
+        %tmp.35 = false;
+        lputv %_hasPos.9 %tmp.35;
+        symbol [ _hasPos %_hasPos.9 97 44 51 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 98 8 ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_8_101_8_if_stmt:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_12_98_45_begin:
+        %tmp.36 = lgetv %_pos.6;
+        symbol [ _pos %tmp.36 98 12 16 ];
+        %tmp.37 = null;
+        %tmp.38 = ne %tmp.36 %tmp.37;
+        bf %tmp.38 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_8_101_8_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_28_98_45_true:
+        %tmp.39 = lgetv %_pos.6;
+        symbol [ _pos %tmp.39 98 28 32 ];
+        %tmp.40 = as %tmp.39 { (!Null) };
+        symbol [ position %tmp.41 98 33 41 ];
+        %tmp.41 = getv %tmp.40 :position;
+        %tmp.42 = null;
+        %tmp.43 = ne %tmp.41 %tmp.42;
+        push %tmp.43;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_28_98_45_end:
+        %tmp.44 = phi [%tmp.38 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_12_98_45_begin] [%tmp.43 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_28_98_45_true] [%tmp.44 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_28_98_45_end];
+        bf %tmp.44 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_8_101_8_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_8_101_8_if_true:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_51_101_8_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 99 12 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_51_101_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_51_101_8_stop" ]
+        %_coords.10 = local;
+        symbol [ _coords %_coords.10 99 16 23 ];
+        %tmp.45 = lgetv %_pos.6;
+        symbol [ _pos %tmp.45 99 26 30 ];
+        %tmp.46 = as %tmp.45 { (!Null) };
+        symbol [ position %tmp.47 99 31 39 ];
+        %tmp.47 = getv %tmp.46 :position;
+        symbol [ toDegrees %tmp.48 99 40 49 ];
+        %tmp.48 = getv function %tmp.47 :toDegrees;
+        %tmp.49 = invoke %tmp.47 %tmp.48();
+        lputv %_coords.10 %tmp.49;
+        symbol [ _coords %_coords.10 99 16 23 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 100 12 ]
+        %tmp.50 = lgetv %_coords.10;
+        symbol [ _coords %tmp.50 100 19 26 ];
+        %tmp.51 = 0;
+        %tmp.52 = agetv %tmp.50 %tmp.51;
+        symbol [ toFloat %tmp.53 100 30 37 ];
+        %tmp.53 = getv function %tmp.52 :toFloat;
+        %tmp.54 = invoke %tmp.52 %tmp.53();
+        lputv %_lat.7 %tmp.54;
+        symbol [ _lat %_lat.7 100 12 16 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 100 41 ]
+        %tmp.55 = lgetv %_coords.10;
+        symbol [ _coords %tmp.55 100 48 55 ];
+        %tmp.56 = 1;
+        %tmp.57 = agetv %tmp.55 %tmp.56;
+        symbol [ toFloat %tmp.58 100 59 66 ];
+        %tmp.58 = getv function %tmp.57 :toFloat;
+        %tmp.59 = invoke %tmp.57 %tmp.58();
+        lputv %_lon.8 %tmp.59;
+        symbol [ _lon %_lon.8 100 41 45 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 100 70 ]
+        %tmp.60 = true;
+        lputv %_hasPos.9 %tmp.60;
+        symbol [ _hasPos %_hasPos.9 100 70 77 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_51_101_8_stop:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_8_101_8_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_98_8_101_8_if_end:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 102 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_srMin.11 = local;
+        symbol [ _srMin %_srMin.11 102 12 18 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_102_21_102_68_begin:
+        %tmp.61 = lgetv %_hasPos.9;
+        symbol [ _hasPos %tmp.61 102 21 28 ];
+        bf %tmp.61 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_102_21_102_68_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_102_21_102_68_true:
+        %tmp.62 = self;
+        symbol [ calcSunTimeMin %tmp.63 102 31 45 ];
+        %tmp.63 = getv function %tmp.62 :calcSunTimeMin;
+        %tmp.64 = lgetv %_lat.7;
+        symbol [ _lat %tmp.64 102 46 50 ];
+        %tmp.65 = lgetv %_lon.8;
+        symbol [ _lon %tmp.65 102 52 56 ];
+        %tmp.66 = true;
+        %tmp.67 = invoke %tmp.62 %tmp.63(%tmp.64, %tmp.65, %tmp.66);
+        push %tmp.67;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_102_21_102_68_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_102_21_102_68_else_false:
+        %tmp.68 = -1;
+        push %tmp.68;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_102_21_102_68_end:
+        %tmp.69 = phi [%tmp.61 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_102_21_102_68_begin] [%tmp.67 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_102_21_102_68_true] [%tmp.68 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_102_21_102_68_else_false] [%tmp.69 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_102_21_102_68_end];
+        lputv %_srMin.11 %tmp.69;
+        symbol [ _srMin %_srMin.11 102 12 18 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 103 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_ssMin.12 = local;
+        symbol [ _ssMin %_ssMin.12 103 12 18 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_103_21_103_68_begin:
+        %tmp.70 = lgetv %_hasPos.9;
+        symbol [ _hasPos %tmp.70 103 21 28 ];
+        bf %tmp.70 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_103_21_103_68_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_103_21_103_68_true:
+        %tmp.71 = self;
+        symbol [ calcSunTimeMin %tmp.72 103 31 45 ];
+        %tmp.72 = getv function %tmp.71 :calcSunTimeMin;
+        %tmp.73 = lgetv %_lat.7;
+        symbol [ _lat %tmp.73 103 46 50 ];
+        %tmp.74 = lgetv %_lon.8;
+        symbol [ _lon %tmp.74 103 52 56 ];
+        %tmp.75 = false;
+        %tmp.76 = invoke %tmp.71 %tmp.72(%tmp.73, %tmp.74, %tmp.75);
+        push %tmp.76;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_103_21_103_68_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_103_21_103_68_else_false:
+        %tmp.77 = -1;
+        push %tmp.77;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_103_21_103_68_end:
+        %tmp.78 = phi [%tmp.70 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_103_21_103_68_begin] [%tmp.76 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_103_21_103_68_true] [%tmp.77 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_103_21_103_68_else_false] [%tmp.78 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_103_21_103_68_end];
+        lputv %_ssMin.12 %tmp.78;
+        symbol [ _ssMin %_ssMin.12 103 12 18 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 104 12 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %heartRate.13 = local;
+        symbol [ heartRate %heartRate.13 104 16 25 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_28_104_110_begin:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_29_104_68_begin:
+        %tmp.79 = lgetv %_ai.4;
+        symbol [ _ai %tmp.79 104 29 32 ];
+        %tmp.80 = null;
+        %tmp.81 = ne %tmp.79 %tmp.80;
+        bf %tmp.81 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_28_104_110_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_44_104_68_true:
+        %tmp.82 = lgetv %_ai.4;
+        symbol [ _ai %tmp.82 104 44 47 ];
+        %tmp.83 = as %tmp.82 { (!Null) };
+        symbol [ currentHeartRate %tmp.84 104 48 64 ];
+        %tmp.84 = getv %tmp.83 :currentHeartRate;
+        %tmp.85 = null;
+        %tmp.86 = ne %tmp.84 %tmp.85;
+        push %tmp.86;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_44_104_68_end:
+        %tmp.87 = phi [%tmp.81 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_29_104_68_begin] [%tmp.86 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_44_104_68_true] [%tmp.87 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_44_104_68_end];
+        bf %tmp.87 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_28_104_110_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_28_104_110_true:
+        %tmp.88 = lgetv %_ai.4;
+        symbol [ _ai %tmp.88 104 76 79 ];
+        %tmp.89 = as %tmp.88 { (!Null) };
+        symbol [ currentHeartRate %tmp.90 104 80 96 ];
+        %tmp.90 = getv %tmp.89 :currentHeartRate;
+        symbol [ toString %tmp.91 104 97 105 ];
+        %tmp.91 = getv function %tmp.90 :toString;
+        %tmp.92 = invoke %tmp.90 %tmp.91();
+        push %tmp.92;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_28_104_110_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_28_104_110_else_false:
+        %tmp.93 = "--";
+        push %tmp.93;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_28_104_110_end:
+        %tmp.94 = phi [%tmp.87 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_28_104_110_begin] [%tmp.92 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_28_104_110_true] [%tmp.93 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_28_104_110_else_false] [%tmp.94 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_104_28_104_110_end];
+        lputv %heartRate.13 %tmp.94;
+        symbol [ heartRate %heartRate.13 104 16 25 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 105 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %battery.14 = local;
+        symbol [ battery %battery.14 105 12 19 ];
+        symbol [ Sys %tmp.95 105 23 26 ];
+        %tmp.95 = getm $.Toybox.System;
+        symbol [ getSystemStats %tmp.96 105 27 41 ];
+        %tmp.96 = getv function %tmp.95 :getSystemStats;
+        %tmp.97 = invoke %tmp.95 %tmp.96();
+        symbol [ battery %tmp.98 105 44 51 ];
+        %tmp.98 = getv %tmp.97 :battery;
+        %tmp.99 = 0.5;
+        %tmp.100 = add %tmp.98 %tmp.99;
+        symbol [ toNumber %tmp.101 105 59 67 ];
+        %tmp.101 = getv function %tmp.100 :toNumber;
+        %tmp.102 = invoke %tmp.100 %tmp.101();
+        symbol [ toString %tmp.103 105 70 78 ];
+        %tmp.103 = getv function %tmp.102 :toString;
+        %tmp.104 = invoke %tmp.102 %tmp.103();
+        %tmp.105 = "%";
+        %tmp.106 = add %tmp.104 %tmp.105;
+        lputv %battery.14 %tmp.106;
+        symbol [ battery %battery.14 105 12 19 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 106 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %sunriseTime.15 = local;
+        symbol [ sunriseTime %sunriseTime.15 106 12 23 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_106_26_106_106_begin:
+        %tmp.107 = lgetv %_srMin.11;
+        symbol [ _srMin %tmp.107 106 26 32 ];
+        %tmp.108 = 0;
+        %tmp.109 = gte %tmp.107 %tmp.108;
+        bf %tmp.109 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_106_26_106_106_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_106_26_106_106_true:
+        %tmp.110 = lgetv %_srMin.11;
+        symbol [ _srMin %tmp.110 106 41 47 ];
+        %tmp.111 = 60;
+        %tmp.112 = div %tmp.110 %tmp.111;
+        symbol [ format %tmp.113 106 54 60 ];
+        %tmp.113 = getv function %tmp.112 :format;
+        %tmp.114 = "%d";
+        %tmp.115 = invoke %tmp.112 %tmp.113(%tmp.114);
+        %tmp.116 = ":";
+        %tmp.117 = add %tmp.115 %tmp.116;
+        %tmp.118 = lgetv %_srMin.11;
+        symbol [ _srMin %tmp.118 106 76 82 ];
+        %tmp.119 = 60;
+        %tmp.120 = mod %tmp.118 %tmp.119;
+        symbol [ format %tmp.121 106 89 95 ];
+        %tmp.121 = getv function %tmp.120 :format;
+        %tmp.122 = "%02d";
+        %tmp.123 = invoke %tmp.120 %tmp.121(%tmp.122);
+        %tmp.124 = add %tmp.117 %tmp.123;
+        push %tmp.124;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_106_26_106_106_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_106_26_106_106_else_false:
+        %tmp.125 = "--:--";
+        push %tmp.125;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_106_26_106_106_end:
+        %tmp.126 = phi [%tmp.109 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_106_26_106_106_begin] [%tmp.124 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_106_26_106_106_true] [%tmp.125 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_106_26_106_106_else_false] [%tmp.126 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_106_26_106_106_end];
+        lputv %sunriseTime.15 %tmp.126;
+        symbol [ sunriseTime %sunriseTime.15 106 12 23 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 107 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %sunsetTime.16 = local;
+        symbol [ sunsetTime %sunsetTime.16 107 12 22 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_107_26_107_106_begin:
+        %tmp.127 = lgetv %_ssMin.12;
+        symbol [ _ssMin %tmp.127 107 26 32 ];
+        %tmp.128 = 0;
+        %tmp.129 = gte %tmp.127 %tmp.128;
+        bf %tmp.129 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_107_26_107_106_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_107_26_107_106_true:
+        %tmp.130 = lgetv %_ssMin.12;
+        symbol [ _ssMin %tmp.130 107 41 47 ];
+        %tmp.131 = 60;
+        %tmp.132 = div %tmp.130 %tmp.131;
+        symbol [ format %tmp.133 107 54 60 ];
+        %tmp.133 = getv function %tmp.132 :format;
+        %tmp.134 = "%d";
+        %tmp.135 = invoke %tmp.132 %tmp.133(%tmp.134);
+        %tmp.136 = ":";
+        %tmp.137 = add %tmp.135 %tmp.136;
+        %tmp.138 = lgetv %_ssMin.12;
+        symbol [ _ssMin %tmp.138 107 76 82 ];
+        %tmp.139 = 60;
+        %tmp.140 = mod %tmp.138 %tmp.139;
+        symbol [ format %tmp.141 107 89 95 ];
+        %tmp.141 = getv function %tmp.140 :format;
+        %tmp.142 = "%02d";
+        %tmp.143 = invoke %tmp.140 %tmp.141(%tmp.142);
+        %tmp.144 = add %tmp.137 %tmp.143;
+        push %tmp.144;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_107_26_107_106_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_107_26_107_106_else_false:
+        %tmp.145 = "--:--";
+        push %tmp.145;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_107_26_107_106_end:
+        %tmp.146 = phi [%tmp.129 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_107_26_107_106_begin] [%tmp.144 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_107_26_107_106_true] [%tmp.145 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_107_26_107_106_else_false] [%tmp.146 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_107_26_107_106_end];
+        lputv %sunsetTime.16 %tmp.146;
+        symbol [ sunsetTime %sunsetTime.16 107 12 22 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 108 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_nowM.17 = local;
+        symbol [ _nowM %_nowM.17 108 12 17 ];
+        symbol [ Sys %tmp.147 108 20 23 ];
+        %tmp.147 = getm $.Toybox.System;
+        symbol [ getClockTime %tmp.148 108 24 36 ];
+        %tmp.148 = getv function %tmp.147 :getClockTime;
+        %tmp.149 = invoke %tmp.147 %tmp.148();
+        symbol [ hour %tmp.150 108 39 43 ];
+        %tmp.150 = getv %tmp.149 :hour;
+        %tmp.151 = 60;
+        %tmp.152 = mul %tmp.150 %tmp.151;
+        symbol [ Sys %tmp.153 108 51 54 ];
+        %tmp.153 = getm $.Toybox.System;
+        symbol [ getClockTime %tmp.154 108 55 67 ];
+        %tmp.154 = getv function %tmp.153 :getClockTime;
+        %tmp.155 = invoke %tmp.153 %tmp.154();
+        symbol [ min %tmp.156 108 70 73 ];
+        %tmp.156 = getv %tmp.155 :min;
+        %tmp.157 = add %tmp.152 %tmp.156;
+        lputv %_nowM.17 %tmp.157;
+        symbol [ _nowM %_nowM.17 108 12 17 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 109 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_next.18 = local;
+        symbol [ _next %_next.18 109 12 17 ];
+        %tmp.158 = -1;
+        lputv %_next.18 %tmp.158;
+        symbol [ _next %_next.18 109 12 17 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 110 8 ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_8_112_63_if_stmt:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_12_110_36_begin:
+        %tmp.159 = lgetv %_srMin.11;
+        symbol [ _srMin %tmp.159 110 12 18 ];
+        %tmp.160 = 0;
+        %tmp.161 = gte %tmp.159 %tmp.160;
+        bf %tmp.161 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_8_112_63_if_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_27_110_36_true:
+        %tmp.162 = lgetv %_srMin.11;
+        symbol [ _srMin %tmp.162 110 27 33 ];
+        %tmp.163 = lgetv %_nowM.17;
+        symbol [ _nowM %tmp.163 110 36 41 ];
+        %tmp.164 = gt %tmp.162 %tmp.163;
+        push %tmp.164;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_27_110_36_end:
+        %tmp.165 = phi [%tmp.161 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_12_110_36_begin] [%tmp.164 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_27_110_36_true] [%tmp.165 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_27_110_36_end];
+        bf %tmp.165 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_8_112_63_if_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_8_112_63_if_true:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_43_110_69_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 110 45 ]
+        %tmp.166 = lgetv %_srMin.11;
+        symbol [ _srMin %tmp.166 110 53 59 ];
+        %tmp.167 = lgetv %_nowM.17;
+        symbol [ _nowM %tmp.167 110 62 67 ];
+        %tmp.168 = sub %tmp.166 %tmp.167;
+        lputv %_next.18 %tmp.168;
+        symbol [ _next %_next.18 110 45 50 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_43_110_69_stop:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_8_112_63_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_8_112_63_if_false:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 111 13 ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_13_112_63_if_stmt:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_17_111_41_begin:
+        %tmp.169 = lgetv %_ssMin.12;
+        symbol [ _ssMin %tmp.169 111 17 23 ];
+        %tmp.170 = 0;
+        %tmp.171 = gte %tmp.169 %tmp.170;
+        bf %tmp.171 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_13_112_63_if_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_32_111_41_true:
+        %tmp.172 = lgetv %_ssMin.12;
+        symbol [ _ssMin %tmp.172 111 32 38 ];
+        %tmp.173 = lgetv %_nowM.17;
+        symbol [ _nowM %tmp.173 111 41 46 ];
+        %tmp.174 = gt %tmp.172 %tmp.173;
+        push %tmp.174;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_32_111_41_end:
+        %tmp.175 = phi [%tmp.171 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_17_111_41_begin] [%tmp.174 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_32_111_41_true] [%tmp.175 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_32_111_41_end];
+        bf %tmp.175 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_13_112_63_if_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_13_112_63_if_true:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_48_111_74_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 111 50 ]
+        %tmp.176 = lgetv %_ssMin.12;
+        symbol [ _ssMin %tmp.176 111 58 64 ];
+        %tmp.177 = lgetv %_nowM.17;
+        symbol [ _nowM %tmp.177 111 67 72 ];
+        %tmp.178 = sub %tmp.176 %tmp.177;
+        lputv %_next.18 %tmp.178;
+        symbol [ _next %_next.18 111 50 55 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_48_111_74_stop:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_13_112_63_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_13_112_63_if_false:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 112 13 ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_112_13_112_63_if_stmt:
+        %tmp.179 = lgetv %_srMin.11;
+        symbol [ _srMin %tmp.179 112 17 23 ];
+        %tmp.180 = 0;
+        %tmp.181 = gte %tmp.179 %tmp.180;
+        bf %tmp.181 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_112_13_112_63_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_112_13_112_63_if_true:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_112_30_112_63_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 112 32 ]
+        %tmp.182 = 1440;
+        %tmp.183 = lgetv %_nowM.17;
+        symbol [ _nowM %tmp.183 112 47 52 ];
+        %tmp.184 = sub %tmp.182 %tmp.183;
+        %tmp.185 = lgetv %_srMin.11;
+        symbol [ _srMin %tmp.185 112 55 61 ];
+        %tmp.186 = add %tmp.184 %tmp.185;
+        lputv %_next.18 %tmp.186;
+        symbol [ _next %_next.18 112 32 37 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_112_30_112_63_stop:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_112_13_112_63_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_112_13_112_63_if_end:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_111_13_112_63_if_end:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_110_8_112_63_if_end:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 113 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %timeTillSun.19 = local;
+        symbol [ timeTillSun %timeTillSun.19 113 12 23 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_113_26_113_110_begin:
+        %tmp.187 = lgetv %_next.18;
+        symbol [ _next %tmp.187 113 26 31 ];
+        %tmp.188 = 0;
+        %tmp.189 = gte %tmp.187 %tmp.188;
+        bf %tmp.189 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_113_26_113_110_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_113_26_113_110_true:
+        %tmp.190 = lgetv %_next.18;
+        symbol [ _next %tmp.190 113 40 45 ];
+        %tmp.191 = 60;
+        %tmp.192 = div %tmp.190 %tmp.191;
+        symbol [ format %tmp.193 113 52 58 ];
+        %tmp.193 = getv function %tmp.192 :format;
+        %tmp.194 = "%d";
+        %tmp.195 = invoke %tmp.192 %tmp.193(%tmp.194);
+        %tmp.196 = "h ";
+        %tmp.197 = add %tmp.195 %tmp.196;
+        %tmp.198 = lgetv %_next.18;
+        symbol [ _next %tmp.198 113 75 80 ];
+        %tmp.199 = 60;
+        %tmp.200 = mod %tmp.198 %tmp.199;
+        symbol [ format %tmp.201 113 87 93 ];
+        %tmp.201 = getv function %tmp.200 :format;
+        %tmp.202 = "%02d";
+        %tmp.203 = invoke %tmp.200 %tmp.201(%tmp.202);
+        %tmp.204 = add %tmp.197 %tmp.203;
+        %tmp.205 = "m";
+        %tmp.206 = add %tmp.204 %tmp.205;
+        push %tmp.206;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_113_26_113_110_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_113_26_113_110_else_false:
+        %tmp.207 = "--h --m";
+        push %tmp.207;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_113_26_113_110_end:
+        %tmp.208 = phi [%tmp.189 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_113_26_113_110_begin] [%tmp.206 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_113_26_113_110_true] [%tmp.207 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_113_26_113_110_else_false] [%tmp.208 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_113_26_113_110_end];
+        lputv %timeTillSun.19 %tmp.208;
+        symbol [ timeTillSun %timeTillSun.19 113 12 23 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 114 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %restingHR.20 = local;
+        symbol [ restingHR %restingHR.20 114 12 21 ];
+        %tmp.209 = "--";
+        lputv %restingHR.20 %tmp.209;
+        symbol [ restingHR %restingHR.20 114 12 21 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 115 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %notifications.21 = local;
+        symbol [ notifications %notifications.21 115 12 25 ];
+        symbol [ Sys %tmp.210 115 28 31 ];
+        %tmp.210 = getm $.Toybox.System;
+        symbol [ getDeviceSettings %tmp.211 115 32 49 ];
+        %tmp.211 = getv function %tmp.210 :getDeviceSettings;
+        %tmp.212 = invoke %tmp.210 %tmp.211();
+        symbol [ notificationCount %tmp.213 115 52 69 ];
+        %tmp.213 = getv %tmp.212 :notificationCount;
+        symbol [ toString %tmp.214 115 70 78 ];
+        %tmp.214 = getv function %tmp.213 :toString;
+        %tmp.215 = invoke %tmp.213 %tmp.214();
+        lputv %notifications.21 %tmp.215;
+        symbol [ notifications %notifications.21 115 12 25 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 116 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_jdM.22 = local;
+        symbol [ _jdM %_jdM.22 116 12 16 ];
+        %tmp.216 = 2440587.5;
+        symbol [ Time %tmp.217 116 31 35 ];
+        %tmp.217 = getm $.Toybox.Time;
+        symbol [ now %tmp.218 116 36 39 ];
+        %tmp.218 = getv function %tmp.217 :now;
+        %tmp.219 = invoke %tmp.217 %tmp.218();
+        symbol [ value %tmp.220 116 42 47 ];
+        %tmp.220 = getv function %tmp.219 :value;
+        %tmp.221 = invoke %tmp.219 %tmp.220();
+        symbol [ toFloat %tmp.222 116 50 57 ];
+        %tmp.222 = getv function %tmp.221 :toFloat;
+        %tmp.223 = invoke %tmp.221 %tmp.222();
+        %tmp.224 = 86400.0;
+        %tmp.225 = div %tmp.223 %tmp.224;
+        %tmp.226 = add %tmp.216 %tmp.225;
+        lputv %_jdM.22 %tmp.226;
+        symbol [ _jdM %_jdM.22 116 12 16 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 117 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_phs.23 = local;
+        symbol [ _phs %_phs.23 117 12 16 ];
+        %tmp.227 = lgetv %_jdM.22;
+        symbol [ _jdM %tmp.227 117 20 24 ];
+        %tmp.228 = 2451549.5;
+        %tmp.229 = sub %tmp.227 %tmp.228;
+        %tmp.230 = 29.530589;
+        %tmp.231 = div %tmp.229 %tmp.230;
+        lputv %_phs.23 %tmp.231;
+        symbol [ _phs %_phs.23 117 12 16 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 118 8 ]
+        %tmp.232 = lgetv %_phs.23;
+        symbol [ _phs %tmp.232 118 8 12 ];
+        %tmp.233 = lgetv %_phs.23;
+        symbol [ _phs %tmp.233 118 16 20 ];
+        symbol [ toNumber %tmp.234 118 21 29 ];
+        %tmp.234 = getv function %tmp.233 :toNumber;
+        %tmp.235 = invoke %tmp.233 %tmp.234();
+        symbol [ toFloat %tmp.236 118 32 39 ];
+        %tmp.236 = getv function %tmp.235 :toFloat;
+        %tmp.237 = invoke %tmp.235 %tmp.236();
+        %tmp.238 = sub %tmp.232 %tmp.237;
+        lputv %_phs.23 %tmp.238;
+        symbol [ _phs %_phs.23 118 8 12 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 119 8 ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_119_8_119_39_if_stmt:
+        %tmp.239 = lgetv %_phs.23;
+        symbol [ _phs %tmp.239 119 12 16 ];
+        %tmp.240 = 0.0;
+        %tmp.241 = lt %tmp.239 %tmp.240;
+        bf %tmp.241 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_119_8_119_39_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_119_8_119_39_if_true:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_119_24_119_39_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 119 26 ]
+        %tmp.242 = lgetv %_phs.23;
+        symbol [ _phs %tmp.242 119 26 30 ];
+        %tmp.243 = 1.0;
+        %tmp.244 = add %tmp.242 %tmp.243;
+        lputv %_phs.23 %tmp.244;
+        symbol [ _phs %_phs.23 119 26 30 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_119_24_119_39_stop:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_119_8_119_39_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_119_8_119_39_if_end:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 120 8 ]
+        %tmp.245 = 1.0;
+        %tmp.246 = lgetv %_phs.23;
+        symbol [ _phs %tmp.246 120 21 25 ];
+        %tmp.247 = sub %tmp.245 %tmp.246;
+        lputv %_phs.23 %tmp.247;
+        symbol [ _phs %_phs.23 120 8 12 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 121 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %trainReadiness.24 = local;
+        symbol [ trainReadiness %trainReadiness.24 121 12 26 ];
+        %tmp.248 = "--";
+        lputv %trainReadiness.24 %tmp.248;
+        symbol [ trainReadiness %trainReadiness.24 121 12 26 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 122 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_ssh.25 = local;
+        symbol [ _ssh %_ssh.25 122 12 16 ];
+        symbol [ SensorHistory %tmp.249 122 19 32 ];
+        %tmp.249 = getm $.Toybox.SensorHistory;
+        symbol [ getStressHistory %tmp.250 122 33 49 ];
+        %tmp.250 = getv function %tmp.249 :getStressHistory;
+        %tmp.251 = null;
+        %tmp.252 = invoke %tmp.249 %tmp.250(%tmp.251);
+        lputv %_ssh.25 %tmp.252;
+        symbol [ _ssh %_ssh.25 122 12 16 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 123 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %_sss.26 = local;
+        symbol [ _sss %_sss.26 123 12 16 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_123_19_123_48_begin:
+        %tmp.253 = lgetv %_ssh.25;
+        symbol [ _ssh %tmp.253 123 19 23 ];
+        %tmp.254 = null;
+        %tmp.255 = ne %tmp.253 %tmp.254;
+        bf %tmp.255 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_123_19_123_48_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_123_19_123_48_true:
+        %tmp.256 = lgetv %_ssh.25;
+        symbol [ _ssh %tmp.256 123 34 38 ];
+        %tmp.257 = as %tmp.256 { (!Null) };
+        symbol [ next %tmp.258 123 39 43 ];
+        %tmp.258 = getv function %tmp.257 :next;
+        %tmp.259 = invoke %tmp.257 %tmp.258();
+        push %tmp.259;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_123_19_123_48_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_123_19_123_48_else_false:
+        %tmp.260 = null;
+        push %tmp.260;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_123_19_123_48_end:
+        %tmp.261 = phi [%tmp.255 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_123_19_123_48_begin] [%tmp.259 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_123_19_123_48_true] [%tmp.260 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_123_19_123_48_else_false] [%tmp.261 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_123_19_123_48_end];
+        lputv %_sss.26 %tmp.261;
+        symbol [ _sss %_sss.26 123 12 16 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 124 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %stressLevel.27 = local;
+        symbol [ stressLevel %stressLevel.27 124 12 23 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_26_124_102_begin:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_27_124_56_begin:
+        %tmp.262 = lgetv %_sss.26;
+        symbol [ _sss %tmp.262 124 27 31 ];
+        %tmp.263 = null;
+        %tmp.264 = ne %tmp.262 %tmp.263;
+        bf %tmp.264 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_26_124_102_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_43_124_56_true:
+        %tmp.265 = lgetv %_sss.26;
+        symbol [ _sss %tmp.265 124 43 47 ];
+        %tmp.266 = as %tmp.265 { (!Null) };
+        symbol [ data %tmp.267 124 48 52 ];
+        %tmp.267 = getv %tmp.266 :data;
+        %tmp.268 = null;
+        %tmp.269 = ne %tmp.267 %tmp.268;
+        push %tmp.269;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_43_124_56_end:
+        %tmp.270 = phi [%tmp.264 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_27_124_56_begin] [%tmp.269 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_43_124_56_true] [%tmp.270 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_43_124_56_end];
+        bf %tmp.270 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_26_124_102_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_26_124_102_true:
+        %tmp.271 = lgetv %_sss.26;
+        symbol [ _sss %tmp.271 124 65 69 ];
+        %tmp.272 = as %tmp.271 { (!Null) };
+        symbol [ data %tmp.273 124 70 74 ];
+        %tmp.273 = getv %tmp.272 :data;
+        symbol [ toNumber %tmp.274 124 75 83 ];
+        %tmp.274 = getv function %tmp.273 :toNumber;
+        %tmp.275 = invoke %tmp.273 %tmp.274();
+        symbol [ format %tmp.276 124 87 93 ];
+        %tmp.276 = getv function %tmp.275 :format;
+        %tmp.277 = "%d";
+        %tmp.278 = invoke %tmp.275 %tmp.276(%tmp.277);
+        push %tmp.278;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_26_124_102_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_26_124_102_else_false:
+        %tmp.279 = "--";
+        push %tmp.279;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_26_124_102_end:
+        %tmp.280 = phi [%tmp.270 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_26_124_102_begin] [%tmp.278 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_26_124_102_true] [%tmp.279 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_26_124_102_else_false] [%tmp.280 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_124_26_124_102_end];
+        lputv %stressLevel.27 %tmp.280;
+        symbol [ stressLevel %stressLevel.27 124 12 23 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 125 8 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop" ]
+        %steps.28 = local;
+        symbol [ steps %steps.28 125 12 17 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_23_125_92_begin:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_24_125_57_begin:
+        %tmp.281 = lgetv %_ami.5;
+        symbol [ _ami %tmp.281 125 24 28 ];
+        %tmp.282 = null;
+        %tmp.283 = ne %tmp.281 %tmp.282;
+        bf %tmp.283 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_23_125_92_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_40_125_57_true:
+        %tmp.284 = lgetv %_ami.5;
+        symbol [ _ami %tmp.284 125 40 44 ];
+        %tmp.285 = as %tmp.284 { (!Null) };
+        symbol [ steps %tmp.286 125 45 50 ];
+        %tmp.286 = getv %tmp.285 :steps;
+        %tmp.287 = null;
+        %tmp.288 = ne %tmp.286 %tmp.287;
+        push %tmp.288;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_40_125_57_end:
+        %tmp.289 = phi [%tmp.283 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_24_125_57_begin] [%tmp.288 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_40_125_57_true] [%tmp.289 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_40_125_57_end];
+        bf %tmp.289 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_23_125_92_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_23_125_92_true:
+        %tmp.290 = lgetv %_ami.5;
+        symbol [ _ami %tmp.290 125 65 69 ];
+        %tmp.291 = as %tmp.290 { (!Null) };
+        symbol [ steps %tmp.292 125 70 75 ];
+        %tmp.292 = getv %tmp.291 :steps;
+        symbol [ toString %tmp.293 125 76 84 ];
+        %tmp.293 = getv function %tmp.292 :toString;
+        %tmp.294 = invoke %tmp.292 %tmp.293();
+        push %tmp.294;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_23_125_92_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_23_125_92_else_false:
+        %tmp.295 = "--";
+        push %tmp.295;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_23_125_92_end:
+        %tmp.296 = phi [%tmp.289 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_23_125_92_begin] [%tmp.294 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_23_125_92_true] [%tmp.295 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_23_125_92_else_false] [%tmp.296 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_125_23_125_92_end];
+        lputv %steps.28 %tmp.296;
+        symbol [ steps %steps.28 125 12 17 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 127 12 ]
+        %tmp.297 = lgetv %dc;
+        symbol [ dc %tmp.297 127 12 14 ];
+        symbol [ setColor %tmp.298 127 15 23 ];
+        %tmp.298 = getv function %tmp.297 :setColor;
+        %tmp.299 = 0xFFFFFF;
+        symbol [ Gfx %tmp.300 127 34 37 ];
+        %tmp.300 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.301 127 38 55 ];
+        %tmp.301 = getv %tmp.300 :COLOR_TRANSPARENT;
+        invoke %tmp.297 %tmp.298(%tmp.299, %tmp.301);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 128 8 ]
+        %tmp.302 = lgetv %dc;
+        symbol [ dc %tmp.302 128 8 10 ];
+        symbol [ drawText %tmp.303 128 11 19 ];
+        %tmp.303 = getv function %tmp.302 :drawText;
+        %tmp.304 = 117;
+        %tmp.305 = 137;
+        symbol [ Gfx %tmp.306 128 30 33 ];
+        %tmp.306 = getm $.Toybox.Graphics;
+        symbol [ FONT_NUMBER_HOT %tmp.307 128 34 49 ];
+        %tmp.307 = getv %tmp.306 :FONT_NUMBER_HOT;
+        %tmp.308 = lgetv %clockTime.1;
+        symbol [ clockTime %tmp.308 128 51 60 ];
+        symbol [ hour %tmp.309 128 61 65 ];
+        %tmp.309 = getv %tmp.308 :hour;
+        symbol [ format %tmp.310 128 66 72 ];
+        %tmp.310 = getv function %tmp.309 :format;
+        %tmp.311 = "%02d";
+        %tmp.312 = invoke %tmp.309 %tmp.310(%tmp.311);
+        symbol [ Gfx %tmp.313 128 82 85 ];
+        %tmp.313 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.314 128 86 105 ];
+        %tmp.314 = getv %tmp.313 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.315 128 108 111 ];
+        %tmp.315 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.316 128 112 132 ];
+        %tmp.316 = getv %tmp.315 :TEXT_JUSTIFY_VCENTER;
+        %tmp.317 = bitor %tmp.314 %tmp.316;
+        invoke %tmp.302 %tmp.303(%tmp.304, %tmp.305, %tmp.307, %tmp.312, %tmp.317);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 130 8 ]
+        %tmp.318 = lgetv %dc;
+        symbol [ dc %tmp.318 130 8 10 ];
+        symbol [ setColor %tmp.319 130 11 19 ];
+        %tmp.319 = getv function %tmp.318 :setColor;
+        %tmp.320 = 0xFFFFFF;
+        symbol [ Gfx %tmp.321 130 30 33 ];
+        %tmp.321 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.322 130 34 51 ];
+        %tmp.322 = getv %tmp.321 :COLOR_TRANSPARENT;
+        invoke %tmp.318 %tmp.319(%tmp.320, %tmp.322);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 131 8 ]
+        %tmp.323 = lgetv %dc;
+        symbol [ dc %tmp.323 131 8 10 ];
+        symbol [ drawText %tmp.324 131 11 19 ];
+        %tmp.324 = getv function %tmp.323 :drawText;
+        %tmp.325 = 249;
+        %tmp.326 = 138;
+        symbol [ Gfx %tmp.327 131 30 33 ];
+        %tmp.327 = getm $.Toybox.Graphics;
+        symbol [ FONT_NUMBER_HOT %tmp.328 131 34 49 ];
+        %tmp.328 = getv %tmp.327 :FONT_NUMBER_HOT;
+        %tmp.329 = lgetv %clockTime.1;
+        symbol [ clockTime %tmp.329 131 51 60 ];
+        symbol [ min %tmp.330 131 61 64 ];
+        %tmp.330 = getv %tmp.329 :min;
+        symbol [ format %tmp.331 131 65 71 ];
+        %tmp.331 = getv function %tmp.330 :format;
+        %tmp.332 = "%02d";
+        %tmp.333 = invoke %tmp.330 %tmp.331(%tmp.332);
+        symbol [ Gfx %tmp.334 131 81 84 ];
+        %tmp.334 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.335 131 85 104 ];
+        %tmp.335 = getv %tmp.334 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.336 131 107 110 ];
+        %tmp.336 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.337 131 111 131 ];
+        %tmp.337 = getv %tmp.336 :TEXT_JUSTIFY_VCENTER;
+        %tmp.338 = bitor %tmp.335 %tmp.337;
+        invoke %tmp.323 %tmp.324(%tmp.325, %tmp.326, %tmp.328, %tmp.333, %tmp.338);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 133 8 ]
+        %tmp.339 = lgetv %dc;
+        symbol [ dc %tmp.339 133 8 10 ];
+        symbol [ setColor %tmp.340 133 11 19 ];
+        %tmp.340 = getv function %tmp.339 :setColor;
+        %tmp.341 = 0xCCCCCC;
+        symbol [ Gfx %tmp.342 133 30 33 ];
+        %tmp.342 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.343 133 34 51 ];
+        %tmp.343 = getv %tmp.342 :COLOR_TRANSPARENT;
+        invoke %tmp.339 %tmp.340(%tmp.341, %tmp.343);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 134 8 ]
+        %tmp.344 = lgetv %dc;
+        symbol [ dc %tmp.344 134 8 10 ];
+        symbol [ drawText %tmp.345 134 11 19 ];
+        %tmp.345 = getv function %tmp.344 :drawText;
+        %tmp.346 = 195;
+        %tmp.347 = 240;
+        symbol [ Gfx %tmp.348 134 30 33 ];
+        %tmp.348 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.349 134 34 44 ];
+        %tmp.349 = getv %tmp.348 :FONT_SMALL;
+        %tmp.350 = lgetv %info.3;
+        symbol [ info %tmp.350 134 46 50 ];
+        symbol [ day_of_week %tmp.351 134 51 62 ];
+        %tmp.351 = getv %tmp.350 :day_of_week;
+        %tmp.352 = ", ";
+        %tmp.353 = add %tmp.351 %tmp.352;
+        %tmp.354 = lgetv %info.3;
+        symbol [ info %tmp.354 134 72 76 ];
+        symbol [ month %tmp.355 134 77 82 ];
+        %tmp.355 = getv %tmp.354 :month;
+        symbol [ toString %tmp.356 134 83 91 ];
+        %tmp.356 = getv function %tmp.355 :toString;
+        %tmp.357 = invoke %tmp.355 %tmp.356();
+        %tmp.358 = add %tmp.353 %tmp.357;
+        %tmp.359 = "/";
+        %tmp.360 = add %tmp.358 %tmp.359;
+        %tmp.361 = lgetv %info.3;
+        symbol [ info %tmp.361 134 102 106 ];
+        symbol [ day %tmp.362 134 107 110 ];
+        %tmp.362 = getv %tmp.361 :day;
+        symbol [ toString %tmp.363 134 111 119 ];
+        %tmp.363 = getv function %tmp.362 :toString;
+        %tmp.364 = invoke %tmp.362 %tmp.363();
+        %tmp.365 = add %tmp.360 %tmp.364;
+        symbol [ Gfx %tmp.366 134 123 126 ];
+        %tmp.366 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.367 134 127 146 ];
+        %tmp.367 = getv %tmp.366 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.368 134 149 152 ];
+        %tmp.368 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.369 134 153 173 ];
+        %tmp.369 = getv %tmp.368 :TEXT_JUSTIFY_VCENTER;
+        %tmp.370 = bitor %tmp.367 %tmp.369;
+        invoke %tmp.344 %tmp.345(%tmp.346, %tmp.347, %tmp.349, %tmp.365, %tmp.370);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 136 8 ]
+        %tmp.371 = lgetv %dc;
+        symbol [ dc %tmp.371 136 8 10 ];
+        symbol [ setColor %tmp.372 136 11 19 ];
+        %tmp.372 = getv function %tmp.371 :setColor;
+        %tmp.373 = 0xFF4444;
+        symbol [ Gfx %tmp.374 136 30 33 ];
+        %tmp.374 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.375 136 34 51 ];
+        %tmp.375 = getv %tmp.374 :COLOR_TRANSPARENT;
+        invoke %tmp.371 %tmp.372(%tmp.373, %tmp.375);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 137 8 ]
+        %tmp.376 = lgetv %dc;
+        symbol [ dc %tmp.376 137 8 10 ];
+        symbol [ drawText %tmp.377 137 11 19 ];
+        %tmp.377 = getv function %tmp.376 :drawText;
+        %tmp.378 = 120;
+        %tmp.379 = 290;
+        symbol [ Gfx %tmp.380 137 30 33 ];
+        %tmp.380 = getm $.Toybox.Graphics;
+        symbol [ FONT_MEDIUM %tmp.381 137 34 45 ];
+        %tmp.381 = getv %tmp.380 :FONT_MEDIUM;
+        %tmp.382 = lgetv %heartRate.13;
+        symbol [ heartRate %tmp.382 137 47 56 ];
+        symbol [ Gfx %tmp.383 137 58 61 ];
+        %tmp.383 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.384 137 62 81 ];
+        %tmp.384 = getv %tmp.383 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.385 137 84 87 ];
+        %tmp.385 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.386 137 88 108 ];
+        %tmp.386 = getv %tmp.385 :TEXT_JUSTIFY_VCENTER;
+        %tmp.387 = bitor %tmp.384 %tmp.386;
+        invoke %tmp.376 %tmp.377(%tmp.378, %tmp.379, %tmp.381, %tmp.382, %tmp.387);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 139 8 ]
+        %tmp.388 = lgetv %dc;
+        symbol [ dc %tmp.388 139 8 10 ];
+        symbol [ setColor %tmp.389 139 11 19 ];
+        %tmp.389 = getv function %tmp.388 :setColor;
+        %tmp.390 = 0xFFFF00;
+        symbol [ Gfx %tmp.391 139 30 33 ];
+        %tmp.391 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.392 139 34 51 ];
+        %tmp.392 = getv %tmp.391 :COLOR_TRANSPARENT;
+        invoke %tmp.388 %tmp.389(%tmp.390, %tmp.392);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 140 8 ]
+        %tmp.393 = lgetv %dc;
+        symbol [ dc %tmp.393 140 8 10 ];
+        symbol [ drawText %tmp.394 140 11 19 ];
+        %tmp.394 = getv function %tmp.393 :drawText;
+        %tmp.395 = 270;
+        %tmp.396 = 290;
+        symbol [ Gfx %tmp.397 140 30 33 ];
+        %tmp.397 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.398 140 34 44 ];
+        %tmp.398 = getv %tmp.397 :FONT_SMALL;
+        %tmp.399 = lgetv %battery.14;
+        symbol [ battery %tmp.399 140 46 53 ];
+        symbol [ Gfx %tmp.400 140 55 58 ];
+        %tmp.400 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.401 140 59 78 ];
+        %tmp.401 = getv %tmp.400 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.402 140 81 84 ];
+        %tmp.402 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.403 140 85 105 ];
+        %tmp.403 = getv %tmp.402 :TEXT_JUSTIFY_VCENTER;
+        %tmp.404 = bitor %tmp.401 %tmp.403;
+        invoke %tmp.393 %tmp.394(%tmp.395, %tmp.396, %tmp.398, %tmp.399, %tmp.404);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 142 8 ]
+        %tmp.405 = lgetv %dc;
+        symbol [ dc %tmp.405 142 8 10 ];
+        symbol [ setColor %tmp.406 142 11 19 ];
+        %tmp.406 = getv function %tmp.405 :setColor;
+        %tmp.407 = 0xFFCC44;
+        symbol [ Gfx %tmp.408 142 30 33 ];
+        %tmp.408 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.409 142 34 51 ];
+        %tmp.409 = getv %tmp.408 :COLOR_TRANSPARENT;
+        invoke %tmp.405 %tmp.406(%tmp.407, %tmp.409);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 143 8 ]
+        %tmp.410 = lgetv %dc;
+        symbol [ dc %tmp.410 143 8 10 ];
+        symbol [ drawText %tmp.411 143 11 19 ];
+        %tmp.411 = getv function %tmp.410 :drawText;
+        %tmp.412 = 97;
+        %tmp.413 = 187;
+        symbol [ Gfx %tmp.414 143 29 32 ];
+        %tmp.414 = getm $.Toybox.Graphics;
+        symbol [ FONT_TINY %tmp.415 143 33 42 ];
+        %tmp.415 = getv %tmp.414 :FONT_TINY;
+        %tmp.416 = lgetv %sunriseTime.15;
+        symbol [ sunriseTime %tmp.416 143 44 55 ];
+        symbol [ Gfx %tmp.417 143 57 60 ];
+        %tmp.417 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.418 143 61 80 ];
+        %tmp.418 = getv %tmp.417 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.419 143 83 86 ];
+        %tmp.419 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.420 143 87 107 ];
+        %tmp.420 = getv %tmp.419 :TEXT_JUSTIFY_VCENTER;
+        %tmp.421 = bitor %tmp.418 %tmp.420;
+        invoke %tmp.410 %tmp.411(%tmp.412, %tmp.413, %tmp.415, %tmp.416, %tmp.421);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 145 8 ]
+        %tmp.422 = lgetv %dc;
+        symbol [ dc %tmp.422 145 8 10 ];
+        symbol [ setColor %tmp.423 145 11 19 ];
+        %tmp.423 = getv function %tmp.422 :setColor;
+        %tmp.424 = 0xFF8844;
+        symbol [ Gfx %tmp.425 145 30 33 ];
+        %tmp.425 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.426 145 34 51 ];
+        %tmp.426 = getv %tmp.425 :COLOR_TRANSPARENT;
+        invoke %tmp.422 %tmp.423(%tmp.424, %tmp.426);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 146 8 ]
+        %tmp.427 = lgetv %dc;
+        symbol [ dc %tmp.427 146 8 10 ];
+        symbol [ drawText %tmp.428 146 11 19 ];
+        %tmp.428 = getv function %tmp.427 :drawText;
+        %tmp.429 = 290;
+        %tmp.430 = 189;
+        symbol [ Gfx %tmp.431 146 30 33 ];
+        %tmp.431 = getm $.Toybox.Graphics;
+        symbol [ FONT_TINY %tmp.432 146 34 43 ];
+        %tmp.432 = getv %tmp.431 :FONT_TINY;
+        %tmp.433 = lgetv %sunsetTime.16;
+        symbol [ sunsetTime %tmp.433 146 45 55 ];
+        symbol [ Gfx %tmp.434 146 57 60 ];
+        %tmp.434 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.435 146 61 80 ];
+        %tmp.435 = getv %tmp.434 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.436 146 83 86 ];
+        %tmp.436 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.437 146 87 107 ];
+        %tmp.437 = getv %tmp.436 :TEXT_JUSTIFY_VCENTER;
+        %tmp.438 = bitor %tmp.435 %tmp.437;
+        invoke %tmp.427 %tmp.428(%tmp.429, %tmp.430, %tmp.432, %tmp.433, %tmp.438);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 148 8 ]
+        %tmp.439 = lgetv %dc;
+        symbol [ dc %tmp.439 148 8 10 ];
+        symbol [ setColor %tmp.440 148 11 19 ];
+        %tmp.440 = getv function %tmp.439 :setColor;
+        %tmp.441 = 0xFFAA44;
+        symbol [ Gfx %tmp.442 148 30 33 ];
+        %tmp.442 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.443 148 34 51 ];
+        %tmp.443 = getv %tmp.442 :COLOR_TRANSPARENT;
+        invoke %tmp.439 %tmp.440(%tmp.441, %tmp.443);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 149 8 ]
+        %tmp.444 = lgetv %dc;
+        symbol [ dc %tmp.444 149 8 10 ];
+        symbol [ drawText %tmp.445 149 11 19 ];
+        %tmp.445 = getv function %tmp.444 :drawText;
+        %tmp.446 = 190;
+        %tmp.447 = 168;
+        symbol [ Gfx %tmp.448 149 30 33 ];
+        %tmp.448 = getm $.Toybox.Graphics;
+        symbol [ FONT_TINY %tmp.449 149 34 43 ];
+        %tmp.449 = getv %tmp.448 :FONT_TINY;
+        %tmp.450 = lgetv %timeTillSun.19;
+        symbol [ timeTillSun %tmp.450 149 45 56 ];
+        symbol [ Gfx %tmp.451 149 58 61 ];
+        %tmp.451 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.452 149 62 81 ];
+        %tmp.452 = getv %tmp.451 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.453 149 84 87 ];
+        %tmp.453 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.454 149 88 108 ];
+        %tmp.454 = getv %tmp.453 :TEXT_JUSTIFY_VCENTER;
+        %tmp.455 = bitor %tmp.452 %tmp.454;
+        invoke %tmp.444 %tmp.445(%tmp.446, %tmp.447, %tmp.449, %tmp.450, %tmp.455);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 151 8 ]
+        %tmp.456 = lgetv %dc;
+        symbol [ dc %tmp.456 151 8 10 ];
+        symbol [ setColor %tmp.457 151 11 19 ];
+        %tmp.457 = getv function %tmp.456 :setColor;
+        %tmp.458 = 0xFF8888;
+        symbol [ Gfx %tmp.459 151 30 33 ];
+        %tmp.459 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.460 151 34 51 ];
+        %tmp.460 = getv %tmp.459 :COLOR_TRANSPARENT;
+        invoke %tmp.456 %tmp.457(%tmp.458, %tmp.460);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 152 8 ]
+        %tmp.461 = lgetv %dc;
+        symbol [ dc %tmp.461 152 8 10 ];
+        symbol [ drawText %tmp.462 152 11 19 ];
+        %tmp.462 = getv function %tmp.461 :drawText;
+        %tmp.463 = 65;
+        %tmp.464 = 279;
+        symbol [ Gfx %tmp.465 152 29 32 ];
+        %tmp.465 = getm $.Toybox.Graphics;
+        symbol [ FONT_TINY %tmp.466 152 33 42 ];
+        %tmp.466 = getv %tmp.465 :FONT_TINY;
+        %tmp.467 = lgetv %restingHR.20;
+        symbol [ restingHR %tmp.467 152 44 53 ];
+        symbol [ Gfx %tmp.468 152 55 58 ];
+        %tmp.468 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.469 152 59 78 ];
+        %tmp.469 = getv %tmp.468 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.470 152 81 84 ];
+        %tmp.470 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.471 152 85 105 ];
+        %tmp.471 = getv %tmp.470 :TEXT_JUSTIFY_VCENTER;
+        %tmp.472 = bitor %tmp.469 %tmp.471;
+        invoke %tmp.461 %tmp.462(%tmp.463, %tmp.464, %tmp.466, %tmp.467, %tmp.472);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 155 8 ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_155_8_158_8_if_stmt:
+        symbol [ Sys %tmp.473 155 12 15 ];
+        %tmp.473 = getm $.Toybox.System;
+        symbol [ getDeviceSettings %tmp.474 155 16 33 ];
+        %tmp.474 = getv function %tmp.473 :getDeviceSettings;
+        %tmp.475 = invoke %tmp.473 %tmp.474();
+        symbol [ phoneConnected %tmp.476 155 36 50 ];
+        %tmp.476 = getv %tmp.475 :phoneConnected;
+        bf %tmp.476 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_155_8_158_8_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_155_8_158_8_if_true:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_155_52_158_8_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 156 12 ]
+        %tmp.477 = lgetv %dc;
+        symbol [ dc %tmp.477 156 12 14 ];
+        symbol [ setColor %tmp.478 156 15 23 ];
+        %tmp.478 = getv function %tmp.477 :setColor;
+        %tmp.479 = 0x0077FF;
+        symbol [ Gfx %tmp.480 156 34 37 ];
+        %tmp.480 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.481 156 38 55 ];
+        %tmp.481 = getv %tmp.480 :COLOR_TRANSPARENT;
+        invoke %tmp.477 %tmp.478(%tmp.479, %tmp.481);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 157 12 ]
+        %tmp.482 = lgetv %dc;
+        symbol [ dc %tmp.482 157 12 14 ];
+        symbol [ fillCircle %tmp.483 157 15 25 ];
+        %tmp.483 = getv function %tmp.482 :fillCircle;
+        %tmp.484 = 55;
+        %tmp.485 = 145;
+        %tmp.486 = 10;
+        invoke %tmp.482 %tmp.483(%tmp.484, %tmp.485, %tmp.486);
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_155_52_158_8_stop:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_155_8_158_8_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_155_8_158_8_if_end:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 160 8 ]
+        %tmp.487 = lgetv %dc;
+        symbol [ dc %tmp.487 160 8 10 ];
+        symbol [ setColor %tmp.488 160 11 19 ];
+        %tmp.488 = getv function %tmp.487 :setColor;
+        %tmp.489 = 0xFFFFFF;
+        symbol [ Gfx %tmp.490 160 30 33 ];
+        %tmp.490 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.491 160 34 51 ];
+        %tmp.491 = getv %tmp.490 :COLOR_TRANSPARENT;
+        invoke %tmp.487 %tmp.488(%tmp.489, %tmp.491);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 161 8 ]
+        %tmp.492 = lgetv %dc;
+        symbol [ dc %tmp.492 161 8 10 ];
+        symbol [ drawText %tmp.493 161 11 19 ];
+        %tmp.493 = getv function %tmp.492 :drawText;
+        %tmp.494 = 48;
+        %tmp.495 = 188;
+        symbol [ Gfx %tmp.496 161 29 32 ];
+        %tmp.496 = getm $.Toybox.Graphics;
+        symbol [ FONT_TINY %tmp.497 161 33 42 ];
+        %tmp.497 = getv %tmp.496 :FONT_TINY;
+        %tmp.498 = lgetv %notifications.21;
+        symbol [ notifications %tmp.498 161 44 57 ];
+        symbol [ Gfx %tmp.499 161 59 62 ];
+        %tmp.499 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.500 161 63 82 ];
+        %tmp.500 = getv %tmp.499 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.501 161 85 88 ];
+        %tmp.501 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.502 161 89 109 ];
+        %tmp.502 = getv %tmp.501 :TEXT_JUSTIFY_VCENTER;
+        %tmp.503 = bitor %tmp.500 %tmp.502;
+        invoke %tmp.492 %tmp.493(%tmp.494, %tmp.495, %tmp.497, %tmp.498, %tmp.503);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 165 8 ]
+        %tmp.504 = lgetv %dc;
+        symbol [ dc %tmp.504 165 8 10 ];
+        symbol [ setColor %tmp.505 165 11 19 ];
+        %tmp.505 = getv function %tmp.504 :setColor;
+        %tmp.506 = 0xDDDDFF;
+        symbol [ Gfx %tmp.507 165 30 33 ];
+        %tmp.507 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.508 165 34 51 ];
+        %tmp.508 = getv %tmp.507 :COLOR_TRANSPARENT;
+        invoke %tmp.504 %tmp.505(%tmp.506, %tmp.508);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 166 8 ]
+        %tmp.509 = lgetv %dc;
+        symbol [ dc %tmp.509 166 8 10 ];
+        symbol [ fillCircle %tmp.510 166 11 21 ];
+        %tmp.510 = getv function %tmp.509 :fillCircle;
+        %tmp.511 = 194;
+        %tmp.512 = 63;
+        %tmp.513 = 20;
+        invoke %tmp.509 %tmp.510(%tmp.511, %tmp.512, %tmp.513);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 168 8 ]
+        %tmp.514 = lgetv %dc;
+        symbol [ dc %tmp.514 168 8 10 ];
+        symbol [ setColor %tmp.515 168 11 19 ];
+        %tmp.515 = getv function %tmp.514 :setColor;
+        symbol [ Gfx %tmp.516 168 20 23 ];
+        %tmp.516 = getm $.Toybox.Graphics;
+        symbol [ COLOR_BLACK %tmp.517 168 24 35 ];
+        %tmp.517 = getv %tmp.516 :COLOR_BLACK;
+        symbol [ Gfx %tmp.518 168 37 40 ];
+        %tmp.518 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.519 168 41 58 ];
+        %tmp.519 = getv %tmp.518 :COLOR_TRANSPARENT;
+        invoke %tmp.514 %tmp.515(%tmp.517, %tmp.519);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 169 8 ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_169_8_177_8_if_stmt:
+        %tmp.520 = lgetv %_phs.23;
+        symbol [ _phs %tmp.520 169 12 16 ];
+        %tmp.521 = 0.5;
+        %tmp.522 = lt %tmp.520 %tmp.521;
+        bf %tmp.522 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_169_8_177_8_if_else_false;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_169_8_177_8_if_true:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_169_24_173_8_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 171 12 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_169_24_173_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_169_24_173_8_stop" ]
+        %_sxWan.29 = local;
+        symbol [ _sxWan %_sxWan.29 171 16 22 ];
+        %tmp.523 = 194;
+        %tmp.524 = 20;
+        %tmp.525 = 20;
+        %tmp.526 = 2.0;
+        %tmp.527 = mul %tmp.525 %tmp.526;
+        %tmp.528 = lgetv %_phs.23;
+        symbol [ _phs %tmp.528 171 48 52 ];
+        %tmp.529 = mul %tmp.527 %tmp.528;
+        %tmp.530 = sub %tmp.524 %tmp.529;
+        symbol [ toNumber %tmp.531 171 54 62 ];
+        %tmp.531 = getv function %tmp.530 :toNumber;
+        %tmp.532 = invoke %tmp.530 %tmp.531();
+        %tmp.533 = add %tmp.523 %tmp.532;
+        lputv %_sxWan.29 %tmp.533;
+        symbol [ _sxWan %_sxWan.29 171 16 22 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 172 12 ]
+        %tmp.534 = lgetv %dc;
+        symbol [ dc %tmp.534 172 12 14 ];
+        symbol [ fillCircle %tmp.535 172 15 25 ];
+        %tmp.535 = getv function %tmp.534 :fillCircle;
+        %tmp.536 = lgetv %_sxWan.29;
+        symbol [ _sxWan %tmp.536 172 26 32 ];
+        %tmp.537 = 63;
+        %tmp.538 = 20;
+        invoke %tmp.534 %tmp.535(%tmp.536, %tmp.537, %tmp.538);
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_169_24_173_8_stop:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_169_8_177_8_if_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_169_8_177_8_if_else_false:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_173_15_177_8_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 175 12 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_173_15_177_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_173_15_177_8_stop" ]
+        %_sxWax.30 = local;
+        symbol [ _sxWax %_sxWax.30 175 16 22 ];
+        %tmp.539 = 194;
+        %tmp.540 = 20;
+        %tmp.541 = 20;
+        %tmp.542 = 2.0;
+        %tmp.543 = mul %tmp.541 %tmp.542;
+        %tmp.544 = lgetv %_phs.23;
+        symbol [ _phs %tmp.544 175 49 53 ];
+        %tmp.545 = 0.5;
+        %tmp.546 = sub %tmp.544 %tmp.545;
+        %tmp.547 = mul %tmp.543 %tmp.546;
+        %tmp.548 = sub %tmp.540 %tmp.547;
+        symbol [ toNumber %tmp.549 175 62 70 ];
+        %tmp.549 = getv function %tmp.548 :toNumber;
+        %tmp.550 = invoke %tmp.548 %tmp.549();
+        %tmp.551 = sub %tmp.539 %tmp.550;
+        lputv %_sxWax.30 %tmp.551;
+        symbol [ _sxWax %_sxWax.30 175 16 22 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 176 12 ]
+        %tmp.552 = lgetv %dc;
+        symbol [ dc %tmp.552 176 12 14 ];
+        symbol [ fillCircle %tmp.553 176 15 25 ];
+        %tmp.553 = getv function %tmp.552 :fillCircle;
+        %tmp.554 = lgetv %_sxWax.30;
+        symbol [ _sxWax %tmp.554 176 26 32 ];
+        %tmp.555 = 63;
+        %tmp.556 = 20;
+        invoke %tmp.552 %tmp.553(%tmp.554, %tmp.555, %tmp.556);
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_173_15_177_8_stop:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_169_8_177_8_if_end:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 179 8 ]
+        %tmp.557 = lgetv %dc;
+        symbol [ dc %tmp.557 179 8 10 ];
+        symbol [ setColor %tmp.558 179 11 19 ];
+        %tmp.558 = getv function %tmp.557 :setColor;
+        %tmp.559 = 0x44FF88;
+        symbol [ Gfx %tmp.560 179 30 33 ];
+        %tmp.560 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.561 179 34 51 ];
+        %tmp.561 = getv %tmp.560 :COLOR_TRANSPARENT;
+        invoke %tmp.557 %tmp.558(%tmp.559, %tmp.561);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 180 8 ]
+        %tmp.562 = lgetv %dc;
+        symbol [ dc %tmp.562 180 8 10 ];
+        symbol [ drawText %tmp.563 180 11 19 ];
+        %tmp.563 = getv function %tmp.562 :drawText;
+        %tmp.564 = 276;
+        %tmp.565 = 325;
+        symbol [ Gfx %tmp.566 180 30 33 ];
+        %tmp.566 = getm $.Toybox.Graphics;
+        symbol [ FONT_TINY %tmp.567 180 34 43 ];
+        %tmp.567 = getv %tmp.566 :FONT_TINY;
+        %tmp.568 = lgetv %trainReadiness.24;
+        symbol [ trainReadiness %tmp.568 180 45 59 ];
+        symbol [ Gfx %tmp.569 180 61 64 ];
+        %tmp.569 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.570 180 65 84 ];
+        %tmp.570 = getv %tmp.569 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.571 180 87 90 ];
+        %tmp.571 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.572 180 91 111 ];
+        %tmp.572 = getv %tmp.571 :TEXT_JUSTIFY_VCENTER;
+        %tmp.573 = bitor %tmp.570 %tmp.572;
+        invoke %tmp.562 %tmp.563(%tmp.564, %tmp.565, %tmp.567, %tmp.568, %tmp.573);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 182 8 ]
+        %tmp.574 = lgetv %dc;
+        symbol [ dc %tmp.574 182 8 10 ];
+        symbol [ setColor %tmp.575 182 11 19 ];
+        %tmp.575 = getv function %tmp.574 :setColor;
+        %tmp.576 = 0xFF8844;
+        symbol [ Gfx %tmp.577 182 30 33 ];
+        %tmp.577 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.578 182 34 51 ];
+        %tmp.578 = getv %tmp.577 :COLOR_TRANSPARENT;
+        invoke %tmp.574 %tmp.575(%tmp.576, %tmp.578);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 183 8 ]
+        %tmp.579 = lgetv %dc;
+        symbol [ dc %tmp.579 183 8 10 ];
+        symbol [ drawText %tmp.580 183 11 19 ];
+        %tmp.580 = getv function %tmp.579 :drawText;
+        %tmp.581 = 240;
+        %tmp.582 = 324;
+        symbol [ Gfx %tmp.583 183 30 33 ];
+        %tmp.583 = getm $.Toybox.Graphics;
+        symbol [ FONT_TINY %tmp.584 183 34 43 ];
+        %tmp.584 = getv %tmp.583 :FONT_TINY;
+        %tmp.585 = lgetv %stressLevel.27;
+        symbol [ stressLevel %tmp.585 183 45 56 ];
+        symbol [ Gfx %tmp.586 183 58 61 ];
+        %tmp.586 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.587 183 62 81 ];
+        %tmp.587 = getv %tmp.586 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.588 183 84 87 ];
+        %tmp.588 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.589 183 88 108 ];
+        %tmp.589 = getv %tmp.588 :TEXT_JUSTIFY_VCENTER;
+        %tmp.590 = bitor %tmp.587 %tmp.589;
+        invoke %tmp.579 %tmp.580(%tmp.581, %tmp.582, %tmp.584, %tmp.585, %tmp.590);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 185 8 ]
+        %tmp.591 = lgetv %dc;
+        symbol [ dc %tmp.591 185 8 10 ];
+        symbol [ setColor %tmp.592 185 11 19 ];
+        %tmp.592 = getv function %tmp.591 :setColor;
+        %tmp.593 = 0x00FF88;
+        symbol [ Gfx %tmp.594 185 30 33 ];
+        %tmp.594 = getm $.Toybox.Graphics;
+        symbol [ COLOR_TRANSPARENT %tmp.595 185 34 51 ];
+        %tmp.595 = getv %tmp.594 :COLOR_TRANSPARENT;
+        invoke %tmp.591 %tmp.592(%tmp.593, %tmp.595);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 186 8 ]
+        %tmp.596 = lgetv %dc;
+        symbol [ dc %tmp.596 186 8 10 ];
+        symbol [ drawText %tmp.597 186 11 19 ];
+        %tmp.597 = getv function %tmp.596 :drawText;
+        %tmp.598 = 193;
+        %tmp.599 = 202;
+        symbol [ Gfx %tmp.600 186 30 33 ];
+        %tmp.600 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.601 186 34 44 ];
+        %tmp.601 = getv %tmp.600 :FONT_SMALL;
+        %tmp.602 = lgetv %steps.28;
+        symbol [ steps %tmp.602 186 46 51 ];
+        symbol [ Gfx %tmp.603 186 53 56 ];
+        %tmp.603 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.604 186 57 76 ];
+        %tmp.604 = getv %tmp.603 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.605 186 79 82 ];
+        %tmp.605 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.606 186 83 103 ];
+        %tmp.606 = getv %tmp.605 :TEXT_JUSTIFY_VCENTER;
+        %tmp.607 = bitor %tmp.604 %tmp.606;
+        invoke %tmp.596 %tmp.597(%tmp.598, %tmp.599, %tmp.601, %tmp.602, %tmp.607);
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_12_187_8_stop:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_endTry:
+        jsr @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_finally;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_catch:
+        %tmp.608 = exception;
+        push %tmp.608;
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 187 10 ]
+        %tmp.609 = dup %tmp.608;
+        symbol [ Lang %tmp.610 187 31 35 ];
+        %tmp.610 = getm $.Toybox.Lang;
+        symbol [ Exception %tmp.611 187 36 45 ];
+        %tmp.611 = getv %tmp.610 :Exception;
+        %tmp.612 = isa %tmp.609 %tmp.611;
+        bf %tmp.612 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_187_10_192_8_next;
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_catch" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_187_10_192_8_next" ]
+        %ex.31 = local;
+        symbol [ ex %ex.31 187 17 19 ];
+        %tmp.613 = dup %tmp.608;
+        %tmp.614 = as %tmp.613 Lang.Exception;
+        lputv %ex.31 %tmp.614;
+        symbol [ ex %ex.31 187 17 19 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_187_47_192_8_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 189 12 ]
+        %tmp.615 = lgetv %dc;
+        symbol [ dc %tmp.615 189 12 14 ];
+        symbol [ setColor %tmp.616 189 15 23 ];
+        %tmp.616 = getv function %tmp.615 :setColor;
+        symbol [ Gfx %tmp.617 189 24 27 ];
+        %tmp.617 = getm $.Toybox.Graphics;
+        symbol [ COLOR_RED %tmp.618 189 28 37 ];
+        %tmp.618 = getv %tmp.617 :COLOR_RED;
+        symbol [ Gfx %tmp.619 189 39 42 ];
+        %tmp.619 = getm $.Toybox.Graphics;
+        symbol [ COLOR_BLACK %tmp.620 189 43 54 ];
+        %tmp.620 = getv %tmp.619 :COLOR_BLACK;
+        invoke %tmp.615 %tmp.616(%tmp.618, %tmp.620);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 190 12 ]
+        %tmp.621 = lgetv %dc;
+        symbol [ dc %tmp.621 190 12 14 ];
+        symbol [ drawText %tmp.622 190 15 23 ];
+        %tmp.622 = getv function %tmp.621 :drawText;
+        %tmp.623 = 195;
+        %tmp.624 = 195;
+        symbol [ Gfx %tmp.625 190 34 37 ];
+        %tmp.625 = getm $.Toybox.Graphics;
+        symbol [ FONT_SMALL %tmp.626 190 38 48 ];
+        %tmp.626 = getv %tmp.625 :FONT_SMALL;
+        %tmp.627 = lgetv %ex.31;
+        symbol [ ex %tmp.627 190 50 52 ];
+        symbol [ getErrorMessage %tmp.628 190 53 68 ];
+        %tmp.628 = getv function %tmp.627 :getErrorMessage;
+        %tmp.629 = invoke %tmp.627 %tmp.628();
+        symbol [ Gfx %tmp.630 190 72 75 ];
+        %tmp.630 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.631 190 76 95 ];
+        %tmp.631 = getv %tmp.630 :TEXT_JUSTIFY_CENTER;
+        symbol [ Gfx %tmp.632 190 98 101 ];
+        %tmp.632 = getm $.Toybox.Graphics;
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.633 190 102 122 ];
+        %tmp.633 = getv %tmp.632 :TEXT_JUSTIFY_VCENTER;
+        %tmp.634 = bitor %tmp.631 %tmp.633;
+        invoke %tmp.621 %tmp.622(%tmp.623, %tmp.624, %tmp.626, %tmp.629, %tmp.634);
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 191 12 ]
+        symbol [ Sys %tmp.635 191 12 15 ];
+        %tmp.635 = getm $.Toybox.System;
+        symbol [ println %tmp.636 191 16 23 ];
+        %tmp.636 = getv function %tmp.635 :println;
+        %tmp.637 = "WF onUpdate exception: ";
+        %tmp.638 = lgetv %ex.31;
+        symbol [ ex %tmp.638 191 52 54 ];
+        symbol [ getErrorMessage %tmp.639 191 55 70 ];
+        %tmp.639 = getv function %tmp.638 :getErrorMessage;
+        %tmp.640 = invoke %tmp.638 %tmp.639();
+        %tmp.641 = add %tmp.637 %tmp.640;
+        invoke %tmp.635 %tmp.636(%tmp.641);
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_187_47_192_8_stop:
+        jsr @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_finally;
         pop;
-        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_end;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_71_10_76_8_next:
-        try @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_catch @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_71_10_76_8_next @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_71_10_76_8_next @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_finally;
-        jsr @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_finally;
-        throw %tmp.85;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_finally:
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_187_10_192_8_next:
+        try @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_catch @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_187_10_192_8_next @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_187_10_192_8_next @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_finally;
+        jsr @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_finally;
+        throw %tmp.608;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_finally:
         jsrret;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_56_8_76_8_end:
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_52_26_77_4_stop:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_89_8_192_8_end:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_85_26_193_4_stop:
     }
-    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 81; @symbol_functiondef = [onPartialUpdate,81,13,28]; @symbol_param<0> = [dc,81,29,31]; ]
+    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 197; @symbol_functiondef = [onPartialUpdate,197,13,28]; @symbol_param<0> = [dc,197,29,31]; ]
     function onPartialUpdate(dc) {
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_81_33_91_4_start:
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 82 8 ]
-        try @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_beginTry @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_endTry @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_catch @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_finally;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_beginTry:
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_12_88_8_start:
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 83 12 ]
-        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_12_88_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_12_88_8_stop" ]
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_197_33_207_4_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 198 8 ]
+        try @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_beginTry @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_endTry @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_catch @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_finally;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_beginTry:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_12_204_8_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 199 12 ]
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_12_204_8_start" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_12_204_8_stop" ]
         %clockTime.1 = local;
-        symbol [ clockTime %clockTime.1 83 16 25 ];
-        symbol [ Sys %tmp.1 83 28 31 ];
+        symbol [ clockTime %clockTime.1 199 16 25 ];
+        symbol [ Sys %tmp.1 199 28 31 ];
         %tmp.1 = getm $.Toybox.System;
-        symbol [ getClockTime %tmp.2 83 32 44 ];
+        symbol [ getClockTime %tmp.2 199 32 44 ];
         %tmp.2 = getv function %tmp.1 :getClockTime;
         %tmp.3 = invoke %tmp.1 %tmp.2();
         lputv %clockTime.1 %tmp.3;
-        symbol [ clockTime %clockTime.1 83 16 25 ];
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 84 12 ]
+        symbol [ clockTime %clockTime.1 199 16 25 ];
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 200 12 ]
         %tmp.4 = lgetv %dc;
-        symbol [ dc %tmp.4 84 12 14 ];
-        symbol [ setColor %tmp.5 84 15 23 ];
+        symbol [ dc %tmp.4 200 12 14 ];
+        symbol [ setColor %tmp.5 200 15 23 ];
         %tmp.5 = getv function %tmp.4 :setColor;
-        symbol [ Gfx %tmp.6 84 24 27 ];
+        symbol [ Gfx %tmp.6 200 24 27 ];
         %tmp.6 = getm $.Toybox.Graphics;
-        symbol [ COLOR_WHITE %tmp.7 84 28 39 ];
+        symbol [ COLOR_WHITE %tmp.7 200 28 39 ];
         %tmp.7 = getv %tmp.6 :COLOR_WHITE;
-        symbol [ Gfx %tmp.8 84 41 44 ];
+        symbol [ Gfx %tmp.8 200 41 44 ];
         %tmp.8 = getm $.Toybox.Graphics;
-        symbol [ COLOR_BLACK %tmp.9 84 45 56 ];
+        symbol [ COLOR_BLACK %tmp.9 200 45 56 ];
         %tmp.9 = getv %tmp.8 :COLOR_BLACK;
         invoke %tmp.4 %tmp.5(%tmp.7, %tmp.9);
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 85 12 ]
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 201 12 ]
         %tmp.10 = lgetv %dc;
-        symbol [ dc %tmp.10 85 12 14 ];
-        symbol [ drawText %tmp.11 85 15 23 ];
+        symbol [ dc %tmp.10 201 12 14 ];
+        symbol [ drawText %tmp.11 201 15 23 ];
         %tmp.11 = getv function %tmp.10 :drawText;
         %tmp.12 = 195;
         %tmp.13 = 195;
-        symbol [ Gfx %tmp.14 85 34 37 ];
+        symbol [ Gfx %tmp.14 201 34 37 ];
         %tmp.14 = getm $.Toybox.Graphics;
-        symbol [ FONT_NUMBER_HOT %tmp.15 85 38 53 ];
+        symbol [ FONT_NUMBER_HOT %tmp.15 201 38 53 ];
         %tmp.15 = getv %tmp.14 :FONT_NUMBER_HOT;
         %tmp.16 = lgetv %clockTime.1;
-        symbol [ clockTime %tmp.16 86 16 25 ];
-        symbol [ hour %tmp.17 86 26 30 ];
+        symbol [ clockTime %tmp.16 202 16 25 ];
+        symbol [ hour %tmp.17 202 26 30 ];
         %tmp.17 = getv %tmp.16 :hour;
-        symbol [ format %tmp.18 86 31 37 ];
+        symbol [ format %tmp.18 202 31 37 ];
         %tmp.18 = getv function %tmp.17 :format;
         %tmp.19 = "%02d";
         %tmp.20 = invoke %tmp.17 %tmp.18(%tmp.19);
         %tmp.21 = ":";
         %tmp.22 = add %tmp.20 %tmp.21;
         %tmp.23 = lgetv %clockTime.1;
-        symbol [ clockTime %tmp.23 86 54 63 ];
-        symbol [ min %tmp.24 86 64 67 ];
+        symbol [ clockTime %tmp.23 202 54 63 ];
+        symbol [ min %tmp.24 202 64 67 ];
         %tmp.24 = getv %tmp.23 :min;
-        symbol [ format %tmp.25 86 68 74 ];
+        symbol [ format %tmp.25 202 68 74 ];
         %tmp.25 = getv function %tmp.24 :format;
         %tmp.26 = "%02d";
         %tmp.27 = invoke %tmp.24 %tmp.25(%tmp.26);
         %tmp.28 = add %tmp.22 %tmp.27;
-        symbol [ Gfx %tmp.29 87 16 19 ];
+        symbol [ Gfx %tmp.29 203 16 19 ];
         %tmp.29 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_CENTER %tmp.30 87 20 39 ];
+        symbol [ TEXT_JUSTIFY_CENTER %tmp.30 203 20 39 ];
         %tmp.30 = getv %tmp.29 :TEXT_JUSTIFY_CENTER;
-        symbol [ Gfx %tmp.31 87 42 45 ];
+        symbol [ Gfx %tmp.31 203 42 45 ];
         %tmp.31 = getm $.Toybox.Graphics;
-        symbol [ TEXT_JUSTIFY_VCENTER %tmp.32 87 46 66 ];
+        symbol [ TEXT_JUSTIFY_VCENTER %tmp.32 203 46 66 ];
         %tmp.32 = getv %tmp.31 :TEXT_JUSTIFY_VCENTER;
         %tmp.33 = bitor %tmp.30 %tmp.32;
         invoke %tmp.10 %tmp.11(%tmp.12, %tmp.13, %tmp.15, %tmp.28, %tmp.33);
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_12_88_8_stop:
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_endTry:
-        jsr @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_finally;
-        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_end;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_catch:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_12_204_8_stop:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_endTry:
+        jsr @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_finally;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_catch:
         %tmp.34 = exception;
         push %tmp.34;
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 88 10 ]
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 204 10 ]
         %tmp.35 = dup %tmp.34;
-        symbol [ Lang %tmp.36 88 31 35 ];
+        symbol [ Lang %tmp.36 204 31 35 ];
         %tmp.36 = getm $.Toybox.Lang;
-        symbol [ Exception %tmp.37 88 36 45 ];
+        symbol [ Exception %tmp.37 204 36 45 ];
         %tmp.37 = getv %tmp.36 :Exception;
         %tmp.38 = isa %tmp.35 %tmp.37;
-        bf %tmp.38 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_88_10_90_8_next;
-        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_catch" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_88_10_90_8_next" ]
+        bf %tmp.38 @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_204_10_206_8_next;
+        [ "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_catch" "C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_204_10_206_8_next" ]
         %ex.2 = local;
-        symbol [ ex %ex.2 88 17 19 ];
+        symbol [ ex %ex.2 204 17 19 ];
         %tmp.39 = dup %tmp.34;
         %tmp.40 = as %tmp.39 Lang.Exception;
         lputv %ex.2 %tmp.40;
-        symbol [ ex %ex.2 88 17 19 ];
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_88_47_90_8_start:
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 89 12 ]
-        symbol [ Sys %tmp.41 89 12 15 ];
+        symbol [ ex %ex.2 204 17 19 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_204_47_206_8_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 205 12 ]
+        symbol [ Sys %tmp.41 205 12 15 ];
         %tmp.41 = getm $.Toybox.System;
-        symbol [ println %tmp.42 89 16 23 ];
+        symbol [ println %tmp.42 205 16 23 ];
         %tmp.42 = getv function %tmp.41 :println;
         %tmp.43 = "WF onPartialUpdate exception: ";
         %tmp.44 = lgetv %ex.2;
-        symbol [ ex %tmp.44 89 59 61 ];
-        symbol [ getErrorMessage %tmp.45 89 62 77 ];
+        symbol [ ex %tmp.44 205 59 61 ];
+        symbol [ getErrorMessage %tmp.45 205 62 77 ];
         %tmp.45 = getv function %tmp.44 :getErrorMessage;
         %tmp.46 = invoke %tmp.44 %tmp.45();
         %tmp.47 = add %tmp.43 %tmp.46;
         invoke %tmp.41 %tmp.42(%tmp.47);
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_88_47_90_8_stop:
-        jsr @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_finally;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_204_47_206_8_stop:
+        jsr @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_finally;
         pop;
-        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_end;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_88_10_90_8_next:
-        try @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_catch @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_88_10_90_8_next @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_88_10_90_8_next @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_finally;
-        jsr @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_finally;
+        goto @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_end;
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_204_10_206_8_next:
+        try @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_catch @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_204_10_206_8_next @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_204_10_206_8_next @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_finally;
+        jsr @C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_finally;
         throw %tmp.34;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_finally:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_finally:
         jsrret;
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_82_8_90_8_end:
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_81_33_91_4_stop:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_198_8_206_8_end:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_197_33_207_4_stop:
     }
-    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 93; @symbol_functiondef = [onHide,93,13,19]; ]
+    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 209; @symbol_functiondef = [onHide,209,13,19]; ]
     function onHide() {
     }
-    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 94; @symbol_functiondef = [onExitSleep,94,13,24]; ]
+    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 210; @symbol_functiondef = [onExitSleep,210,13,24]; ]
     function onExitSleep() {
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_94_27_94_49_start:
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 94 29 ]
-        symbol [ Ui %tmp.1 94 29 31 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_210_27_210_49_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 210 29 ]
+        symbol [ Ui %tmp.1 210 29 31 ];
         %tmp.1 = getm $.Toybox.WatchUi;
-        symbol [ requestUpdate %tmp.2 94 32 45 ];
+        symbol [ requestUpdate %tmp.2 210 32 45 ];
         %tmp.2 = getv function %tmp.1 :requestUpdate;
         invoke %tmp.1 %tmp.2();
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_94_27_94_49_stop:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_210_27_210_49_stop:
     }
-    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 95; @symbol_functiondef = [onEnterSleep,95,13,25]; ]
+    [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 211; @symbol_functiondef = [onEnterSleep,211,13,25]; ]
     function onEnterSleep() {
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_95_28_95_50_start:
-[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 95 30 ]
-        symbol [ Ui %tmp.1 95 30 32 ];
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_211_28_211_50_start:
+[ "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc" 211 30 ]
+        symbol [ Ui %tmp.1 211 30 32 ];
         %tmp.1 = getm $.Toybox.WatchUi;
-        symbol [ requestUpdate %tmp.2 95 33 46 ];
+        symbol [ requestUpdate %tmp.2 211 33 46 ];
         %tmp.2 = getv function %tmp.1 :requestUpdate;
         invoke %tmp.1 %tmp.2();
-C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_95_28_95_50_stop:
+C__Users_mr_la_WatchFace_Builder_exported_garmin_project_source_WatchFaceView_mc_211_28_211_50_stop:
     }
 }
 [ @file = "C:\Users\mr_la\WatchFace Builder\exported-garmin-project\source\WatchFaceView.mc"; @line = 1; ]

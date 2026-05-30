@@ -2,10 +2,11 @@ import { DATA_FIELDS, CATEGORIES } from './modules/data-fields.js';
 import { addElement, createElement, exportState, importState, undo, redo } from './modules/elements.js';
 import { initCanvas, render, setSelectedId, toggleSafeArea, toggleGrid, bringForward, sendBackward } from './modules/canvas.js';
 import { showProperties } from './modules/properties.js';
-import { exportProject, previewInSimulator, openInVSCode } from './modules/export.js';
+import { exportProject, previewInSimulator } from './modules/export.js';
 
 const LS_KEY = 'wfb-design';
 let saveTimer = null;
+let lastExportedPath = null;
 
 // ─── Auto-save ────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,11 @@ function initSettings() {
   // Listen for Settings overlay show event from main process
   if (window.electronAPI?.onSettingsShow) {
     window.electronAPI.onSettingsShow(() => showSettings());
+  }
+
+  // Listen for New Design menu item
+  if (window.electronAPI?.onNewDesign) {
+    window.electronAPI.onNewDesign(() => handleNew());
   }
 
   const settingsOverlay = document.getElementById('settings-overlay');
@@ -82,18 +88,66 @@ function initSettings() {
     }
   });
 
+  // Generate key button
+  const keyGenerateBtn = document.getElementById('settings-key-generate');
+  const keyStatusEl = document.getElementById('settings-key-status');
+
+  keyGenerateBtn?.addEventListener('click', async () => {
+    keyGenerateBtn.disabled = true;
+    keyGenerateBtn.textContent = '⏳ Generating… (15–30s)';
+    keyStatusEl.style.display = 'block';
+    keyStatusEl.textContent = 'Generating 4096-bit RSA key — please wait…';
+    keyStatusEl.style.color = '#888';
+
+    const outputPath = devKeyInput.value.trim() || null;
+    let result = await window.electronAPI?.generateDevKey?.({ outputPath, force: false });
+
+    // Handle existing file case
+    if (result && !result.success && result.exists) {
+      const overwrite = confirm(
+        `A developer key already exists at:\n${result.path}\n\nOverwrite it? The old key cannot be recovered.`
+      );
+      if (!overwrite) {
+        keyGenerateBtn.disabled = false;
+        keyGenerateBtn.textContent = '🔑 Generate New Key';
+        keyStatusEl.style.display = 'none';
+        return;
+      }
+      // Retry with force
+      result = await window.electronAPI?.generateDevKey?.({ outputPath: result.path, force: true });
+    }
+
+    // Handle final outcome
+    if (result?.success) {
+      devKeyInput.value = result.path;
+      keyStatusEl.textContent = '✓ Key generated successfully.';
+      keyStatusEl.style.color = '#4caf50';
+    } else {
+      keyStatusEl.textContent = `✗ Error: ${result?.error || 'Unknown error'}`;
+      keyStatusEl.style.color = '#e05050';
+    }
+
+    keyGenerateBtn.disabled = false;
+    keyGenerateBtn.textContent = '🔑 Generate New Key';
+  });
+
   // Save button
   saveBtn?.addEventListener('click', async () => {
     if (!sdkPathInput.value.trim() || !devKeyInput.value.trim()) {
       alert('Please fill in both SDK path and developer key path.');
       return;
     }
+    saveBtn.disabled = true;
+    saveBtn.textContent = '💾 Saved — restarting…';
     const result = await window.electronAPI?.saveConfig?.({
       sdkBin: sdkPathInput.value.trim(),
       devKey: devKeyInput.value.trim(),
     });
     if (result?.success) {
-      hideSettings();
+      // Relaunch is scheduled in main process; this will exit shortly
+    } else {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Settings';
     }
   });
 
@@ -139,6 +193,7 @@ function init() {
 
   // ── Toolbar: save/load ──
   document.getElementById('btn-new').addEventListener('click', handleNew);
+  document.getElementById('btn-save-design').addEventListener('click', handleSaveDesign);
   document.getElementById('btn-save-json').addEventListener('click', handleSaveJSON);
   document.getElementById('btn-load-json').addEventListener('click', () => document.getElementById('file-input').click());
   document.getElementById('file-input').addEventListener('change', handleLoadJSON);
@@ -146,7 +201,6 @@ function init() {
   // ── Toolbar: export ──
   document.getElementById('btn-preview').addEventListener('click', handlePreview);
   document.getElementById('btn-export').addEventListener('click', handleExport);
-  document.getElementById('btn-open-vscode').addEventListener('click', handleOpenVSCode);
 
   // ── Modal ──
   document.getElementById('btn-add').addEventListener('click', () => document.getElementById('field-modal').classList.remove('hidden'));
@@ -258,6 +312,30 @@ function handleNew() {
   localStorage.removeItem(LS_KEY);
 }
 
+async function handleSaveDesign() {
+  const projectName = prompt('Design name:', 'MyWatchFace');
+  if (!projectName) return;
+
+  try {
+    const elements = getElements();
+    const res = await fetch('/api/save-design', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectName, elements }),
+    });
+
+    const result = await res.json();
+    if (!result.success) {
+      alert(`Save failed: ${result.error}`);
+    } else {
+      flashSaveIndicator();
+      alert(`✓ Design saved!\n\nFile: ${result.filePath}\n\nYou can load it later with the Load button.`);
+    }
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+  }
+}
+
 function handleSaveJSON() {
   const blob = new Blob([exportState()], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
@@ -319,6 +397,7 @@ async function handleExport() {
   try {
     const result = await exportProject(name.trim() || 'MyWatchFace');
     if (result.success) {
+      lastExportedPath = result.projectPath;
       showLog(`✓ Build succeeded!\n\nOutput: ${result.prgPath}\n\n${result.log || '(no compiler output)'}`);
     } else {
       showLog(`✗ Build failed\n\n${result.error || ''}\n\n${result.log || ''}\n\n──────────────────────────\nManual build:\n  Open exported-garmin-project/ in VS Code\n  Run: Monkey C: Build for Device → vivoactive6`);
@@ -329,11 +408,18 @@ async function handleExport() {
 }
 
 async function handleOpenVSCode() {
-  try {
-    const result = await openInVSCode();
-    if (!result.success) showLog(`Could not open VS Code:\n${result.error}`);
-  } catch (err) {
-    showLog(`Error: ${err.message}`);
+  if (!lastExportedPath) {
+    alert('No exported project yet. Click Export first.');
+    return;
+  }
+  if (window.electronAPI?.openInVSCode) {
+    try {
+      await window.electronAPI.openInVSCode(lastExportedPath);
+    } catch (err) {
+      alert(`Could not open VS Code: ${err.message}`);
+    }
+  } else {
+    alert(`Open VS Code manually:\n\ncode "${lastExportedPath}"`);
   }
 }
 

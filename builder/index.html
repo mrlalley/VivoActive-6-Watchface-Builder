@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src 'self' http://127.0.0.1:*; font-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'">
   <title>Watch Face Builder — Garmin Vivoactive 6</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -28,13 +29,13 @@
         <span id="save-indicator" class="save-indicator" title="Design auto-saved">● Saved</span>
         <button id="btn-settings" class="btn" title="SDK configuration (Ctrl+,)">⚙ Settings</button>
         <button id="btn-new" class="btn" title="Start a new design">New</button>
-        <button id="btn-save-json" class="btn" title="Download design as JSON file">💾 Save</button>
+        <button id="btn-save-design" class="btn" title="Save design to project folder">💾 Save Design</button>
+        <button id="btn-save-json" class="btn" title="Download design as JSON file">⬇ Download</button>
         <button id="btn-load-json" class="btn" title="Load a previously saved JSON file">📂 Load</button>
         <input id="file-input" type="file" accept=".json" style="display:none">
       </div>
       <div class="toolbar-group">
         <button id="btn-preview" class="btn btn-preview" title="Build and launch in Garmin simulator">▶ Preview</button>
-        <button id="btn-open-vscode" class="btn" title="Open exported project in VS Code">VS Code</button>
         <button id="btn-export" class="btn btn-primary" title="Export Monkey C project and build .prg">⚙ Export .prg</button>
       </div>
     </div>
@@ -119,6 +120,8 @@
           </span>
           <input id="settings-dev-key" type="text" placeholder="C:\..." style="padding: 8px; background: #2e2e2e; border: 1px solid #3a3a3a; border-radius: 3px; color: #fff; font-size: 12px;">
           <button id="settings-key-browse" class="btn" style="margin-top: 6px; width: 100%;">Browse…</button>
+          <button id="settings-key-generate" class="btn" style="margin-top: 4px; width: 100%; border-color: #4a9eff; color: #4a9eff;">🔑 Generate New Key</button>
+          <div id="settings-key-status" style="margin-top: 6px; font-size: 11px; color: #888; display: none;"></div>
         </label>
 
         <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #3a3a3a; display: flex; gap: 8px;">

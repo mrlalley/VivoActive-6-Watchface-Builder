@@ -6,11 +6,18 @@ A local web-based visual design tool for creating Garmin Vivoactive 6 watch face
 
 ## Quick start
 
+### Web server (development / testing)
 ```powershell
-cd "c:\Users\mr_la\WatchFace Builder"
 npm install
 npm start
-# Open http://localhost:3000
+# App runs at http://127.0.0.1:<random-port> in Express mode
+```
+
+### Electron app (desktop / packaged)
+```powershell
+npm install
+npm run dev
+# Electron window opens with embedded Express server
 ```
 
 ---
@@ -105,6 +112,33 @@ WatchFace Builder/
 ├── garmin-project-template/ Reference template files
 └── exported-garmin-project/ Generated on export (git-ignored)
 ```
+
+---
+
+## Packaging and distribution
+
+### Build the packaged app
+```powershell
+npm run package
+# Output: out/WatchFace Builder-win32-x64/
+```
+
+### Create the installer
+```powershell
+npm run make
+# Output: out/make/squirrel.windows/x64/WatchFaceBuilder Setup.exe
+```
+
+### Install and run
+1. Run `WatchFaceBuilder Setup.exe` on any Windows machine (no dependencies required).
+2. On first launch, **Settings** overlay appears — configure SDK path and developer key.
+3. Design watch faces, export, and preview in the simulator.
+4. Exports saved to `Documents/WatchFaceBuilder/exported/` (user-writable location).
+
+### Troubleshooting
+- **"SmartScreen blocked it"** — installer is unsigned. Click "More info → Run anyway."
+- **First run shows Settings overlay** — normal behavior. Fill in SDK paths once, then relaunch is automatic.
+- **Export folder location** — in packaged app, changes to `Documents/WatchFaceBuilder/exported/` instead of project root (for write permissions).
 
 ---
 
