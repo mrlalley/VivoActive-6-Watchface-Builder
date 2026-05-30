@@ -56,6 +56,20 @@ let onSelectCb = null;
 let onChangeCb = null;
 let analogRenderTimer = null; // Adaptive analog rendering timer
 
+// ─── RAF-based render batching ────────────────────────────────────────────────
+// Deduplicates rapid render() calls (drag, color picker, etc.) so at most one
+// full canvas repaint happens per animation frame (~16 ms).
+let redrawScheduled = false;
+
+function scheduleRedraw() {
+  if (redrawScheduled) return;
+  redrawScheduled = true;
+  requestAnimationFrame(() => {
+    render();
+    redrawScheduled = false;
+  });
+}
+
 const ANALOG_SHAPES = new Set(['analogHour', 'analogMinute', 'analogSecond', 'analogCenter']);
 function isAnalogShape(el) { return el.shapeType && ANALOG_SHAPES.has(el.shapeType); }
 
@@ -515,7 +529,7 @@ function onMouseDown(e) {
     onSelectCb && onSelectCb(null);
     dragState = null;
   }
-  render();
+  scheduleRedraw();
 }
 
 function onMouseMove(e) {
@@ -548,7 +562,7 @@ function onMouseMove(e) {
   }
 
   dragState.moved = true;
-  render();
+  scheduleRedraw();
   onChangeCb && onChangeCb(getElements().find(e => e.id === selectedId));
 }
 
@@ -583,8 +597,9 @@ function mousePos(e) {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-export function setSelectedId(id) { selectedId = id; render(); }
+export function setSelectedId(id) { selectedId = id; scheduleRedraw(); }
 export function getSelectedId() { return selectedId; }
+export { scheduleRedraw };
 
 export function cleanupCanvas() {
   // Stop the adaptive render loop when canvas is destroyed or re-initialized
@@ -598,7 +613,7 @@ export function toggleSafeArea() {
   showSafeArea = !showSafeArea;
   const btn = document.getElementById('btn-safe-area');
   btn && btn.classList.toggle('active', showSafeArea);
-  render();
+  scheduleRedraw();
 }
 
 export function toggleGrid() {
@@ -608,7 +623,7 @@ export function toggleGrid() {
     btn.textContent = gridLevel === 0 ? 'Grid' : `Grid ${gridLevel}`;
     btn.classList.toggle('active', gridLevel > 0);
   }
-  render();
+  scheduleRedraw();
 }
 
 export function bringForward() {
@@ -621,7 +636,7 @@ export function bringForward() {
   const swp = above[0];
   updateElement(el.id,  { zIndex: swp.zIndex });
   updateElement(swp.id, { zIndex: el.zIndex });
-  render();
+  scheduleRedraw();
 }
 
 export function sendBackward() {
@@ -634,5 +649,5 @@ export function sendBackward() {
   const swp = below[0];
   updateElement(el.id,  { zIndex: swp.zIndex });
   updateElement(swp.id, { zIndex: el.zIndex });
-  render();
+  scheduleRedraw();
 }

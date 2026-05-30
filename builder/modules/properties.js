@@ -1,5 +1,5 @@
 import { updateElement, removeElement, commitHistory, FONT_HEIGHTS } from './elements.js';
-import { render, setSelectedId } from './canvas.js';
+import { scheduleRedraw, setSelectedId } from './canvas.js';
 import { CANVAS_SIZE, CANVAS_CENTER } from '../constants.js';
 
 /**
@@ -154,7 +154,7 @@ export function showProperties(el, onDelete, onAnyChange) {
     removeElement(el.id);
     setSelectedId(null);
     showProperties(null);
-    render();
+    scheduleRedraw();
     onDelete && onDelete();
   });
 
@@ -168,7 +168,7 @@ export function showProperties(el, onDelete, onAnyChange) {
     // 'input' → live canvas update + notify auto-save
     input.addEventListener('input', () => {
       updateElement(el.id, propsOf(id));
-      render();
+      scheduleRedraw();
       onAnyChange && onAnyChange();
     });
     // 'change' (blur / Enter) → push to undo history
