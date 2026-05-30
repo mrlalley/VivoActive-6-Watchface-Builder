@@ -8,6 +8,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const { getConfig } = require('./lib/config');
 const { logInfo, logError } = require('./lib/logger');
@@ -26,19 +27,39 @@ function createServer(config = {}, detectors = {}) {
   const app = express();
 
   app.use(express.json({ limit: '10mb' }));
-  app.use(express.static(path.join(__dirname, 'builder')));
 
-  // ─── Content Security Policy: restrict fetch/script/style origins ───────────────
+  // ─── Content Security Policy: nonce-based for stronger XSS protection ─────────
   app.use((req, res, next) => {
+    // Generate a random nonce for this request
+    const nonce = crypto.randomBytes(16).toString('base64');
+    res.locals.nonce = nonce;
+
+    // CSP header with nonce for scripts and 'unsafe-hashes' for inline styles
+    // Note: 'strict-dynamic' only allows scripts with valid nonce, ignoring 'unsafe-inline'
     res.setHeader(
       'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+      `default-src 'self'; script-src 'self' 'strict-dynamic' 'nonce-${nonce}'; style-src 'self' 'unsafe-hashes'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none';`
     );
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
     next();
   });
+
+  // ─── Serve index.html with nonce-injected script tags ─────────────────────────
+  app.get('/', (req, res) => {
+    const indexPath = path.join(__dirname, 'builder', 'index.html');
+    let html = fs.readFileSync(indexPath, 'utf8');
+    // Inject nonce into external script tags
+    html = html.replace(/<script type="module" src="app\.js"><\/script>/g, `<script type="module" src="app.js" nonce="${res.locals.nonce}"></script>`);
+    res.set('Content-Type', 'text/html').send(html);
+  });
+
+  // ─── Serve static files (but not index.html, which is handled above) ──────────
+  app.use(express.static(path.join(__dirname, 'builder'), {
+    index: false // Disable default index.html serving
+  }));
 
   // ── POST /api/export – Export and build .prg file ──
   app.post('/api/export', async (req, res) => {
