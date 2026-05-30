@@ -134,10 +134,11 @@ function hasCompleteConfig() {
 async function checkHealth() {
   try {
     const res = await fetch(`http://127.0.0.1:${serverPort}/api/health`);
+    if (res.status === 429) return; // rate-limited — skip this cycle, try again next poll
     const health = await res.json();
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.send('app:health-status', health);
-      if (!health.ok) {
+      if (health.ok === false) { // strict: only real failures, not undefined/missing
         mainWindow.webContents.send('app:health-warning', health);
       }
     }

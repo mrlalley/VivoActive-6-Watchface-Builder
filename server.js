@@ -44,8 +44,8 @@ function createServer(config = {}, detectors = {}) {
   });
 
   const healthLimiter = rateLimit({
-    windowMs: 10000, // 10 seconds
-    max: 5, // 5 requests per IP — enough for one window polling every 5s
+    windowMs: 60000, // 60 seconds
+    max: 30, // 30 requests per IP — 12 polls/min + headroom for browser refreshes
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res) => {
