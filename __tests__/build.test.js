@@ -8,9 +8,19 @@ const { EventEmitter }  = require('events');
 
 describe('Build Module', () => {
   // Use the OS temp directory so build artifacts never land in the project tree.
-  // The OS reclaims the directory automatically; afterAll removes it immediately
-  // so the same temp path is clean for the next run in the same session (e.g. CI).
-  const testExportDir = path.join(os.tmpdir(), 'watchface-test-export');
+  // Each run gets a unique directory (mkdtempSync adds a random suffix),
+  // preventing false passes from residue of crashed runs and collisions in
+  // parallel test execution. afterAll unconditionally removes it.
+  // Initialized with a fallback path that beforeAll will override with mkdtempSync.
+  let testExportDir = path.join(os.tmpdir(), 'wfb-test-fallback');
+
+  beforeAll(() => {
+    // Create a unique temp directory for this test run.
+    // mkdtempSync appends a random suffix, making each run's path unique.
+    // The 'wfb-test-' prefix makes leaked directories identifiable in os.tmpdir()
+    // when debugging CI failures.
+    testExportDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wfb-test-'));
+  });
 
   const mockCfg = {
     monkeyc: '/fake/monkeyc',
@@ -19,7 +29,13 @@ describe('Build Module', () => {
   };
 
   afterAll(() => {
-    fs.rmSync(testExportDir, { recursive: true, force: true });
+    // Unconditional cleanup of the unique temp directory.
+    // The guard handles the edge case where beforeAll threw before mkdtempSync completed.
+    // force: true suppresses ENOENT if the directory was already removed,
+    // preventing afterAll cleanup errors from masking test failures.
+    if (testExportDir) {
+      fs.rmSync(testExportDir, { recursive: true, force: true });
+    }
   });
 
   describe('buildProject', () => {
@@ -66,16 +82,20 @@ describe('Build Module', () => {
   describe('buildProject behavioral tests', () => {
     const childProcess = require('child_process');
 
-    const dummyMonkeyc = path.join(testExportDir, 'fake-monkeyc');
-    const dummyDevKey  = path.join(testExportDir, 'fake-key.der');
-    const spawnCfg = {
-      monkeyc:   dummyMonkeyc,
-      devKey:    dummyDevKey,
-      exportDir: testExportDir,
-    };
+    let dummyMonkeyc;
+    let dummyDevKey;
+    let spawnCfg;
 
     beforeAll(() => {
-      fs.mkdirSync(testExportDir, { recursive: true });
+      // Compute dummy paths using the already-initialized testExportDir.
+      dummyMonkeyc = path.join(testExportDir, 'fake-monkeyc');
+      dummyDevKey  = path.join(testExportDir, 'fake-key.der');
+      spawnCfg = {
+        monkeyc:   dummyMonkeyc,
+        devKey:    dummyDevKey,
+        exportDir: testExportDir,
+      };
+
       fs.writeFileSync(dummyMonkeyc, '');
       fs.writeFileSync(dummyDevKey,  '');
     });
