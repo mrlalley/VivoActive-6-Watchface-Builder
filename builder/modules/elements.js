@@ -1,21 +1,10 @@
 import { DATA_FIELDS } from './data-fields.js';
-
-// Validation allowlists imported from the single shared source of truth.
-// These values are synchronized across three validation layers:
-//   - lib/validation.js (HTTP input validation)
-//   - builder/modules/elements.js (this file — canvas importState sanitization)
-//   - lib/generators/monkeyc.js (Monkey C generation guard)
-//
-// All three import from lib/allowed-values.js. Structural sync — no manual
-// contracts needed. Previously, this file had a comment "Must stay in sync
-// with lib/validation.js". That manual contract is now replaced by this
-// architecture: all three files import from the same module.
-const {
+import {
   VALID_FONTS,
   VALID_SHAPE_TYPES,
   VALID_ALIGNS,
   VALID_VISIBILITY,
-} = require('../../lib/allowed-values');
+} from '../constants/allowed-values.js';
 
 // Convert frozen arrays to Sets for O(1) membership checks in validation
 const IMPORT_VALID_FONTS = new Set(VALID_FONTS);
