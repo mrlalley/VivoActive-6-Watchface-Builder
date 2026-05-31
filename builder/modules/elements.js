@@ -1,5 +1,21 @@
 import { DATA_FIELDS } from './data-fields.js';
 
+// Allowlists used by importState to validate optional element fields.
+// Must stay in sync with lib/validation.js (server-side) and properties.js (UI).
+const IMPORT_VALID_FONTS = new Set([
+  'FONT_XTINY', 'FONT_TINY', 'FONT_SMALL', 'FONT_MEDIUM', 'FONT_LARGE',
+  'FONT_NUMBER_MILD', 'FONT_NUMBER_MEDIUM', 'FONT_NUMBER_HOT', 'FONT_NUMBER_THAI_HOT',
+]);
+const IMPORT_VALID_ALIGNS      = new Set(['left', 'center', 'right']);
+const IMPORT_VALID_VISIBILITY  = new Set(['always', 'awake', 'sleep']);
+const IMPORT_VALID_SHAPE_TYPES = new Set([
+  'circle', 'line', 'arc',
+  'tickHour', 'tickMinute', 'tickMixed', 'tickDots',
+  'analogHour', 'analogMinute', 'analogSecond', 'analogCenter',
+  'btIcon', 'moonPhase', 'hrGraph',
+]);
+const IMPORT_COLOR_RE = /^#[0-9A-Fa-f]{6}$/;
+
 /**
  * @typedef {Object} Element
  * @property {number} id - Unique element identifier (auto-incremented)
@@ -176,6 +192,23 @@ export function importState(json) {
     }
     if (!Number.isInteger(el.zIndex) || el.zIndex < 0) {
       throw new Error(`Element ${idx}: zIndex must be a non-negative integer`);
+    }
+    // Optional field validation — only checked when the field is present
+    if (el.color !== undefined && !IMPORT_COLOR_RE.test(el.color)) {
+      throw new Error(`Element ${idx}: color "${el.color}" is not a valid hex color (expected #RRGGBB)`);
+    }
+    if (el.font !== undefined && !IMPORT_VALID_FONTS.has(el.font)) {
+      throw new Error(`Element ${idx}: font "${el.font}" is not a recognised Garmin font. Valid fonts: ${[...IMPORT_VALID_FONTS].join(', ')}`);
+    }
+    if (el.align !== undefined && !IMPORT_VALID_ALIGNS.has(el.align)) {
+      throw new Error(`Element ${idx}: align "${el.align}" must be one of: ${[...IMPORT_VALID_ALIGNS].join(', ')}`);
+    }
+    if (el.visibility !== undefined && !IMPORT_VALID_VISIBILITY.has(el.visibility)) {
+      throw new Error(`Element ${idx}: visibility "${el.visibility}" must be one of: ${[...IMPORT_VALID_VISIBILITY].join(', ')}`);
+    }
+    // shapeType: null is valid (text element); a non-null string must be in the allowlist
+    if (el.shapeType !== undefined && el.shapeType !== null && !IMPORT_VALID_SHAPE_TYPES.has(el.shapeType)) {
+      throw new Error(`Element ${idx}: shapeType "${el.shapeType}" is not a recognised shape. Valid types: ${[...IMPORT_VALID_SHAPE_TYPES].join(', ')}`);
     }
   });
 

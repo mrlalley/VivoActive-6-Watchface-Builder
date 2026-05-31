@@ -12,6 +12,7 @@ let lastExportedPath = null;
 // ─── Auto-save ────────────────────────────────────────────────────────────────
 
 function scheduleAutoSave() {
+  clearExportLock(); // any edit clears the load-time validation lock
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     localStorage.setItem(LS_KEY, exportState());
@@ -44,31 +45,95 @@ function tryRestore() {
 
 function initHealthCheck() {
   const warningEl = document.getElementById('health-warning');
+  const warningTitleEl = document.getElementById('health-warning-title');
   const warningTextEl = document.getElementById('health-warning-text');
+  const warningActionsEl = document.getElementById('health-warning-actions');
   const closeBtn = document.getElementById('health-warning-close');
 
-  if (!warningEl || !warningTextEl || !closeBtn) return;
+  if (!warningEl || !warningTitleEl || !warningTextEl || !closeBtn) return;
+
+  function makeActionBtn(label, onClick) {
+    const btn = document.createElement('button');
+    btn.className = 'health-warning-action-btn';
+    btn.textContent = label;
+    btn.addEventListener('click', onClick);
+    return btn;
+  }
 
   function displayHealthWarning(health) {
-    if (health.ok === false) {
-      let message = '';
-      if (!health.sdkFound && !health.keyFound) {
-        message = '⚠️ Garmin SDK and developer key not found. You can still design watch faces, but cannot export or build. ' +
-                  'Install SDK from https://developer.garmin.com/connect-iq/sdk/ and generate a key in Settings → Generate Key.';
-      } else if (!health.sdkFound) {
-        message = '⚠️ Garmin SDK not found. You can design and save watch faces, but cannot export or preview in simulator. ' +
-                  'Install from https://developer.garmin.com/connect-iq/sdk/';
-      } else if (!health.keyFound) {
-        message = '⚠️ Developer key not found. You can design watch faces, but cannot build for the watch. ' +
-                  'Generate a key in Settings → Generate Key.';
-      } else if (health.error) {
-        message = `⚠️ Server error: ${health.error}`;
-      } else {
-        message = '⚠️ Build dependencies are not configured properly. Design features are available, but export/build are disabled.';
+    if (health.ok !== false) return;
+
+    let title = '';
+    let message = '';
+    const buttons = [];
+
+    const openSDKSite = () => window.open('https://developer.garmin.com/connect-iq/sdk/', '_blank', 'noopener,noreferrer');
+
+    const openSettings = () => document.getElementById('btn-settings')?.click();
+
+    const generateKeyInline = async (btn) => {
+      if (window.electronAPI?.generateDevKey) {
+        // Electron mode: delegate to settings panel which has the full flow
+        openSettings();
+        return;
       }
-      warningTextEl.textContent = message;
-      warningEl.style.display = 'flex';
+      // Web mode: call server endpoint directly
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating…';
+      try {
+        let res = await fetch('/api/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+        let result = await res.json();
+        if (result.exists) {
+          if (!confirm(`A developer key already exists at:\n${result.path}\n\nOverwrite it?`)) {
+            btn.disabled = false;
+            btn.textContent = '🔑 Generate Developer Key';
+            return;
+          }
+          res = await fetch('/api/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force: true }) });
+          result = await res.json();
+        }
+        if (result.success) {
+          warningEl.classList.add('health-warning--hidden'); // Key now exists — hide bar
+        } else {
+          alert(`Key generation failed: ${result.error || 'Unknown error'}`);
+          btn.disabled = false;
+          btn.textContent = '🔑 Generate Developer Key';
+        }
+      } catch (err) {
+        alert(`Key generation failed: ${err.message}`);
+        btn.disabled = false;
+        btn.textContent = '🔑 Generate Developer Key';
+      }
+    };
+
+    if (!health.sdkFound && !health.keyFound) {
+      title = 'Garmin SDK and developer key not found';
+      message = 'Design and save work, but export and build to watch are disabled.';
+      buttons.push(makeActionBtn('↗ Get Garmin SDK', openSDKSite));
+      const keyBtn = makeActionBtn('🔑 Generate Developer Key', () => generateKeyInline(keyBtn));
+      buttons.push(keyBtn);
+    } else if (!health.sdkFound) {
+      title = 'Garmin SDK not found';
+      message = 'Export and simulator preview are disabled. Design and save still work.';
+      buttons.push(makeActionBtn('↗ Get Garmin SDK', openSDKSite));
+    } else if (!health.keyFound) {
+      title = 'Developer key not found';
+      message = 'Building .prg files for your watch is disabled. Design, save, and export project files still work.';
+      const keyBtn = makeActionBtn('🔑 Generate Developer Key', () => generateKeyInline(keyBtn));
+      buttons.push(keyBtn);
+    } else if (health.error) {
+      title = 'Server error';
+      message = health.error;
+    } else {
+      title = 'Build tools not fully configured';
+      message = 'Design features work but export and build are disabled.';
     }
+
+    warningTitleEl.textContent = title;
+    warningTextEl.textContent = message;
+    warningActionsEl.innerHTML = '';
+    buttons.forEach(btn => warningActionsEl.appendChild(btn));
+    warningEl.classList.remove('health-warning--hidden');
   }
 
   // Electron mode: listen for IPC health warnings
@@ -82,8 +147,7 @@ function initHealthCheck() {
       .then(res => res.json())
       .then(health => displayHealthWarning(health))
       .catch(() => {
-        // If health check fails, just hide the warning (server is unavailable)
-        warningEl.style.display = 'none';
+        warningEl.classList.add('health-warning--hidden');
       });
   }
 
@@ -96,7 +160,7 @@ function initHealthCheck() {
 
   // Close button
   closeBtn.addEventListener('click', () => {
-    warningEl.style.display = 'none';
+    warningEl.classList.add('health-warning--hidden');
   });
 }
 
@@ -299,7 +363,10 @@ function init() {
   });
 
   // ── Stop the analog render timer when the page unloads (Electron reload / navigation) ──
-  window.addEventListener('beforeunload', () => cleanupCanvas());
+  window.addEventListener('beforeunload', () => {
+    cleanupCanvas();
+    window.electronAPI?.cleanup(); // remove persistent IPC listeners before unload
+  });
 
   // ── Restore or load defaults ──
   if (!tryRestore()) addDefaults();
@@ -477,110 +544,6 @@ function handleLoadJSON(e) {
 
 // ─── Load Design ──────────────────────────────────────────────────────────────
 
-/**
- * Show a confirmation dialog for design validation warnings.
- * @param {string} warning - The validation warning message
- * @returns {Promise<boolean>} True if user clicks "Load Anyway", false if "Cancel"
- */
-async function showValidationWarningDialog(warning) {
-  return new Promise((resolve) => {
-    const dialog = document.createElement('div');
-    dialog.className = 'validation-warning-dialog';
-    dialog.innerHTML = `
-      <div class="validation-warning-overlay" style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-      ">
-        <div style="
-          background: #1e1e1e;
-          border: 1px solid #e05050;
-          border-radius: 5px;
-          padding: 24px;
-          max-width: 500px;
-          color: #fff;
-          font-family: system-ui, -apple-system, sans-serif;
-        ">
-          <h2 style="margin: 0 0 12px 0; color: #e05050; font-size: 18px;">
-            ⚠️ Design Validation Warning
-          </h2>
-          <p style="margin: 0 0 16px 0; color: #ccc; line-height: 1.5; white-space: pre-wrap;">
-            ${warning}
-          </p>
-          <p style="margin: 0 0 20px 0; color: #888; font-size: 12px;">
-            This design has elements positioned outside the safe display area. Loading it may cause export failures.
-          </p>
-          <div style="display: flex; gap: 12px; justify-content: flex-end;">
-            <button class="cancel-btn" style="
-              padding: 8px 16px;
-              background: #3a3a3a;
-              border: 1px solid #4a4a4a;
-              border-radius: 3px;
-              color: #fff;
-              cursor: pointer;
-              font-size: 14px;
-              transition: background 0.2s;
-            ">Cancel</button>
-            <button class="load-anyway-btn" style="
-              padding: 8px 16px;
-              background: #e05050;
-              border: 1px solid #e05050;
-              border-radius: 3px;
-              color: #fff;
-              cursor: pointer;
-              font-size: 14px;
-              transition: background 0.2s;
-            ">Load Anyway</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(dialog);
-
-    const overlay = dialog.querySelector('.validation-warning-overlay');
-    const cancelBtn = dialog.querySelector('.cancel-btn');
-    const loadBtn = dialog.querySelector('.load-anyway-btn');
-
-    // Hover effects
-    cancelBtn.addEventListener('mouseover', () => cancelBtn.style.background = '#4a4a4a');
-    cancelBtn.addEventListener('mouseout', () => cancelBtn.style.background = '#3a3a3a');
-    loadBtn.addEventListener('mouseover', () => loadBtn.style.background = '#f05050');
-    loadBtn.addEventListener('mouseout', () => loadBtn.style.background = '#e05050');
-
-    const cleanup = () => {
-      dialog.remove();
-    };
-
-    cancelBtn.addEventListener('click', () => {
-      cleanup();
-      resolve(false);
-    });
-
-    loadBtn.addEventListener('click', () => {
-      cleanup();
-      resolve(true);
-    });
-
-    // Close on overlay click (outside the dialog box)
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        cleanup();
-        resolve(false);
-      }
-    });
-
-    // Focus on cancel button for keyboard accessibility
-    cancelBtn.focus();
-  });
-}
 
 async function handleLoadDesignDialog() {
   const overlay = document.getElementById('load-overlay');
@@ -609,7 +572,10 @@ async function handleLoadDesignDialog() {
     list.querySelectorAll('.design-item').forEach(btn => {
       btn.addEventListener('mouseover', () => btn.style.background = '#383838');
       btn.addEventListener('mouseout', () => btn.style.background = '#2e2e2e');
-      btn.addEventListener('click', () => loadDesign(btn.dataset.file));
+      btn.addEventListener('click', () => {
+        document.getElementById('load-overlay').classList.add('hidden');
+        loadDesign(btn.dataset.file);
+      });
     });
   } catch (err) {
     list.innerHTML = `<p style="color: #e05050; font-size: 12px;">Error loading designs: ${err.message}</p>`;
@@ -626,15 +592,6 @@ async function loadDesign(filename) {
       return;
     }
 
-    // Gate on validation warning before loading
-    if (result.requiresConfirmation && result.validationWarning) {
-      const userConfirmed = await showValidationWarningDialog(result.validationWarning);
-      if (!userConfirmed) {
-        console.info('Design load aborted by user:', filename);
-        return; // Abort load, canvas remains unchanged
-      }
-    }
-
     try {
       importState(JSON.stringify(result.design));
     } catch (validationErr) {
@@ -648,27 +605,51 @@ async function loadDesign(filename) {
     localStorage.setItem(LS_KEY, JSON.stringify(result.design));
     flashSaveIndicator();
 
-    // If there's a validation warning, highlight the problematic elements
-    if (result.design.validationWarning) {
-      const match = result.design.validationWarning.match(/element\[(\d+)\]/);
+    // If there's a validation warning, lock export/preview and show in log
+    const warning = result.validationWarning;
+    if (warning) {
+      setExportLock(warning);
+
+      const match = warning.match(/element\[(\d+)\]/);
       if (match) {
         const elementIndex = parseInt(match[1], 10);
-        const elements = getElements();
-        if (elements[elementIndex]) {
-          setSelectedId(elements[elementIndex].id);
-          showProperties(elements[elementIndex]);
+        const els = getElements();
+        if (els[elementIndex]) {
+          setSelectedId(els[elementIndex].id);
+          showProperties(els[elementIndex]);
           render();
-          showLog(`⚠️ Warning: ${result.design.validationWarning}\n\nThe element above is highlighted. You can resize or move it to fit within the safe display area.`);
+          showLog(`⚠️ One element is outside the safe display area and has been highlighted.\n\nMove or resize it to re-enable Preview and Export.\n\nDetail: ${warning}`);
         }
       } else {
-        showLog(`⚠️ Warning: ${result.design.validationWarning}`);
+        showLog(`⚠️ ${warning}\n\nFix the highlighted element to re-enable Preview and Export.`);
       }
+    } else {
+      clearExportLock();
     }
-
-    document.getElementById('load-overlay').classList.add('hidden');
   } catch (err) {
     alert(`Error loading design: ${err.message}`);
   }
+}
+
+// ─── Export lock (set when a loaded design has validation warnings) ───────────
+
+let _exportLockReason = null;
+
+function setExportLock(reason) {
+  _exportLockReason = reason;
+  const previewBtn = document.getElementById('btn-preview');
+  const exportBtn  = document.getElementById('btn-export');
+  if (previewBtn) { previewBtn.disabled = true; previewBtn.title = 'Fix the out-of-bounds element to enable Preview'; }
+  if (exportBtn)  { exportBtn.disabled  = true; exportBtn.title  = 'Fix the out-of-bounds element to enable Export'; }
+}
+
+function clearExportLock() {
+  if (!_exportLockReason) return;
+  _exportLockReason = null;
+  const previewBtn = document.getElementById('btn-preview');
+  const exportBtn  = document.getElementById('btn-export');
+  if (previewBtn) { previewBtn.disabled = false; previewBtn.title = ''; }
+  if (exportBtn)  { exportBtn.disabled  = false; exportBtn.title  = ''; }
 }
 
 // ─── Export ───────────────────────────────────────────────────────────────────

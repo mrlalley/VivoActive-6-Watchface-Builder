@@ -1,12 +1,23 @@
 const { buildProject } = require('../lib/build');
 const path = require('path');
+const os   = require('os');
+const fs   = require('fs');
 
 describe('Build Module', () => {
+  // Use the OS temp directory so build artifacts never land in the project tree.
+  // The OS reclaims the directory automatically; afterAll removes it immediately
+  // so the same temp path is clean for the next run in the same session (e.g. CI).
+  const testExportDir = path.join(os.tmpdir(), 'watchface-test-export');
+
   const mockCfg = {
     monkeyc: '/fake/monkeyc',
     devKey: '/fake/key.der',
-    exportDir: path.join(__dirname, '..', 'test-export'),
+    exportDir: testExportDir,
   };
+
+  afterAll(() => {
+    fs.rmSync(testExportDir, { recursive: true, force: true });
+  });
 
   describe('buildProject', () => {
     it('rejects invalid projectName', async () => {

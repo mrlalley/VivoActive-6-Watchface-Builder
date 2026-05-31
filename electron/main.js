@@ -235,9 +235,34 @@ function detectSdkPath() {
 }
 
 // Handle IPC: generate developer key (rate-limited to prevent key generation spam)
+// outputPath is renderer-supplied; restrict writes to an allowlist of safe directories
+// to prevent a compromised renderer from writing key material anywhere on the filesystem.
 withRateLimit('key:generate', async (event, options = {}) => {
   const { outputPath = null, force = false } = options;
-  const resolvedPath = outputPath ? path.resolve(outputPath) : getDefaultKeyPath();
+
+  // Build the allowlist once per call (app paths are stable after ready).
+  // Keys may only be written inside ~/.garmin/ or the user's Documents folder.
+  const allowedRoots = [
+    path.resolve(path.dirname(getDefaultKeyPath())), // ~/.garmin
+    path.resolve(app.getPath('documents')),           // ~/Documents (or platform equivalent)
+  ];
+
+  // Resolve the requested path (handles ../ traversal and relative paths).
+  // Fall back to the canonical default when the renderer omits outputPath.
+  const resolvedPath = path.resolve(outputPath || getDefaultKeyPath());
+
+  // Reject any path that doesn't sit inside one of the allowed roots.
+  const isAllowed = allowedRoots.some(root => {
+    const boundary = root + path.sep;
+    return resolvedPath === root || resolvedPath.startsWith(boundary);
+  });
+
+  if (!isAllowed) {
+    return {
+      success: false,
+      error: `Key output path must be inside ${allowedRoots.join(' or ')}`,
+    };
+  }
 
   // Check if file already exists (unless force is true)
   if (!force && fs.existsSync(resolvedPath)) {
@@ -253,9 +278,33 @@ withRateLimit('key:generate', async (event, options = {}) => {
 }, 5000);
 
 // Handle IPC: open folder in VS Code
+// folderPath comes from the renderer; validate it is inside the exports directory
+// before constructing a vscode:// URI to prevent protocol handler injection.
 ipcMain.handle('shell:openVSCode', async (event, folderPath) => {
   try {
-    await shell.openExternal(`vscode://file/${folderPath}`);
+    if (typeof folderPath !== 'string' || folderPath.trim().length === 0) {
+      return { success: false, error: 'Invalid path argument' };
+    }
+
+    // Resolve to an absolute, normalised path — eliminates ../ traversal and
+    // collapses symlinks on the current working directory.
+    const resolved = path.resolve(folderPath);
+
+    // The only paths we will open are inside the exports directory.
+    const exportDir = path.resolve(
+      path.join(app.getPath('documents'), 'WatchFaceBuilder', 'exported')
+    );
+
+    // Use sep-terminated prefix so "exported" never matches "exportedEvil".
+    const allowed = exportDir + path.sep;
+    if (resolved !== exportDir && !resolved.startsWith(allowed)) {
+      return { success: false, error: 'Path is outside the exports directory' };
+    }
+
+    // Build a valid vscode:// URI with forward slashes (required by VS Code's
+    // protocol handler on all platforms; Windows paths become C:/… not C:\…).
+    const uriPath = resolved.split(path.sep).join('/');
+    await shell.openExternal(`vscode://file/${uriPath}`);
     return { success: true };
   } catch (err) {
     return { success: false, error: err.message };

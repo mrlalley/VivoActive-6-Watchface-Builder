@@ -1,6 +1,10 @@
 /**
  * @fileoverview Hardware and device-specific constants for the Garmin Vivoactive 6.
  * These values define the target watch face dimensions, safe drawing areas, and icon sizes.
+ *
+ * SOURCE OF TRUTH — do not edit builder/constants.js directly.
+ * Run `npm run generate-constants` (or npm start / npm run server) to regenerate
+ * the browser-compatible ES module mirror at builder/constants.js.
  */
 
 /** Vivoactive 6 AMOLED round display resolution (width and height in pixels). */

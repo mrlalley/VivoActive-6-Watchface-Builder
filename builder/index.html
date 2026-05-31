@@ -9,8 +9,12 @@
 </head>
 <body>
   <!-- Health warning banner (shown if SDK or dev key is missing) -->
-  <div id="health-warning" class="health-warning" style="display: none;">
-    <span id="health-warning-text"></span>
+  <div id="health-warning" class="health-warning health-warning--hidden">
+    <div class="health-warning-body">
+      <strong id="health-warning-title"></strong>
+      <span id="health-warning-text"></span>
+    </div>
+    <div id="health-warning-actions" class="health-warning-actions"></div>
     <button id="health-warning-close" class="health-warning-close" title="Dismiss">✕</button>
   </div>
 

@@ -32,16 +32,37 @@
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 13px; overflow: hidden; }
 
 /* ── Health warning banner ───────────────────────────────────────────────────── */
+/* Hidden by default via class so CSP style-src doesn't block it (inline style= is blocked) */
+.health-warning--hidden { display: none !important; }
 .health-warning {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; padding: 10px 12px;
-  background: linear-gradient(90deg, rgba(224, 80, 80, 0.95) 0%, rgba(200, 60, 60, 0.95) 100%);
-  border-bottom: 2px solid var(--danger);
-  color: #ffffff; font-weight: 500; font-size: 13px;
+  gap: 12px; padding: 10px 14px;
+  background: linear-gradient(90deg, rgba(180, 50, 50, 0.97) 0%, rgba(155, 35, 35, 0.97) 100%);
+  border-bottom: 2px solid #8b0000;
+  color: #ffffff; font-size: 13px; flex-shrink: 0;
 }
+.health-warning-body {
+  display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0;
+}
+.health-warning-body strong {
+  font-size: 13px; font-weight: 700; white-space: nowrap;
+}
+.health-warning-body span {
+  font-size: 12px; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.health-warning-actions {
+  display: flex; gap: 8px; flex-shrink: 0;
+}
+.health-warning-action-btn {
+  background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.45);
+  color: #ffffff; cursor: pointer; font-size: 12px; font-weight: 600;
+  padding: 4px 10px; border-radius: 4px; transition: background 0.15s; white-space: nowrap;
+}
+.health-warning-action-btn:hover { background: rgba(255,255,255,0.32); }
+.health-warning-action-btn:active { background: rgba(255,255,255,0.45); }
 .health-warning-close {
   background: none; border: none; color: #ffffff; cursor: pointer; font-size: 16px;
-  padding: 2px 4px; border-radius: 3px; transition: background 0.2s;
+  padding: 2px 6px; border-radius: 3px; transition: background 0.2s; flex-shrink: 0;
 }
 .health-warning-close:hover { background: rgba(255, 255, 255, 0.2); }
 

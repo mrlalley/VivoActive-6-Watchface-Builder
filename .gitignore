@@ -1,4 +1,5 @@
 node_modules/
+builder/constants.js
 .DS_Store
 *.log
 exported-garmin-project/bin/

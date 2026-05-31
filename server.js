@@ -17,6 +17,7 @@ const { buildProject } = require('./lib/build');
 const { previewInSimulator } = require('./lib/preview');
 const { saveDesign, listDesigns, loadDesign } = require('./lib/design-store');
 const { buildQueue, designSaveQueue } = require('./lib/queue');
+const { generateKey, getDefaultKeyPath } = require('./lib/keygen');
 
 // ─── Server factory ────────────────────────────────────────────────────────────
 // Creates and returns an Express app with all routes configured.
@@ -170,7 +171,6 @@ function createServer(config = {}, detectors = {}) {
         log: '',
         requestId: 'unknown',
         projectPath: cfg.exportDir,
-        projectExists: false,
       });
     }
   });
@@ -268,8 +268,26 @@ function createServer(config = {}, detectors = {}) {
         log: '',
         requestId: 'unknown',
         projectPath: cfg.exportDir,
-        projectExists: false,
       });
+    }
+  });
+
+  // ── POST /api/generate-key – Generate a developer key (web mode; Electron uses IPC) ──
+  app.post('/api/generate-key', async (req, res) => {
+    const outputPath = cfg.devKey || getDefaultKeyPath();
+    const force = req.body?.force === true;
+
+    if (!force && fs.existsSync(outputPath)) {
+      return res.json({ success: false, exists: true, path: outputPath });
+    }
+
+    try {
+      const result = await generateKey(outputPath);
+      logInfo('Developer key generated', { path: result.path });
+      res.json({ success: true, path: result.path });
+    } catch (err) {
+      logError('Key generation failed', { error: err.message });
+      res.status(500).json({ success: false, error: err.message });
     }
   });
 

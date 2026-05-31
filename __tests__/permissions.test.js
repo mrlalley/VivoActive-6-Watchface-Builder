@@ -12,16 +12,15 @@ describe('Permissions', () => {
       expect(perms).toEqual([]);
     });
 
-    it('returns ActivityMonitor for fitness counter fields', () => {
-      // steps/calories are fetched via ActivityMonitor.getInfo(), not UserProfile
+    it('returns no permission for fitness counter fields (ActivityMonitor needs no manifest permission)', () => {
       const elements = [
         { fieldId: 'steps' },
         { fieldId: 'calories' },
       ];
       const perms = getRequiredPermissions(elements);
-      expect(perms).toContain('ActivityMonitor');
+      expect(perms).not.toContain('ActivityMonitor');
       expect(perms).not.toContain('UserProfile');
-      expect(perms.length).toBe(1);
+      expect(perms.length).toBe(0);
     });
 
     it('returns SensorHistory for sensor fields', () => {
@@ -46,25 +45,25 @@ describe('Permissions', () => {
 
     it('combines multiple permission types', () => {
       const elements = [
-        { fieldId: 'steps' },        // ActivityMonitor
+        { fieldId: 'steps' },        // no permission needed
         { fieldId: 'bodyBattery' },  // SensorHistory
         { fieldId: 'sunrise' },      // Positioning
       ];
       const perms = getRequiredPermissions(elements);
-      expect(perms).toContain('ActivityMonitor');
+      expect(perms).not.toContain('ActivityMonitor');
       expect(perms).toContain('SensorHistory');
       expect(perms).toContain('Positioning');
-      expect(perms.length).toBe(3);
+      expect(perms.length).toBe(2);
     });
 
     it('deduplicates permissions', () => {
       const elements = [
-        { fieldId: 'steps' },
-        { fieldId: 'stepGoal' },
-        { fieldId: 'calories' },
+        { fieldId: 'bodyBattery' },
+        { fieldId: 'stressLevel' },
+        { fieldId: 'spo2' },
       ];
       const perms = getRequiredPermissions(elements);
-      expect(perms).toEqual(['ActivityMonitor']);
+      expect(perms).toEqual(['SensorHistory']);
     });
 
     it('returns sorted permissions', () => {
@@ -83,31 +82,42 @@ describe('Permissions', () => {
       expect(getRequiredPermissions([])).toEqual([]);
     });
 
-    it('ignores unknown field IDs', () => {
+    it('ignores unknown field IDs and fields with no required permission', () => {
       const elements = [
         { fieldId: 'unknownField' },
-        { fieldId: 'steps' },
+        { fieldId: 'steps' },          // no manifest permission needed
+        { fieldId: 'bodyBattery' },    // SensorHistory
       ];
       const perms = getRequiredPermissions(elements);
-      expect(perms).toEqual(['ActivityMonitor']);
+      expect(perms).toEqual(['SensorHistory']);
     });
   });
 
   describe('PERMISSION_MAP', () => {
     it('contains expected permissions', () => {
-      // steps fetched via ActivityMonitor.getInfo() — must use ActivityMonitor permission
-      expect(PERMISSION_MAP.steps).toBe('ActivityMonitor');
+      // ActivityMonitor.getInfo() and Activity.getActivityInfo() need no manifest permission
+      expect(PERMISSION_MAP.steps).toBeUndefined();
+      expect(PERMISSION_MAP.heartRate).toBeUndefined();
+      expect(PERMISSION_MAP.heartRateZone).toBeUndefined();
+      // SensorHistory and Positioning still required
       expect(PERMISSION_MAP.bodyBattery).toBe('SensorHistory');
       expect(PERMISSION_MAP.sunrise).toBe('Positioning');
-      // heartRate fetched via UserProfile.getProfile()
-      expect(PERMISSION_MAP.heartRate).toBe('UserProfile');
+      // UserProfile still required for profile data
+      expect(PERMISSION_MAP.restingHeartRate).toBe('UserProfile');
     });
 
-    it('is not missing common fields', () => {
-      const commonFields = ['steps', 'bodyBattery', 'sunrise', 'weather'];
-      commonFields.forEach(field => {
-        expect(PERMISSION_MAP).toHaveProperty(field);
+    it('fields requiring no permission are absent from the map', () => {
+      const noPermRequired = ['steps', 'stepGoal', 'calories', 'floorsClimbed', 'distance', 'heartRate', 'heartRateZone'];
+      noPermRequired.forEach(field => {
+        expect(PERMISSION_MAP[field]).toBeUndefined();
       });
+    });
+
+    it('fields with required permissions are present in the map', () => {
+      expect(PERMISSION_MAP.bodyBattery).toBe('SensorHistory');
+      expect(PERMISSION_MAP.sunrise).toBe('Positioning');
+      expect(PERMISSION_MAP.weather).toBe('Positioning');
+      expect(PERMISSION_MAP.restingHeartRate).toBe('UserProfile');
     });
   });
 });
