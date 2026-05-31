@@ -1,8 +1,0 @@
-
-> watchface-builder@1.0.0 server
-> node server.js
-
-Watch Face Builder  →  http://127.0.0.1:54418
-SDK bin:            connectiq-sdk-win-9.1.0-2026-03-09-6a872a80b
-Developer key:      developer_key.der
-Export dir:         exported
