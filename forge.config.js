@@ -22,25 +22,11 @@ module.exports = {
   },
 
   makers: [
-    // Windows: ZIP (simplest, unsigned)
     {
       name: '@electron-forge/maker-zip',
-      platforms: ['win32'],
-    },
-    // macOS: ZIP (unsigned; DMG deferred to post-MVP)
-    {
-      name: '@electron-forge/maker-zip',
-      platforms: ['darwin'],
-    },
-    // Linux: DEB package
-    {
-      name: '@electron-forge/maker-deb',
-      platforms: ['linux'],
-    },
-    // Linux: RPM package
-    {
-      name: '@electron-forge/maker-rpm',
-      platforms: ['linux'],
+      config: {
+        iconUrl: './assets/icon.ico',
+      },
     },
   ],
 

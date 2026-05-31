@@ -21,9 +21,9 @@
     "preserver": "npm run generate-constants",
     "server": "node server.js",
     "prebuild": "npm run generate-constants",
-    "build": "electron-forge package",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
+    "build": "electron-builder",
+    "package": "electron-builder",
+    "make": "electron-builder --win portable",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
