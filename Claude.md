@@ -272,6 +272,19 @@ Every new external resource (CDN script, font host, image host) requires:
 
 Do not use `'unsafe-inline'` or `'unsafe-eval'` without explicit approval and a documented remediation path below.
 
+### Strict connect-src contract (non-negotiable)
+
+`connect-src` is restricted to **the local server only** (`${SERVER_URL}` = `http://127.0.0.1:3000` or equivalent):
+- **In `server.js`:** `connect-src 'self'` (any same-origin request)
+- **In `STATIC_CSP` (Electron fallback):** `connect-src http://127.0.0.1:3000` (explicit, not a wildcard)
+
+The Electron fallback CSP is a **defense-in-depth layer**: if a response lacks the server's CSP header, the fallback prevents data exfiltration to external origins. Do not:
+- Add `https:` or `wss:` wildcards to `connect-src`
+- Add external CDN, analytics, or third-party API origins without explicit approval and security review
+- Assume that adding an origin to `server.js` is sufficient — it must also be in `STATIC_CSP`
+
+If you need to allow outbound connections to a new origin (for example, an analytics service or external API), document it here with explicit justification and ensure it appears in both the `server.js` header and `STATIC_CSP`. This two-layer requirement prevents accidental broadening of the attack surface.
+
 ### CSP violation logging
 
 Chromium reports blocked resources as console errors in the renderer. `electron/main.js` captures these via the `console-message` event handler and logs them at `warn` level using pino (`event: 'csp.violation'`). Navigation blocked events are logged as `navigation.blocked`. Check `app.getPath('logs')` for these entries when debugging blocked resources.
@@ -383,7 +396,10 @@ always use `childProcess.spawn.mockReturnValue()` directly.
 ## Server security contract (non-negotiable)
 
 - **`server.js` MUST bind to `127.0.0.1` only. Never `0.0.0.0`.** Changing the bind address exposes all API endpoints to the local network.
-- **Every `/api/` route MUST apply `requireSessionToken` middleware.** The only exceptions are `GET /health` (liveness probe, called before the renderer loads) and `GET /api/health` (SDK status, called by the Electron main process which sends the token itself). Page routes (`GET /`, static files) do not require a token.
+- **Every `/api/` route MUST apply `requireSessionToken` middleware.** The only exception is `GET /health` (public liveness probe, minimal process info only). Page routes (`GET /`, static files) do not require a token. All other `/api/` routes including `GET /api/health` require the session token.
+  - `requireSessionToken` always returns **HTTP 401** when `expectedTokenBuf` is null (token not configured). It never passes through under any circumstances — a missing token is a misconfiguration error.
+  - `WFB_SESSION_TOKEN` is guaranteed to be set and passed to `createServer()` from `electron/main.js` before any request reaches the middleware.
+  - Do not add a pass-through branch or conditional acceptance when the token is absent — this is the attack surface the middleware guards against.
 - **Every route MUST apply a rate limiter** (`buildLimiter` or `loadDesignLimiter`). Do not add routes without one.
 - **The session token is generated in `electron/main.js` via `crypto.randomBytes(32)` at app startup.** It is never hardcoded, never written to disk, and never logged.
 - **Token comparison MUST use `crypto.timingSafeEqual()`.** Never use `===`. Timing-safe comparison prevents oracle attacks.
@@ -403,7 +419,7 @@ always use `childProcess.spawn.mockReturnValue()` directly.
 
   The server exits with code 1 if started standalone without the token.
 
-- **All renderer API calls MUST go through `window.electronAPI.apiFetch()`**, not bare `fetch()`. The only exception is `fetch('/api/health')` in the web-mode fallback (guarded by `!window.electronAPI`) — that endpoint is token-exempt.
+- **All renderer API calls MUST go through `window.electronAPI.apiFetch()`**, not bare `fetch()`. All `/api/` endpoints, including `/api/health`, require the session token.
 
 ---
 

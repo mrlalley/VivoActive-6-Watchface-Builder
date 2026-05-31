@@ -224,9 +224,10 @@ function createServer(config = {}, detectors = {}) {
   // ── Route inventory ──────────────────────────────────────────────────────────
   // ROUTES (token required): GET /api/export/check/:name, POST /api/export,
   //   POST /api/save-design, GET /api/designs, GET /api/designs/check/:name,
-  //   GET /api/designs/:filename, POST /api/preview, POST /api/generate-key
-  // ROUTES (no token — called by Electron main process or health gate):
-  //   GET /health (liveness probe), GET /api/health (SDK/key status for checkHealth())
+  //   GET /api/designs/:filename, POST /api/preview, POST /api/generate-key,
+  //   GET /api/health (SDK/key status for Electron checkHealth())
+  // ROUTES (no token — public liveness probes only):
+  //   GET /health (minimal process status, no sensitive details)
   // PAGE ROUTES (no token — serve static HTML/CSS/JS, not sensitive API endpoints):
   //   GET /, static files middleware
 
@@ -487,8 +488,10 @@ function createServer(config = {}, detectors = {}) {
     }
   });
 
-  // ── GET /api/health – Health check for Electron startup validation ──
-  app.get('/api/health', healthLimiter, (req, res) => {
+  // ── GET /api/health – Authenticated health check for Electron startup validation ──
+  // Requires session token to prevent information disclosure about SDK/key presence and build activity.
+  // Electron's checkHealth() already sends x-wfb-token, so no change needed in electron/main.js.
+  app.get('/api/health', requireSessionToken, healthLimiter, (req, res) => {
     const health = {
       ok: fs.existsSync(cfg.monkeyc) && fs.existsSync(cfg.devKey),
       sdkFound: fs.existsSync(cfg.monkeyc),
