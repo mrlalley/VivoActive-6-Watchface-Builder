@@ -7,7 +7,11 @@ import { DEFAULT_ELEMENT_X, DEFAULT_ELEMENT_Y, MAX_DESIGN_ELEMENTS, SAVE_INDICAT
 
 const LS_KEY = 'wfb-design';
 let saveTimer = null;
-let lastExportedPath = null;
+// requestId of the most recent successful export — used by "Open in VS Code".
+// We store the requestId (not the full path) because the server no longer sends
+// filesystem paths to the renderer. The Electron main process reconstructs the
+// full path from exportDir + requestId server-side, keeping paths off the wire.
+let lastExportedRequestId = null;
 
 // ─── Auto-save ────────────────────────────────────────────────────────────────
 
@@ -234,7 +238,7 @@ function initSettings() {
   keyGenerateBtn?.addEventListener('click', async () => {
     keyGenerateBtn.disabled = true;
     keyGenerateBtn.textContent = '⏳ Generating… (15–30s)';
-    keyStatusEl.style.display = 'block';
+    keyStatusEl.classList.remove('hidden');
     keyStatusEl.textContent = 'Generating 4096-bit RSA key — please wait…';
     keyStatusEl.style.color = '#888';
 
@@ -249,7 +253,7 @@ function initSettings() {
       if (!overwrite) {
         keyGenerateBtn.disabled = false;
         keyGenerateBtn.textContent = '🔑 Generate New Key';
-        keyStatusEl.style.display = 'none';
+        keyStatusEl.classList.add('hidden');
         return;
       }
       // Retry with force
@@ -575,24 +579,39 @@ async function handleLoadDesignDialog() {
       return;
     }
 
-    list.innerHTML = result.designs.map((design, idx) => `
-      <button class="design-item" data-file="${design.file}" data-idx="${idx}" style="padding: 12px; background: #2e2e2e; border: 1px solid #3a3a3a; border-radius: 3px; color: #fff; text-align: left; cursor: pointer; transition: background 0.2s;">
-        <div style="font-weight: 600; margin-bottom: 4px;">${design.name}</div>
-        <div style="font-size: 11px; color: #aaa;">${design.elementCount} elements • ${new Date(design.savedAt).toLocaleString()}</div>
-      </button>
-    `).join('');
+    // Build buttons via DOM API — never via innerHTML — so design.name and design.file
+    // cannot inject HTML regardless of what the server returns.
+    list.innerHTML = '';
+    result.designs.forEach((design) => {
+      const btn = document.createElement('button');
+      btn.className = 'design-item';
+      btn.dataset.file = design.file;
+      btn.style.cssText = 'padding:12px;background:#2e2e2e;border:1px solid #3a3a3a;border-radius:3px;color:#fff;text-align:left;cursor:pointer;transition:background 0.2s;width:100%;';
 
-    // Add event listeners
-    list.querySelectorAll('.design-item').forEach(btn => {
-      btn.addEventListener('mouseover', () => btn.style.background = '#383838');
-      btn.addEventListener('mouseout', () => btn.style.background = '#2e2e2e');
+      const nameDiv = document.createElement('div');
+      nameDiv.style.cssText = 'font-weight:600;margin-bottom:4px;';
+      nameDiv.textContent = design.name; // textContent — XSS-safe
+
+      const metaDiv = document.createElement('div');
+      metaDiv.style.cssText = 'font-size:11px;color:#aaa;';
+      metaDiv.textContent = `${design.elementCount} elements • ${new Date(design.savedAt).toLocaleString()}`;
+
+      btn.appendChild(nameDiv);
+      btn.appendChild(metaDiv);
+      btn.addEventListener('mouseover', () => { btn.style.background = '#383838'; });
+      btn.addEventListener('mouseout',  () => { btn.style.background = '#2e2e2e'; });
       btn.addEventListener('click', () => {
         document.getElementById('load-overlay').classList.add('hidden');
         loadDesign(btn.dataset.file);
       });
+      list.appendChild(btn);
     });
   } catch (err) {
-    list.innerHTML = `<p style="color: #e05050; font-size: 12px;">Error loading designs: ${err.message}</p>`;
+    const p = document.createElement('p');
+    p.style.cssText = 'color:#e05050;font-size:12px;';
+    p.textContent = `Error loading designs: ${err.message}`;
+    list.innerHTML = '';
+    list.appendChild(p);
   }
 }
 
@@ -717,8 +736,8 @@ async function handleExport() {
   try {
     const result = await exportProject(projectName);
     if (result.success) {
-      lastExportedPath = result.projectPath;
-      showLog(`✓ Build succeeded!\n\nOutput: ${result.prgPath}\n\n${result.log || '(no compiler output)'}`);
+      lastExportedRequestId = result.requestId || null;
+      showLog(`✓ Build succeeded!\n\n${result.log || '(no compiler output)'}`);
     } else {
       const errorMsg = result.error || '';
       showLog(`✗ Build failed\n\n${errorMsg}\n\n${result.log || ''}\n\n──────────────────────────\nManual build:\n  Open exported-garmin-project/ in VS Code\n  Run: Monkey C: Build for Device → vivoactive6`);
@@ -740,18 +759,21 @@ async function handleExport() {
 }
 
 async function handleOpenVSCode() {
-  if (!lastExportedPath) {
+  if (!lastExportedRequestId) {
     alert('No exported project yet. Click Export first.');
     return;
   }
   if (window.electronAPI?.openInVSCode) {
     try {
-      await window.electronAPI.openInVSCode(lastExportedPath);
+      // Pass requestId only — main process resolves the full path server-side
+      // so filesystem paths never travel through the renderer.
+      await window.electronAPI.openInVSCode(lastExportedRequestId);
     } catch (err) {
       alert(`Could not open VS Code: ${err.message}`);
     }
   } else {
-    alert(`Open VS Code manually:\n\ncode "${lastExportedPath}"`);
+    // Web mode: no local filesystem access — direct user to the export directory.
+    alert('Open your export directory in VS Code:\n\ncode <your-export-dir>');
   }
 }
 

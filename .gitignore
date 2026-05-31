@@ -12,5 +12,7 @@ minimal-test/build/
 dist/
 dist-final/
 build/
+coverage/
+.nyc_output/
 designs/
 .claude/settings.local.json

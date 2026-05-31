@@ -13,11 +13,12 @@ const rateLimit = require('express-rate-limit');
 
 const { getConfig } = require('./lib/config');
 const { logInfo, logError, logWarn } = require('./lib/logger');
-const { buildProject } = require('./lib/build');
+const { buildProject, sweepExportDir } = require('./lib/build');
 const { previewInSimulator } = require('./lib/preview');
 const { saveDesign, listDesigns, loadDesign } = require('./lib/design-store');
 const { buildQueue, designSaveQueue } = require('./lib/queue');
 const { generateKey, getDefaultKeyPath } = require('./lib/keygen');
+const { safePrgName } = require('./lib/naming');
 
 // ─── Server factory ────────────────────────────────────────────────────────────
 // Creates and returns an Express app with all routes configured.
@@ -27,6 +28,11 @@ const { generateKey, getDefaultKeyPath } = require('./lib/keygen');
 function createServer(config = {}, detectors = {}) {
   const cfg = getConfig(config, detectors);
   const app = express();
+
+  // Startup sweep: delete export subdirectories older than 7 days.
+  // Fire-and-forget — never blocks startup, never throws to caller.
+  // Runs in both Electron and web-server modes since createServer() is the shared entry point.
+  (async () => { await sweepExportDir(cfg.exportDir); })();
 
   // Enable proxy trust if running behind a reverse proxy
   app.set('trust proxy', 1);
@@ -54,6 +60,20 @@ function createServer(config = {}, detectors = {}) {
     }
   });
 
+  // Rate limiter for CPU/disk-intensive build endpoints.
+  // 10 requests per 60 s is generous for interactive use but stops a CSRF flood
+  // or a runaway renderer from queueing unbounded monkeyc/monkeydo child processes.
+  const buildLimiter = rateLimit({
+    windowMs: 60000, // 60 seconds
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+      res.setHeader('Retry-After', '60');
+      res.status(429).json({ success: false, error: 'Too many build requests, please try again in a minute.' });
+    }
+  });
+
   // ─── Content Security Policy: nonce-based for stronger XSS protection ─────────
   app.use((req, res, next) => {
     // Generate a random nonce for this request
@@ -64,7 +84,7 @@ function createServer(config = {}, detectors = {}) {
     // Note: 'strict-dynamic' only allows scripts with valid nonce, ignoring 'unsafe-inline'
     res.setHeader(
       'Content-Security-Policy',
-      `default-src 'self'; script-src 'self' 'strict-dynamic' 'nonce-${nonce}'; style-src 'self' 'unsafe-hashes'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none';`
+      `default-src 'self'; script-src 'self' 'strict-dynamic' 'nonce-${nonce}'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none';`
     );
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
@@ -90,27 +110,23 @@ function createServer(config = {}, detectors = {}) {
   // ── GET /api/export/check/:projectName – Check if project exists ──
   app.get('/api/export/check/:projectName', (req, res) => {
     try {
-      const { safePrgName } = require('./lib/naming');
       const projectName = req.params.projectName;
       const prgName = safePrgName(projectName);
       const expectedFileName = `${prgName}.prg`;
 
-      // Search for the .prg file in the export directory (recursively with depth limit)
-      // Files are saved in request-scoped subdirectories, so we need to search
-      // But limit recursion depth to prevent DoS on misconfigured or corrupt export dirs
-      let exists = false;
+      // Search for the .prg file in the export directory (recursively with depth limit).
+      // Returns the directory containing the matching .prg file, or null if not found.
+      // This allows post-retrieval cleanup to know exactly which requestId dir to delete.
+      let foundInDir = null;
       try {
         const MAX_DEPTH = 10;
         const MAX_FILES_CHECKED = 10000;
         let filesChecked = 0;
 
         const findFile = (dir, currentDepth = 0) => {
-          // Depth limit: prevent infinite recursion on symlink loops or deep trees
           if (currentDepth > MAX_DEPTH) {
             throw new Error(`Export directory too deeply nested (max depth: ${MAX_DEPTH})`);
           }
-
-          // File count limit: prevent runaway traversal on large filesystems
           if (filesChecked++ > MAX_FILES_CHECKED) {
             throw new Error(`Too many files in export directory (searched ${MAX_FILES_CHECKED}+ files)`);
           }
@@ -119,41 +135,60 @@ function createServer(config = {}, detectors = {}) {
             const files = fs.readdirSync(dir);
             for (const file of files) {
               const filePath = path.join(dir, file);
-              // Use lstat instead of stat to detect symlinks (symlinks return isSymbolicLink = true)
               const stat = fs.lstatSync(filePath);
-              // Skip symlinks to prevent traversal outside exportDir
               if (stat.isSymbolicLink()) {
                 continue;
               } else if (stat.isDirectory()) {
-                if (findFile(filePath, currentDepth + 1)) return true;
+                const found = findFile(filePath, currentDepth + 1);
+                if (found) return found; // propagate the containing dir back up
               } else if (file === expectedFileName) {
-                return true;
+                return dir; // return the directory that directly contains the .prg
               }
             }
           } catch (readErr) {
-            // Permission denied, I/O error, etc. — skip this directory
             logWarn('export-check:read-failed', { dir, reason: readErr.message });
           }
-          return false;
+          return null;
         };
 
         if (fs.existsSync(cfg.exportDir)) {
-          exists = findFile(cfg.exportDir, 0);
+          foundInDir = findFile(cfg.exportDir, 0);
         }
       } catch (searchErr) {
-        // If search fails (depth limit, file count, permission denied), return error
         res.status(400).json({ success: false, error: searchErr.message });
         return;
       }
 
+      const exists = foundInDir !== null;
       res.json({ success: true, exists, projectName });
+
+      // Strategy A — post-retrieval cleanup:
+      // Defer deletion until after res.json() has queued the response body.
+      // setImmediate fires after the current event loop tick, guaranteeing the
+      // response is committed before any filesystem operation begins.
+      // Deletion failure is logged but never surfaces to the client.
+      if (exists) {
+        // Derive the requestId-level directory: the immediate child of exportDir
+        // that contains (or is) the directory where the .prg was found.
+        const rel = path.relative(cfg.exportDir, foundInDir);
+        const requestDir = path.join(cfg.exportDir, rel.split(path.sep)[0]);
+
+        setImmediate(async () => {
+          try {
+            await fs.promises.rm(requestDir, { recursive: true, force: true });
+            logInfo('export-check:cleanup', { requestDir: path.basename(requestDir) });
+          } catch (err) {
+            logWarn('export-check:cleanup-failed', { requestDir: path.basename(requestDir), reason: err.message });
+          }
+        });
+      }
     } catch (err) {
       res.json({ success: false, error: err.message });
     }
   });
 
   // ── POST /api/export – Export and build .prg file ──
-  app.post('/api/export', async (req, res) => {
+  app.post('/api/export', buildLimiter, async (req, res) => {
     const { elements = [], projectName = 'MyWatchFace' } = req.body;
     try {
       // Serialize builds: only one at a time (prevents file contention)
@@ -161,22 +196,22 @@ function createServer(config = {}, detectors = {}) {
         () => buildProject(cfg, projectName, elements),
         `export:${projectName}`
       );
-      res.json(result);
+      // Strip server-side paths before sending to the client — prgPath, designPath,
+      // and projectPath are internal and must not be disclosed over the wire.
+      const { success, error, log, requestId } = result;
+      res.json({ success, error, log, requestId });
     } catch (err) {
+      if (err.message === 'Queue full — try again later') {
+        res.set('Retry-After', '60');
+        return res.status(503).json({ success: false, error: err.message, log: '', requestId: 'unknown' });
+      }
       logError('export:queue-error', { reason: err.message });
-      // Standardize error response to match success response structure
-      res.json({
-        success: false,
-        error: err.message,
-        log: '',
-        requestId: 'unknown',
-        projectPath: cfg.exportDir,
-      });
+      res.json({ success: false, error: err.message, log: '', requestId: 'unknown' });
     }
   });
 
   // ── POST /api/save-design – Save design to disk ──
-  app.post('/api/save-design', async (req, res) => {
+  app.post('/api/save-design', buildLimiter, async (req, res) => {
     const { projectName = 'MyWatchFace', elements = [] } = req.body;
     try {
       const designsDir = path.join(__dirname, 'designs');
@@ -185,10 +220,16 @@ function createServer(config = {}, detectors = {}) {
         () => saveDesign(designsDir, projectName, elements),
         `save-design:${projectName}`
       );
-      res.json(result);
+      // Explicit allowlist — filePath excluded even as a basename; client needs only
+      // success, projectName, and elementCount to confirm the save succeeded.
+      const { success, projectName: savedName, elementCount, error } = result;
+      res.json({ success, projectName: savedName, elementCount, error });
     } catch (err) {
+      if (err.message === 'Queue full — try again later') {
+        res.set('Retry-After', '60');
+        return res.status(503).json({ success: false, error: err.message, log: '' });
+      }
       logError('save-design:queue-error', { reason: err.message });
-      // Standardize error response to match success response structure
       res.json({ success: false, error: err.message, log: '' });
     }
   });
@@ -208,16 +249,10 @@ function createServer(config = {}, detectors = {}) {
   // ── GET /api/designs/check/:projectName – Check if design exists ──
   app.get('/api/designs/check/:projectName', (req, res) => {
     try {
-      const { safePrgName } = require('./lib/naming');
       const projectName = req.params.projectName;
       const fileName = `${safePrgName(projectName)}.json`;
       const designsDir = path.join(__dirname, 'designs');
-      const filePath = path.join(designsDir, fileName);
-
-      // Sanitize filename to prevent path traversal
-      const sanitized = fileName.replace(/[^a-zA-Z0-9._-]/g, '');
-      const safeFilePath = path.join(designsDir, sanitized);
-      const exists = fs.existsSync(safeFilePath);
+      const exists = fs.existsSync(path.join(designsDir, fileName));
 
       res.json({ success: true, exists, projectName });
     } catch (err) {
@@ -244,7 +279,7 @@ function createServer(config = {}, detectors = {}) {
   });
 
   // ── POST /api/preview – Build and launch in simulator ──
-  app.post('/api/preview', async (req, res) => {
+  app.post('/api/preview', buildLimiter, async (req, res) => {
     const { elements = [], projectName = 'WatchFacePreview' } = req.body;
     try {
       // Serialize builds: only one at a time (prevents file contention)
@@ -260,15 +295,12 @@ function createServer(config = {}, detectors = {}) {
       previewInSimulator(cfg, buildResult.prgPath, buildResult.requestId);
       res.json({ success: true, message: 'Starting simulator…', log: buildResult.log, requestId: buildResult.requestId });
     } catch (err) {
+      if (err.message === 'Queue full — try again later') {
+        res.set('Retry-After', '60');
+        return res.status(503).json({ success: false, error: err.message, log: '', requestId: 'unknown' });
+      }
       logError('preview:queue-error', { reason: err.message });
-      // Standardize error response to match success response structure
-      res.json({
-        success: false,
-        error: err.message,
-        log: '',
-        requestId: 'unknown',
-        projectPath: cfg.exportDir,
-      });
+      res.json({ success: false, error: err.message, log: '', requestId: 'unknown' });
     }
   });
 
@@ -297,11 +329,9 @@ function createServer(config = {}, detectors = {}) {
       ok: fs.existsSync(cfg.monkeyc) && fs.existsSync(cfg.devKey),
       sdkFound: fs.existsSync(cfg.monkeyc),
       keyFound: fs.existsSync(cfg.devKey),
-      sdkPath: cfg.monkeyc,
-      keyPath: cfg.devKey,
       timestamp: new Date().toISOString(),
     };
-    res.status(health.ok ? 200 : 503).json(health);
+    res.status(health.ok ? 200 : 503).json({ ...health, buildQueue: buildQueue.stats() });
   });
 
   return app;

@@ -277,28 +277,28 @@ withRateLimit('key:generate', async (event, options = {}) => {
   }
 }, 5000);
 
-// Handle IPC: open folder in VS Code
-// folderPath comes from the renderer; validate it is inside the exports directory
-// before constructing a vscode:// URI to prevent protocol handler injection.
-ipcMain.handle('shell:openVSCode', async (event, folderPath) => {
+// Handle IPC: open the exported project folder in VS Code.
+// The renderer passes a requestId (not a path) — the main process reconstructs
+// the full path from the known export directory, keeping filesystem paths out
+// of the renderer context entirely.
+ipcMain.handle('shell:openVSCode', async (event, requestId) => {
   try {
-    if (typeof folderPath !== 'string' || folderPath.trim().length === 0) {
-      return { success: false, error: 'Invalid path argument' };
+    if (typeof requestId !== 'string' || !/^[a-z0-9]+$/.test(requestId)) {
+      return { success: false, error: 'Invalid requestId' };
     }
 
-    // Resolve to an absolute, normalised path — eliminates ../ traversal and
-    // collapses symlinks on the current working directory.
-    const resolved = path.resolve(folderPath);
-
-    // The only paths we will open are inside the exports directory.
+    // Construct the path entirely in the main process — never trust the renderer
+    // with a full filesystem path.
     const exportDir = path.resolve(
       path.join(app.getPath('documents'), 'WatchFaceBuilder', 'exported')
     );
+    const resolved = path.join(exportDir, requestId);
 
-    // Use sep-terminated prefix so "exported" never matches "exportedEvil".
-    const allowed = exportDir + path.sep;
-    if (resolved !== exportDir && !resolved.startsWith(allowed)) {
-      return { success: false, error: 'Path is outside the exports directory' };
+    // Sanity-check: resolved must still be inside exportDir (guards against
+    // any edge case where path.join collapses the requestId unexpectedly).
+    const boundary = exportDir + path.sep;
+    if (!resolved.startsWith(boundary)) {
+      return { success: false, error: 'Resolved path is outside the exports directory' };
     }
 
     // Build a valid vscode:// URI with forward slashes (required by VS Code's
@@ -332,7 +332,7 @@ app.on('ready', async () => {
   // before DOMContentLoaded fires in the renderer).
   if (!hasCompleteConfig()) {
     mainWindow.webContents.once('did-finish-load', () => {
-      mainWindow.webContents.send('settings:showOverlay');
+      mainWindow?.webContents.send('settings:showOverlay');
     });
   }
 });

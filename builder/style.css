@@ -189,6 +189,8 @@ select option { background: var(--surface2); }
   display: flex; align-items: center; justify-content: center;
   z-index: 100;
 }
+/* Visibility utility — replaces inline style="display:none" so no unsafe-* CSP qualifier is needed */
+.hidden { display: none !important; }
 .modal-overlay.hidden { display: none; }
 
 .modal-box {

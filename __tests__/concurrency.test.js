@@ -111,8 +111,9 @@ describe('Concurrency Protection', () => {
 
       expect(result.success).toBe(true);
 
-      // Verify file was written fully (not partial)
-      const fileContent = fs.readFileSync(result.filePath, 'utf8');
+      // Verify file was written fully (not partial).
+      // result.filePath is now a basename ("TestFace.json") — reconstruct the full path.
+      const fileContent = fs.readFileSync(path.join(designsDir, result.filePath), 'utf8');
       const parsed = JSON.parse(fileContent);
 
       expect(parsed.projectName).toBe('TestFace');
