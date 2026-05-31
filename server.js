@@ -190,8 +190,11 @@ function createServer(config = {}, detectors = {}) {
     const nonce = crypto.randomBytes(16).toString('base64');
     res.locals.nonce = nonce;
 
-    // CSP header with nonce for scripts; no inline styles permitted
-    // Note: 'strict-dynamic' only allows scripts with valid nonce, ignoring 'unsafe-inline'
+    // Content-Security-Policy header — authoritative CSP enforcement.
+    // SYNC CONTRACT: builder/index.html contains a meta tag fallback (lines 4-32) that
+    // must mirror this header on every update. The meta tag intentionally omits
+    // 'strict-dynamic' and nonce because static HTML cannot embed a per-request nonce.
+    // See CLAUDE.md §Content Security Policy for the CSP design rationale.
     res.setHeader(
       'Content-Security-Policy',
       `default-src 'self'; script-src 'self' 'strict-dynamic' 'nonce-${nonce}'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';`

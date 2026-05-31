@@ -235,27 +235,32 @@ The CSP is enforced at two independent layers that must be kept in sync:
 
 | Layer | Location | Scope |
 |---|---|---|
-| **HTTP header (enforcement)** | `server.js` CSP middleware | Every Express response; includes per-request nonce for `script-src` |
-| **Meta tag (declarative fallback)** | `builder/index.html` `<head>` first element | Backup when served outside Express (browser, file://) |
+| **HTTP header (enforcement)** | `server.js` lines 195-202 (setHeader Content-Security-Policy) | Every Express response; includes per-request nonce for `script-src` |
+| **Meta tag (declarative fallback)** | `builder/index.html` lines 4-32 (`<meta http-equiv>`) | Backup when served outside Express (browser, file://) |
 | **Session handler (Electron guard)** | `electron/main.js` `session.defaultSession.webRequest.onHeadersReceived` | Fallback CSP for responses lacking the server header |
 
 ### Current policy
 
 ```
-default-src 'none';
+default-src 'self';
 script-src  'self'  [meta tag] / 'self' 'strict-dynamic' 'nonce-xxx'  [server header];
-# Note: 'strict-dynamic' ignores 'self', so the meta tag must NOT use 'strict-dynamic'
-# or it would block all scripts (no nonce available at template time).
+  # INTENTIONAL DELTA: The meta tag is 'self' only (no 'strict-dynamic' or nonce).
+  # Reason: A static meta tag cannot embed a per-request nonce. Adding 'strict-dynamic'
+  # without a nonce would block all scripts. The server.js header enforces strict-dynamic
+  # for the actual HTTP-delivered page.
 style-src   'self';
 img-src     'self' data:;
 font-src    'self';
-connect-src 'self'  [meta tag] / http://127.0.0.1:PORT [session handler];
+connect-src 'self'  [meta tag] / 'self'  [server header];
 worker-src  'none';
 frame-src   'none';
 object-src  'none';
 base-uri    'self';
 form-action 'self';
 frame-ancestors 'none';
+  # KNOWN INERT DIRECTIVE (meta tag only): Meta tags cannot enforce frame-ancestors
+  # per CSP Level 3 §8.5. This directive is in the meta tag for documentation symmetry.
+  # The server.js header is the actual enforcement point.
 ```
 
 ### Rules for adding new origins

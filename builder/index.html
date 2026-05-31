@@ -2,12 +2,25 @@
 <html lang="en">
 <head>
   <!-- CSP meta tag — declarative fallback layer.
+       SYNC CONTRACT: This meta tag must mirror the server.js CSP header.
+       Source of truth: server.js line 195-198 (setHeader Content-Security-Policy).
+
        The Express server sends the authoritative CSP header (including a per-request nonce
        for script-src). This meta tag is a defence-in-depth backup for environments where
        the server header is absent (direct file:// open, browser devtools reload).
-       Both must be kept in sync. See CLAUDE.md §Content Security Policy. -->
+
+       INTENTIONAL DELTA:
+         script-src: Meta tag is 'self' only (no 'strict-dynamic' or nonce).
+         Reason: The meta tag is static HTML; a nonce cannot be embedded at template time.
+         Adding 'strict-dynamic' without a nonce would block all scripts.
+         See CLAUDE.md §Content Security Policy lines 247-248.
+
+       KNOWN INERT DIRECTIVE:
+         frame-ancestors 'none' — included for spec symmetry, but meta tags cannot enforce
+         frame-ancestors per CSP Level 3 §8.5. The server.js header is the actual enforcement.
+  -->
   <meta http-equiv="Content-Security-Policy" content="
-    default-src 'none';
+    default-src 'self';
     script-src  'self';
     style-src   'self';
     img-src     'self' data:;
@@ -18,6 +31,7 @@
     object-src  'none';
     base-uri    'self';
     form-action 'self';
+    frame-ancestors 'none';
   ">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,7 +71,6 @@
         <button id="btn-settings" class="btn" title="SDK configuration (Ctrl+,)">⚙ Settings</button>
         <button id="btn-new" class="btn" title="Start a new design">New</button>
         <button id="btn-save-design" class="btn" title="Save design to project folder">💾 Save Design</button>
-        <button id="btn-save-json" class="btn" title="Download design as JSON file">⬇ Download</button>
         <button id="btn-load-json" class="btn" title="Load a previously saved JSON file">📂 Load</button>
         <input id="file-input" type="file" accept=".json" class="hidden">
       </div>
