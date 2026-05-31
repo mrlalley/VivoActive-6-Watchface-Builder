@@ -131,7 +131,8 @@ describe('Design Store Module', () => {
       const design = loadDesign(testDir, 'bad-elem.json');
       expect(design.projectName).toBe('Test');
       expect(design.validationWarning).toBeDefined();
-      expect(design.requiresConfirmation).toBe(true);
+      // requiresConfirmation removed: canvas now handles validation reactively
+      expect(design.requiresConfirmation).toBeUndefined();
     });
 
     it('rejects negative nextId', () => {

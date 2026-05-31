@@ -1,5 +1,6 @@
 import { getElements, updateElement, commitHistory, FONT_HEIGHTS } from './elements.js';
 import { CANVAS_SIZE, CANVAS_CENTER, SAFE_AREA_RADIUS as SAFE_RADIUS, EDGE_WARN_DISTANCE as EDGE_WARN_DIST, MIN_ELEMENT_SIZE, ANALOG_RENDER_INTERVAL } from '../constants.js';
+import { validateElements } from './validation.js';
 
 /**
  * @typedef {Object} Element
@@ -55,6 +56,49 @@ let dragState = null;
 let onSelectCb = null;
 let onChangeCb = null;
 let analogRenderTimer = null; // Adaptive analog rendering timer
+
+// ─── Reactive safe-area validation ───────────────────────────────────────────
+// Updated after every element commit (drag, resize, add, property change, undo).
+// Drives the red outline overlay and the export/preview button state.
+let lastValidationResult = { valid: true, invalidIds: new Set(), errors: [] };
+
+/**
+ * Run safe-area validation over all current elements and update button state.
+ * Call this after every commit that may change element positions or sizes.
+ * Do NOT call during drag mousemove — call only on mouseup (commit).
+ */
+/** @returns {import('./validation.js').ValidationResult} */
+export function runValidation() {
+  lastValidationResult = validateElements(getElements());
+  emitValidationState(lastValidationResult);
+  scheduleRedraw(); // repaint so invalid outlines appear / disappear immediately
+  return lastValidationResult;
+}
+
+/**
+ * Update the Export and Preview toolbar buttons based on validation state.
+ * Buttons are disabled (with an explanatory tooltip) when any element is out of bounds.
+ * @param {import('./validation.js').ValidationResult} result
+ */
+function emitValidationState(result) {
+  const exportBtn  = document.getElementById('btn-export');
+  const previewBtn = document.getElementById('btn-preview');
+  if (!exportBtn || !previewBtn) return;
+
+  if (result.valid) {
+    exportBtn.disabled  = false;
+    previewBtn.disabled = false;
+    exportBtn.title  = '';
+    previewBtn.title = '';
+  } else {
+    const n = result.invalidIds.size;
+    const summary = `${n} element${n === 1 ? '' : 's'} outside the safe display area — move ${n === 1 ? 'it' : 'them'} in to enable`;
+    exportBtn.disabled  = true;
+    previewBtn.disabled = true;
+    exportBtn.title  = summary;
+    previewBtn.title = summary;
+  }
+}
 
 // ─── RAF-based render batching ────────────────────────────────────────────────
 // Deduplicates rapid render() calls (drag, color picker, etc.) so at most one
@@ -258,6 +302,18 @@ function drawElement(el) {
       ctx.lineWidth = 2;
       ctx.stroke();
     }
+  }
+
+  // Out-of-bounds indicator: solid red dashed rectangle when element is fully outside safe area.
+  // Only drawn for elements whose width/height represent a rectangular bounding box.
+  if (lastValidationResult.invalidIds.has(el.id)) {
+    const hw = el.width  / 2;
+    const hh = el.height / 2;
+    ctx.strokeStyle = '#FF3333';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 4]);
+    ctx.strokeRect(el.x - hw, el.y - hh, el.width, el.height);
+    ctx.setLineDash([]);
   }
 
   ctx.restore();
@@ -567,7 +623,10 @@ function onMouseMove(e) {
 }
 
 function onMouseUp() {
-  if (dragState?.moved) commitHistory();
+  if (dragState?.moved) {
+    commitHistory();
+    runValidation(); // recheck safe-area after position/size commit
+  }
   dragState = null;
 }
 

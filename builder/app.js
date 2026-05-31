@@ -1,6 +1,6 @@
 import { DATA_FIELDS, CATEGORIES } from './modules/data-fields.js';
 import { addElement, createElement, exportState, importState, undo, redo, getElements } from './modules/elements.js';
-import { initCanvas, render, setSelectedId, toggleSafeArea, toggleGrid, bringForward, sendBackward, cleanupCanvas } from './modules/canvas.js';
+import { initCanvas, render, scheduleRedraw, setSelectedId, toggleSafeArea, toggleGrid, bringForward, sendBackward, cleanupCanvas, runValidation } from './modules/canvas.js';
 import { showProperties } from './modules/properties.js';
 import { exportProject, previewInSimulator } from './modules/export.js';
 import { DEFAULT_ELEMENT_X, DEFAULT_ELEMENT_Y, MAX_DESIGN_ELEMENTS, SAVE_INDICATOR_HIDE_DELAY } from './constants.js';
@@ -12,7 +12,7 @@ let lastExportedPath = null;
 // ─── Auto-save ────────────────────────────────────────────────────────────────
 
 function scheduleAutoSave() {
-  clearExportLock(); // any edit clears the load-time validation lock
+  runValidation(); // recheck safe-area after any property/structural change
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     localStorage.setItem(LS_KEY, exportState());
@@ -374,9 +374,21 @@ function init() {
   // Wait for Garmin TTF fonts to finish loading before first render so text
   // sizes are correct from the start (fonts/Yantramanav + Roboto served from /builder/fonts/).
   if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(() => render());
+    document.fonts.ready.then(() => { render(); notifyValidation(runValidation()); });
   } else {
     render();
+    notifyValidation(runValidation());
+  }
+}
+
+/** Show a log entry when validation disables buttons (startup or load-time). */
+function notifyValidation(result) {
+  if (!result.valid) {
+    showLog(
+      `⚠️ ${result.invalidIds.size} element${result.invalidIds.size === 1 ? '' : 's'} outside the safe display area.\n\n` +
+      result.errors.join('\n') +
+      '\n\nMove or resize the highlighted element(s) to re-enable Preview and Export.'
+    );
   }
 }
 
@@ -404,7 +416,7 @@ function buildPalette() {
 
     const modalDetails = document.createElement('details');
     modalDetails.className = 'modal-category';
-    modalDetails.open = true;
+    if (cat.open) modalDetails.open = true;
     const modalSummary = document.createElement('summary');
     modalSummary.className = 'modal-category-header';
     modalSummary.textContent = cat.label;
@@ -460,6 +472,7 @@ function handleNew() {
   showProperties(null);
   render();
   localStorage.removeItem(LS_KEY);
+  runValidation(); // clear any stale invalid-element state from the previous design
 }
 
 async function handleSaveDesign() {
@@ -534,6 +547,7 @@ function handleLoadJSON(e) {
       render();
       localStorage.setItem(LS_KEY, ev.target.result);
       flashSaveIndicator();
+      notifyValidation(runValidation()); // check safe-area immediately — local files skip the server validation path
     } catch (err) {
       alert('Could not load design file: ' + err.message);
     }
@@ -605,51 +619,35 @@ async function loadDesign(filename) {
     localStorage.setItem(LS_KEY, JSON.stringify(result.design));
     flashSaveIndicator();
 
-    // If there's a validation warning, lock export/preview and show in log
+    // Run reactive validation — sets button state and red outlines based on actual canvas.
+    // If the server flagged a specific element, also select and log it for the user.
+    const validationResult = runValidation();
     const warning = result.validationWarning;
     if (warning) {
-      setExportLock(warning);
-
       const match = warning.match(/element\[(\d+)\]/);
       if (match) {
         const elementIndex = parseInt(match[1], 10);
         const els = getElements();
         if (els[elementIndex]) {
           setSelectedId(els[elementIndex].id);
-          showProperties(els[elementIndex]);
+          // Pass both callbacks so delete and property edits auto-save correctly
+          showProperties(els[elementIndex],
+            () => { setSelectedId(null); showProperties(null); scheduleRedraw(); scheduleAutoSave(); },
+            scheduleAutoSave
+          );
           render();
-          showLog(`⚠️ One element is outside the safe display area and has been highlighted.\n\nMove or resize it to re-enable Preview and Export.\n\nDetail: ${warning}`);
+          showLog(`⚠️ One element is outside the safe display area (highlighted in red).\n\nMove or resize it to re-enable Preview and Export.`);
         }
       } else {
-        showLog(`⚠️ ${warning}\n\nFix the highlighted element to re-enable Preview and Export.`);
+        showLog(`⚠️ ${warning}`);
       }
-    } else {
-      clearExportLock();
+    } else if (!validationResult.valid) {
+      // No server warning, but client-side validation found out-of-bounds elements
+      notifyValidation(validationResult);
     }
   } catch (err) {
     alert(`Error loading design: ${err.message}`);
   }
-}
-
-// ─── Export lock (set when a loaded design has validation warnings) ───────────
-
-let _exportLockReason = null;
-
-function setExportLock(reason) {
-  _exportLockReason = reason;
-  const previewBtn = document.getElementById('btn-preview');
-  const exportBtn  = document.getElementById('btn-export');
-  if (previewBtn) { previewBtn.disabled = true; previewBtn.title = 'Fix the out-of-bounds element to enable Preview'; }
-  if (exportBtn)  { exportBtn.disabled  = true; exportBtn.title  = 'Fix the out-of-bounds element to enable Export'; }
-}
-
-function clearExportLock() {
-  if (!_exportLockReason) return;
-  _exportLockReason = null;
-  const previewBtn = document.getElementById('btn-preview');
-  const exportBtn  = document.getElementById('btn-export');
-  if (previewBtn) { previewBtn.disabled = false; previewBtn.title = ''; }
-  if (exportBtn)  { exportBtn.disabled  = false; exportBtn.title  = ''; }
 }
 
 // ─── Export ───────────────────────────────────────────────────────────────────
