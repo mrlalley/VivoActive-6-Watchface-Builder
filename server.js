@@ -334,14 +334,24 @@ function createServer(config = {}, detectors = {}) {
       // Strip server-side paths before sending to the client — prgPath, designPath,
       // and projectPath are internal and must not be disclosed over the wire.
       const { success, error, log, requestId } = result;
+      // Build failures (invalid elements, validation errors) return 400.
+      // Build successes return 200.
+      if (!success) {
+        return res.status(400).json({ success, error, log, requestId });
+      }
       res.json({ success, error, log, requestId });
     } catch (err) {
       if (err.message === 'Queue full — try again later') {
         res.set('Retry-After', '60');
         return res.status(503).json({ success: false, error: err.message, log: '', requestId: 'unknown' });
       }
-      logError('export:queue-error', { reason: err.message });
-      res.json({ success: false, error: err.message, log: '', requestId: 'unknown' });
+      // Validation errors (from validateProjectName, validateElements) return 400.
+      // Other errors (filesystem, etc.) return 500.
+      if (err.message && (err.message.includes('Validation failed') || err.message.includes('Invalid') || err.message.includes('must be'))) {
+        return res.status(400).json({ success: false, error: err.message, log: '', requestId: 'unknown' });
+      }
+      logError('export:error', { reason: err.message });
+      res.status(500).json({ success: false, error: err.message, log: '', requestId: 'unknown' });
     }
   });
 
@@ -357,14 +367,23 @@ function createServer(config = {}, detectors = {}) {
       // Explicit allowlist — filePath excluded even as a basename; client needs only
       // success, projectName, and elementCount to confirm the save succeeded.
       const { success, projectName: savedName, elementCount, error } = result;
+      // Save failures (validation errors) return 400. Save successes return 200.
+      if (!success) {
+        return res.status(400).json({ success, projectName: savedName, elementCount, error });
+      }
       res.json({ success, projectName: savedName, elementCount, error });
     } catch (err) {
       if (err.message === 'Queue full — try again later') {
         res.set('Retry-After', '60');
         return res.status(503).json({ success: false, error: err.message, log: '' });
       }
-      logError('save-design:queue-error', { reason: err.message });
-      res.json({ success: false, error: err.message, log: '' });
+      // Validation errors (from validateProjectName, validateElements) return 400.
+      // Other errors (filesystem, etc.) return 500.
+      if (err.message && (err.message.includes('Validation failed') || err.message.includes('Invalid') || err.message.includes('must be'))) {
+        return res.status(400).json({ success: false, error: err.message, log: '' });
+      }
+      logError('save-design:error', { reason: err.message });
+      res.status(500).json({ success: false, error: err.message, log: '' });
     }
   });
 
@@ -375,7 +394,8 @@ function createServer(config = {}, detectors = {}) {
       res.json({ success: true, designs });
     } catch (err) {
       logError('designs:list-error', { reason: err.message });
-      res.json({ success: false, error: err.message });
+      // Filesystem errors are server-side failures.
+      res.status(500).json({ success: false, error: err.message });
     }
   });
 
@@ -388,7 +408,8 @@ function createServer(config = {}, detectors = {}) {
 
       res.json({ success: true, exists, projectName });
     } catch (err) {
-      res.json({ success: false, error: err.message });
+      // Filesystem errors are server-side failures.
+      res.status(500).json({ success: false, error: err.message });
     }
   });
 
@@ -404,7 +425,14 @@ function createServer(config = {}, detectors = {}) {
       });
     } catch (err) {
       logError('designs:load-error', { reason: err.message });
-      res.json({ success: false, error: err.message });
+      // Design not found returns 404. Other errors (validation, filesystem) return 400/500.
+      if (err.message && err.message.includes('not found')) {
+        return res.status(404).json({ success: false, error: err.message });
+      }
+      if (err.message && err.message.includes('corrupted')) {
+        return res.status(400).json({ success: false, error: err.message });
+      }
+      res.status(500).json({ success: false, error: err.message });
     }
   });
 
@@ -418,7 +446,8 @@ function createServer(config = {}, detectors = {}) {
         `preview:${projectName}`
       );
       if (!buildResult.success) {
-        return res.json(buildResult);
+        // Build failures (invalid elements, validation errors) return 400.
+        return res.status(400).json(buildResult);
       }
       // Fire off preview work asynchronously (simulator launch, .prg loading)
       // Pass requestId to ensure temp files don't collide if multiple previews run
@@ -429,8 +458,13 @@ function createServer(config = {}, detectors = {}) {
         res.set('Retry-After', '60');
         return res.status(503).json({ success: false, error: err.message, log: '', requestId: 'unknown' });
       }
-      logError('preview:queue-error', { reason: err.message });
-      res.json({ success: false, error: err.message, log: '', requestId: 'unknown' });
+      // Validation errors (from validateProjectName, validateElements) return 400.
+      // Other errors (filesystem, etc.) return 500.
+      if (err.message && (err.message.includes('Validation failed') || err.message.includes('Invalid') || err.message.includes('must be'))) {
+        return res.status(400).json({ success: false, error: err.message, log: '', requestId: 'unknown' });
+      }
+      logError('preview:error', { reason: err.message });
+      res.status(500).json({ success: false, error: err.message, log: '', requestId: 'unknown' });
     }
   });
 
