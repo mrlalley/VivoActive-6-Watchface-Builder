@@ -219,9 +219,11 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   }
 
-  // Always block DevTools shortcuts (F12, Ctrl+Shift+I) unless explicitly debugging
-  // This prevents accidental DevTools access via keyboard shortcuts in normal usage
-  if (process.env.OPEN_DEVTOOLS !== '1') {
+  // Allow DevTools keyboard shortcuts (F12, Ctrl+Shift+I) in development mode
+  // In production (packaged app), block these shortcuts
+  // ELECTRON_IS_DEV is set by 'npm start' for development mode
+  const isDev = process.env.ELECTRON_IS_DEV === '1';
+  if (!isDev) {
     mainWindow.webContents.on('before-input-event', (event, input) => {
       if (input.control && input.shift && input.key.toLowerCase() === 'i') event.preventDefault();
       if (input.key === 'F12') event.preventDefault();
