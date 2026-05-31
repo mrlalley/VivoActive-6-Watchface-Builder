@@ -1,7 +1,7 @@
 // !! GENERATED FILE — DO NOT EDIT MANUALLY !!
 // Source: src/constants/device.js
 // Regenerate: npm run generate-constants
-// Generated: 2026-05-31T17:16:12.309Z
+// Generated: 2026-05-31T19:37:56.448Z
 //
 // Browser-compatible ES module mirror of src/constants/device.js.
 // Device constants are evaluated from the source file at generation time,

@@ -92,7 +92,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 /* On very small viewports, hide non-critical buttons */
 @media (max-width: 900px) {
   .app-title { display: none; }
-  #btn-save-json, #btn-load-json { display: none; }
+  #btn-load-json { display: none; }
 }
 
 /* Ensure export button stays visible */

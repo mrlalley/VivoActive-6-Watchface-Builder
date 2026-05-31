@@ -353,7 +353,6 @@ function init() {
   // ── Toolbar: save/load ──
   document.getElementById('btn-new').addEventListener('click', handleNew);
   document.getElementById('btn-save-design').addEventListener('click', handleSaveDesign);
-  document.getElementById('btn-save-json').addEventListener('click', handleSaveJSON);
   document.getElementById('btn-load-json').addEventListener('click', handleLoadDesignDialog);
   document.getElementById('file-input').addEventListener('change', handleLoadJSON);
   document.getElementById('load-close').addEventListener('click', () => document.getElementById('load-overlay').classList.add('hidden'));
@@ -387,8 +386,10 @@ function init() {
     window.electronAPI?.cleanup(); // remove persistent IPC listeners before unload
   });
 
-  // ── Restore or load defaults ──
-  if (!tryRestore()) addDefaults();
+  // ── Restore prior session ──
+  // On first cold start (nothing in localStorage) the canvas starts blank.
+  // addDefaults() is preserved below as a dev/test utility but not called automatically.
+  tryRestore();
 
   // Wait for Garmin TTF fonts to finish loading before first render so text
   // sizes are correct from the start (fonts/Yantramanav + Roboto served from /builder/fonts/).
@@ -605,12 +606,12 @@ function onDelete() {
 function handleNew() {
   if (!confirm('Start a new design? The current design will be cleared.')) return;
   importState(JSON.stringify({ elements: [], nextId: 1 }));
-  addDefaults();
+  activeCategoryId = null; // collapse palette accordion on next render
   setSelectedId(null);
   showProperties(null);
   render();
   localStorage.removeItem(LS_KEY);
-  runValidation(); // clear any stale invalid-element state from the previous design
+  runValidation();
 }
 
 async function handleSaveDesign() {
@@ -661,16 +662,6 @@ async function handleSaveDesign() {
   } catch (err) {
     alert(`Error: ${err.message}`);
   }
-}
-
-function handleSaveJSON() {
-  const blob = new Blob([exportState()], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = 'watchface-design.json';
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 function handleLoadJSON(e) {
@@ -922,6 +913,9 @@ function closeModal() {
 
 // ─── Default canvas state ─────────────────────────────────────────────────────
 
+// addDefaults() — preserved for manual dev/test use only.
+// NOT called automatically. New and cold-start both begin with a blank canvas.
+// To populate a sample layout for development, call addDefaults() from the console.
 function addDefaults() {
   const defaults = [
     { id: 'hours',        x: 155, y: 178 },

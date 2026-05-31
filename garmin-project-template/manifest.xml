@@ -3,8 +3,12 @@
 <iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
     <!-- minSdkVersion must match garmin-project-template/VERSION minApiLevel.
          Update both files together. See CLAUDE.md §Template versioning contract. -->
+    <!-- entry must match: lib/generators/manifest.js entry value AND
+         the App class name in the generated Monkey C source (WatchFaceApp extends App.AppBase).
+         The view class is WatchFaceView — these are different. Do not confuse them.
+         Update lib/generators/manifest.js and generated .mc together if this ever changes. -->
     <iq:application
-        entry="WatchFaceView"
+        entry="WatchFaceApp"
         id="a3872ef0-6346-4321-abcd-000000000000"
         minSdkVersion="4.2.0"
         name="@Strings.AppName"

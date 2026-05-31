@@ -148,12 +148,12 @@ describe('Concurrency Protection', () => {
       expect(results[1].success).toBe(true);
 
       // Final file should have valid data
-      const listResult = listDesigns(designsDir);
+      const listResult = await listDesigns(designsDir);
       expect(listResult).toHaveLength(1);
       expect(listResult[0].elementCount).toBe(1);
     });
 
-    it('handles TOCTOU gracefully (mkdir with recursive)', () => {
+    it('handles TOCTOU gracefully (mkdir with recursive)', async () => {
       const designsDir = path.join(testDir, 'designs-toctou');
 
       // Create designs directory
@@ -189,7 +189,7 @@ describe('Concurrency Protection', () => {
       expect(result2.success).toBe(true);
 
       // Both designs saved
-      const designs = listDesigns(designsDir);
+      const designs = await listDesigns(designsDir);
       expect(designs).toHaveLength(2);
     });
   });

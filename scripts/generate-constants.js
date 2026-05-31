@@ -18,6 +18,7 @@ const fs              = require('fs');
 const path            = require('path');
 const crypto          = require('crypto');
 const { spawnSync }   = require('child_process');
+const { detectSdkSync, SdkNotFoundError, compareVersions: sdkCompareVersions } = require('../lib/sdk-detect');
 
 // ── JDK version check ─────────────────────────────────────────────────────────
 // Must run as the very first check. A missing or incompatible JDK causes cryptic
@@ -239,121 +240,27 @@ function writeCache() {
 }
 
 // ── SDK version detection and compatibility validation ────────────────────────
+// Detection is delegated to lib/sdk-detect.js — single source of truth.
 
 const TEMPLATE_VERSION_FILE = path.resolve(__dirname, '../garmin-project-template/VERSION');
 
-const SDK_SEARCH_PATHS = [
-  process.env.GARMIN_SDK_PATH,
-  process.env.CIQ_HOME,
-  // Windows: %APPDATA%\Garmin\ConnectIQ\Sdks\
-  path.join(process.env.APPDATA || '', 'Garmin', 'ConnectIQ', 'Sdks'),
-  // macOS: ~/Library/Application Support/Garmin/ConnectIQ/Sdks/
-  path.join(process.env.HOME || '', 'Library', 'Application Support', 'Garmin', 'ConnectIQ', 'Sdks'),
-  // Linux: ~/.Garmin/ConnectIQ/Sdks/
-  path.join(process.env.HOME || '', '.Garmin', 'ConnectIQ', 'Sdks'),
-].filter(Boolean);
-
-// Device definitions in Connect IQ are stored separately from the SDK install.
-// default.jungle references this path: %APPDATA%\Garmin\ConnectIQ\Devices
-const CIQ_DEVICE_PATHS = [
-  // Windows
-  path.join(process.env.APPDATA || '', 'Garmin', 'ConnectIQ', 'Devices'),
-  // macOS
-  path.join(process.env.HOME || '', 'Library', 'Application Support', 'Garmin', 'ConnectIQ', 'Devices'),
-  // Linux
-  path.join(process.env.HOME || '', '.Garmin', 'ConnectIQ', 'Devices'),
-].filter(Boolean);
-
-/**
- * compareVersions(a, b)
- * Returns -1 if a < b, 0 if equal, 1 if a > b.
- * Handles three-part semver strings: "4.2.0", "9.1.0", "4.10.0" > "4.2.0".
- */
-function compareVersions(a, b) {
-  const pa = String(a).split('.').map(Number);
-  const pb = String(b).split('.').map(Number);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const diff = (pa[i] || 0) - (pb[i] || 0);
-    if (diff !== 0) return diff > 0 ? 1 : -1;
-  }
-  return 0;
-}
-
-/**
- * extractSdkVersion(dirName)
- * Extracts the X.Y.Z version from a connectiq-sdk directory name.
- * Handles both simple format (connectiq-sdk-9.1.0) and platform-prefixed
- * format (connectiq-sdk-win-8.2.3-2025-08-11-cac5b3b21).
- * Returns the first X.Y.Z match found, or null.
- */
-function extractSdkVersion(dirName) {
-  const m = dirName.match(/(\d+\.\d+\.\d+)/);
-  return m ? m[1] : null;
-}
+// compareVersions re-exported from sdk-detect for use by validateSdkCompatibility()
+const compareVersions = sdkCompareVersions;
 
 /**
  * detectInstalledSdk()
- * Returns { sdkVersion, sdkPath, deviceIds } on success.
+ * Thin wrapper around lib/sdk-detect.detectSdkSync().
+ * Returns { sdkVersion, sdkPath, deviceIds } to preserve the existing call shape.
  * Returns null if no SDK is found (non-fatal — standalone mode).
- *
- * SDK version: read from bin/version.txt (authoritative).
- * Device IDs: read from the Connect IQ Devices directory (separate from SDK install)
- *   OR parsed from bin/default.jungle which references device IDs inline.
  */
 function detectInstalledSdk() {
-  for (const searchPath of SDK_SEARCH_PATHS) {
-    if (!fs.existsSync(searchPath)) continue;
-
-    let entries;
-    try {
-      entries = fs.readdirSync(searchPath)
-        .filter(d => d.startsWith('connectiq-sdk-') && extractSdkVersion(d) !== null)
-        .sort((a, b) => -compareVersions(extractSdkVersion(a), extractSdkVersion(b)));
-    } catch {
-      continue;
-    }
-
-    if (entries.length === 0) continue;
-
-    const latestSdk = entries[0];
-    const sdkPath   = path.join(searchPath, latestSdk);
-    const binPath   = path.join(sdkPath, 'bin');
-
-    // Prefer bin/version.txt (authoritative) over directory-name extraction.
-    let sdkVersion = extractSdkVersion(latestSdk);
-    try {
-      const versionTxt = fs.readFileSync(path.join(binPath, 'version.txt'), 'utf8').trim();
-      if (/^\d+\.\d+\.\d+/.test(versionTxt)) sdkVersion = versionTxt.match(/^\d+\.\d+\.\d+/)[0];
-    } catch { /* fall back to directory-name extraction */ }
-
-    // Device IDs: check the Garmin Connect IQ Devices directory (shared across SDK versions).
-    let deviceIds = [];
-    for (const devBase of CIQ_DEVICE_PATHS) {
-      if (!fs.existsSync(devBase)) continue;
-      try {
-        deviceIds = fs.readdirSync(devBase)
-          .filter(d => {
-            try { return fs.statSync(path.join(devBase, d)).isDirectory(); }
-            catch { return false; }
-          });
-        if (deviceIds.length > 0) break;
-      } catch { /* try next path */ }
-    }
-
-    // Fallback: parse device IDs from bin/default.jungle if Devices dir is empty.
-    if (deviceIds.length === 0) {
-      try {
-        const jungleContent = fs.readFileSync(path.join(binPath, 'default.jungle'), 'utf8');
-        // Device IDs appear as "deviceId.sourcePath = ..." or in list form.
-        const matches = jungleContent.match(/^([a-z][a-z0-9_]+)\./gmi) || [];
-        const parsed = [...new Set(matches.map(m => m.replace('.', '')))];
-        if (parsed.length > 0) deviceIds = parsed;
-      } catch { /* leave deviceIds empty */ }
-    }
-
-    return { sdkVersion, sdkPath, deviceIds };
+  try {
+    const sdk = detectSdkSync();
+    return { sdkVersion: sdk.sdkVersion, sdkPath: sdk.sdkPath, deviceIds: sdk.deviceIds };
+  } catch (err) {
+    if (err instanceof SdkNotFoundError) return null;
+    throw err;
   }
-  return null; // SDK not installed — non-fatal for standalone mode
 }
 
 /**

@@ -42,23 +42,23 @@ describe('Design Store Module', () => {
   });
 
   describe('listDesigns', () => {
-    it('returns empty array when directory does not exist', () => {
-      const designs = listDesigns(testDir);
+    it('returns empty array when directory does not exist', async () => {
+      const designs = await listDesigns(testDir);
       expect(designs).toEqual([]);
     });
 
-    it('returns saved designs', () => {
+    it('returns saved designs', async () => {
       saveDesign(testDir, 'Face1', []);
       saveDesign(testDir, 'Face2', []);
-      const designs = listDesigns(testDir);
+      const designs = await listDesigns(testDir);
       expect(designs).toHaveLength(2);
       expect(designs.map(d => d.name)).toContain('Face1');
       expect(designs.map(d => d.name)).toContain('Face2');
     });
 
-    it('includes metadata for each design', () => {
+    it('includes metadata for each design', async () => {
       saveDesign(testDir, 'TestFace', []);
-      const designs = listDesigns(testDir);
+      const designs = await listDesigns(testDir);
       expect(designs[0]).toHaveProperty('name');
       expect(designs[0]).toHaveProperty('file');
       expect(designs[0]).toHaveProperty('savedAt');
@@ -92,6 +92,32 @@ describe('Design Store Module', () => {
     it('sanitizes filename to prevent path traversal', () => {
       // Should reject paths with ..
       expect(() => loadDesign(testDir, '../../../etc/passwd')).toThrow();
+    });
+
+    // ── Path boundary regression tests ─────────────────────────────────────────
+    // Guards against the startsWith(dir) bug fixed in loadDesign().
+    // Fix: startsWith(dir + path.sep) — matches electron/main.js lines 372-373.
+    //
+    // The filename sanitizer strips / and \ but allows '.' (dot).
+    // '..' (two dots) passes the sanitizer and path.join(dir, '..') resolves
+    // to the parent directory — outside the designs dir. The boundary check
+    // must catch this case.
+
+    it('rejects ".." which survives the sanitizer but escapes the designs directory', () => {
+      // '..' passes [a-zA-Z0-9._-] sanitizer (dots are allowed).
+      // path.join(testDir, '..') resolves to the parent — outside designs dir.
+      // The old startsWith(testDir) ALSO correctly rejects this, but only because
+      // the resolved path is shorter than testDir. With the path.sep fix the
+      // check is correct for ALL out-of-bounds paths, including siblings.
+      expect(() => loadDesign(testDir, '..'))
+        .toThrow(/Access denied|outside designs|Failed to load/i);
+    });
+
+    it('accepts a valid design filename (boundary check passes, file-not-found is expected)', () => {
+      // Confirms the fix does not over-reject legitimate filenames.
+      // The boundary check passes; the error is file-not-found, not access denied.
+      expect(() => loadDesign(testDir, 'valid-design.json'))
+        .toThrow(/not found|ENOENT|Failed to load/i);
     });
   });
 

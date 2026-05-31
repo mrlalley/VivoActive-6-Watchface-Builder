@@ -11,6 +11,7 @@ const os    = require('os');
 const { default: Store } = require('electron-store');
 const { generateKey, getDefaultKeyPath, validateKeyFile } = require('../lib/keygen');
 const { scanForLatestSdk } = require('../lib/config');
+const { detectSdk, SdkNotFoundError } = require('../lib/sdk-detect');
 const { createLogger } = require('../lib/logger');
 
 // Module-level logger — available before app.ready.
@@ -466,64 +467,20 @@ async function checkSdkCompatibility() {
     return; // Non-fatal — generate-constants pre-script would have already warned.
   }
 
-  // Re-use the same SDK detection logic as generate-constants.js by requiring
-  // it inline here. The functions are module-level in that file so we can't
-  // require() them — instead we replicate the fast path inline.
-  const sdkSearchPaths = [
-    process.env.GARMIN_SDK_PATH,
-    process.env.CIQ_HOME,
-    path.join(process.env.APPDATA || '', 'Garmin', 'ConnectIQ', 'Sdks'),
-    path.join(os.homedir(), 'Library', 'Application Support', 'Garmin', 'ConnectIQ', 'Sdks'),
-    path.join(os.homedir(), '.Garmin', 'ConnectIQ', 'Sdks'),
-  ].filter(Boolean);
-
-  const ciqDevicePaths = [
-    path.join(process.env.APPDATA || '', 'Garmin', 'ConnectIQ', 'Devices'),
-    path.join(os.homedir(), 'Library', 'Application Support', 'Garmin', 'ConnectIQ', 'Devices'),
-    path.join(os.homedir(), '.Garmin', 'ConnectIQ', 'Devices'),
-  ].filter(Boolean);
-
-  // compareVersions: -1 if a < b, 0 equal, 1 if a > b
-  function compareVersions(a, b) {
-    const pa = String(a).split('.').map(Number);
-    const pb = String(b).split('.').map(Number);
-    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-      const diff = (pa[i] || 0) - (pb[i] || 0);
-      if (diff !== 0) return diff > 0 ? 1 : -1;
+  // SDK detection delegated to lib/sdk-detect.js — single source of truth.
+  let sdk;
+  try {
+    sdk = await detectSdk();
+  } catch (err) {
+    if (err instanceof SdkNotFoundError) {
+      log.warn({ event: 'startup.sdk_not_found', searched: err.searchedPaths });
+      return; // Non-fatal — warn and continue; export/preview will surface the error.
     }
-    return 0;
+    throw err;
   }
 
-  // Detect installed SDK version
-  let sdkVersion = null;
-  for (const searchPath of sdkSearchPaths) {
-    if (!fs.existsSync(searchPath)) continue;
-    try {
-      const entries = fs.readdirSync(searchPath)
-        .filter(d => d.startsWith('connectiq-sdk-'));
-      for (const entry of entries) {
-        const versionTxt = path.join(searchPath, entry, 'bin', 'version.txt');
-        if (fs.existsSync(versionTxt)) {
-          const raw = fs.readFileSync(versionTxt, 'utf8').trim();
-          const m = raw.match(/^(\d+\.\d+\.\d+)/);
-          if (m) { sdkVersion = m[1]; break; }
-        }
-        // Fallback: extract from directory name
-        const m = entry.match(/(\d+\.\d+\.\d+)/);
-        if (m) { sdkVersion = m[1]; break; }
-      }
-    } catch { /* try next */ }
-    if (sdkVersion) break;
-  }
-
-  if (!sdkVersion) {
-    // SDK not installed — warn but don't block (standalone mode or no SDK yet).
-    log.warn({
-      event:   'startup.sdk_not_found',
-      message: 'Connect IQ SDK not found. Export and Preview will not work.',
-    });
-    return;
-  }
+  const { sdkVersion, deviceIds } = sdk;
+  const { compareVersions } = require('../lib/sdk-detect');
 
   // Hard block: SDK too old
   if (compareVersions(sdkVersion, templateMeta.minSdkVersion) < 0) {
@@ -549,17 +506,6 @@ async function checkSdkCompatibility() {
   // Device fallback warning: show once if vivoactive6 is absent
   const preferredDevice = templateMeta.targetDeviceId   || 'vivoactive6';
   const fallbackDevice  = templateMeta.fallbackDeviceId || 'venu3';
-
-  // Read device list from CIQ Devices directory
-  let deviceIds = [];
-  for (const devBase of ciqDevicePaths) {
-    if (!fs.existsSync(devBase)) continue;
-    try {
-      deviceIds = fs.readdirSync(devBase)
-        .filter(d => { try { return fs.statSync(path.join(devBase, d)).isDirectory(); } catch { return false; } });
-      if (deviceIds.length > 0) break;
-    } catch { /* try next */ }
-  }
 
   if (deviceIds.length > 0 && !deviceIds.includes(preferredDevice) && deviceIds.includes(fallbackDevice)) {
     log.warn({
