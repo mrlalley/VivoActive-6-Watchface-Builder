@@ -1,258 +1,422 @@
-<!-- 
-  CLAUDE_new.md — Garmin Vivoactive 6 Watch-Face Builder
-  Format: XML per Operating Rules of AI Agents (Doo Made, May 2026)
-  Based on: Anthropic official CLAUDE.md guidance + Operating Rules playbook
-  Converted from: CLAUDE-2.md (markdown)
-  Author: Craig Lalley
-  Version: 1.0 · May 2026
--->
+# CLAUDE.md — WatchFace Builder
 
-<user_profile>
-    <name>Craig Lalley</name>
-    <role>Systems Administrator / DevOps Engineer / Software Developer</role>
-    <location>Portland, Oregon, US</location>
-    <style>Detail-oriented, methodical, evidence-first. Prefers small reviewable steps over large rewrites. Surfaces blockers and assumptions explicitly. Does not silently change architecture.</style>
-</user_profile>
+When working on this repository, read this file before making any changes.
 
-<communication_protocol>
-    <tone>
-        Professional and direct. Prefer concrete explanations over marketing language.
-        Avoid preambles, summaries that restate the question, and fluff.
-        Surface blockers early. Never silently swallow errors.
-    </tone>
-    <language_model>
-        <feynman_technique>
-            Explain complex concepts clearly. Use plain English for descriptions.
-            CRITICAL: Simplify the words, never simplify the logic or the implementation.
-        </feynman_technique>
-    </language_model>
-    <formatting_constraints>
-        <constraint>Use bullet points and headers for scanability.</constraint>
-        <constraint>Use NEVER use emdashes. Use commas, colons, or parentheses instead.</constraint>
-        <constraint>Provide exact shell commands for Windows (PowerShell), macOS, and Linux where they differ.</constraint>
-        <constraint>Code blocks must specify the language for syntax highlighting.</constraint>
-    </formatting_constraints>
-    <answer_defaults>
-        <rule>Lead with a brief summary (2-4 sentences) of what the code or task does before listing issues.</rule>
-        <rule>Keep wording simple, but keep the reasoning sharp.</rule>
-        <rule>If a claim depends on retrieved evidence, cite the source when the interface supports citations.</rule>
-    </answer_defaults>
-</communication_protocol>
+---
 
-<cognitive_framework>
-    <primary_mode>Senior Software Engineer and Code Reviewer</primary_mode>
-    <instructions>
-        When asked to analyze, clean up, or refactor code:
-        1. SUMMARIZE: Briefly summarize what the code does in 2-4 sentences.
-        2. ISSUES: List specific issues that hurt readability or maintainability (naming problems, long functions, duplication, unclear control flow, tight coupling, weak error handling, missing documentation).
-        3. PROPOSE: Suggest concrete improvements and explain why each change helps.
-        4. REFACTOR: Provide a refactored version that preserves existing behavior unless explicitly approved for functional changes.
-        5. MIGRATE: End with a short migration notes section that calls out any non-trivial changes, risks, or follow-up checks.
-    </instructions>
-    <secondary_mode>Incremental Implementation</secondary_mode>
-    <instructions>
-        Generate work in small, reviewable steps.
-        Before major changes, explain the approach and tradeoffs.
-        Prefer maintainable, modular code over clever shortcuts.
-        Do not silently change architecture or file layout without explaining why.
-    </instructions>
-</cognitive_framework>
+## Repository purpose
 
-<response_structure>
-    <phase_1_internal>
-        Briefly assess: does this require deep analysis or a direct answer?
-        What is the actual bottleneck or blocking issue?
-        Is behavior preservation required, or are functional changes approved?
-    </phase_1_internal>
-    <phase_2_output>
-        For CODE REVIEW tasks:
-        1. SUMMARY: 2-4 sentences on what the code does.
-        2. ISSUES: Specific problems with readability, maintainability, correctness.
-        3. PROPOSED CHANGES: Concrete improvements with rationale.
-        4. REFACTORED CODE: Preserved behavior unless change was approved.
-        5. MIGRATION NOTES: Non-trivial changes, risks, follow-up checks.
+A desktop Electron app that provides a GUI for designing Garmin Vivoactive 6 watch
+faces. The user places elements on a 390x390 canvas; the app generates a Garmin
+Connect IQ Monkey C project and compiles it to a `.prg` binary via the `monkeyc`
+CLI. The app runs as either an Electron window or a standalone Express server.
 
-        For IMPLEMENTATION tasks:
-        1. DIRECT ANSWER: 1-2 sentences. Bottom line up front.
-        2. APPROACH: Explain the approach and tradeoffs before writing code.
-        3. IMPLEMENTATION: Small, reviewable steps.
-        4. VERIFICATION: Commands to verify the result (build, test, simulate).
-    </phase_2_output>
-</response_structure>
+---
 
-<execution_contract>
-    <autonomy_and_persistence>
-        Persist until the task is handled end-to-end whenever feasible.
-        Default to doing the work, not describing it.
-        Complete all phases in sequence: Phase 0 through Phase 5.
-        After each phase, pause and confirm before proceeding to the next.
-    </autonomy_and_persistence>
-    <tool_persistence_rules>
-        Use tools when they materially improve correctness.
-        Continue until: (1) the task is complete, (2) the next step requires human input,
-        or (3) a stop rule fires.
-        When monkeyc is not found on PATH, return the exact error with PATH fix instructions.
-        Never silently swallow errors.
-    </tool_persistence_rules>
-    <dependency_checks>
-        Before acting, verify prerequisites: Java JDK 11+, Garmin Connect IQ SDK,
-        monkeyc binary, developer key, device definition for vivoactive6.
-        Document the SDK install path and exact device ID used.
-        If vivoactive6 is not in the SDK device list, use the closest supported device,
-        state which device ID is used, and note when to update.
-    </dependency_checks>
-    <completeness_contract>
-        Treat the task as incomplete until every requested deliverable is handled.
-        Maintain an internal checklist. If a deliverable cannot be completed, surface
-        what remains and explain why rather than silently skipping it.
-        Deliverables checklist:
-        - Toolchain installation verified
-        - Working local web builder MVP at http://localhost:3000
-        - Canvas editor with time, date, heart rate, steps, battery fields
-        - Property panel for font, color, position, format
-        - Export pipeline generating valid Monkey C project files
-        - Automated .prg build via monkeyc CLI (with manual fallback documented)
-        - README.md with simulator, build, and deploy instructions
-        - CLAUDE.md with project configuration
-    </completeness_contract>
-    <empty_result_recovery>
-        If a build or tool invocation returns nothing useful, try 1-2 better-targeted
-        recovery steps before giving up. Return the full compiler error to the UI.
-        Never silently swallow errors.
-    </empty_result_recovery>
-    <verification_loop>
-        Before finishing any phase, check:
-        (1) CORRECTNESS: Does the code do what was requested?
-        (2) GROUNDING: Are claims based on actual SDK docs or tool output?
-        (3) COMPLETENESS: Are all deliverables for this phase done?
-        (4) FORMAT: Do manifest.xml permissions match the fields actually placed?
-        (5) RISK: What is the biggest risk in this change?
-        Pause at the right threshold. Show evidence rather than asserting success.
-    </verification_loop>
-    <missing_context_gating>
-        Do not bluff. Prefer retrieval over guessing.
-        Label reversible assumptions clearly.
-        If the Vivoactive 6 device ID is not in the installed SDK, state which device ID
-        is used and why, and note the manifest must be updated when the device is released.
-        Ask one precise question if critical context is missing.
-    </missing_context_gating>
-    <grounding_rules>
-        Base important claims on SDK documentation or tool output.
-        State conflicts between SDK versions explicitly.
-        Narrow the answer when uncertain rather than fabricating details.
-        API level: 4.2.0 minimum. Document the exact version used and why.
-    </grounding_rules>
-    <citation_rules>
-        Only cite sources retrieved in the current workflow.
-        Never fabricate citations, URLs, device IDs, or API calls.
-        Attach citations when the interface supports them.
-    </citation_rules>
-    <structured_output_contract>
-        For manifest.xml, monkey.jungle, and generated Monkey C source:
-        emit only the requested format with no extra prose wrapping inside code blocks.
-        Generate permissions dynamically from the placed field types, not as a blanket include-all.
-    </structured_output_contract>
-    <research_mode>
-        Three passes: PLAN (identify which SDK APIs are needed), RETRIEVE (check SDK docs
-        and version constraints), SYNTHESIZE (resolve conflicts, document assumptions).
-        Stop when more research will not change the implementation.
-    </research_mode>
-    <user_update_pattern>
-        During longer tasks, keep updates short and outcome-based.
-        1 sentence on what changed. 1 sentence on next step.
-        Pause and confirm after each phase before proceeding.
-    </user_update_pattern>
-</execution_contract>
+## Template versioning contract
 
-<!-- PROJECT CONTEXT -->
-<project_overview>
-    <description>
-        Build a local web-based visual design tool to design a custom watch face for the
-        Garmin Vivoactive 6 (390x390 round display), then export a valid Garmin Connect IQ
-        Monkey C project that compiles into a .prg file for installation on the watch.
-    </description>
-    <tech_stack>
-        <item>Desktop: Electron (cross-platform native window + IPC bridge to main process)</item>
-        <item>Backend: Node.js + Express (auto-detects Garmin SDK, generates Monkey C code)</item>
-        <item>Frontend: Vanilla JavaScript (canvas editor, property panel, element palette)</item>
-        <item>Code generation: Monkey C watch face via Garmin Connect IQ to .prg binary</item>
-        <item>SDK: Garmin Connect IQ 9.1.0+ (minApiLevel 4.2.0 for Vivoactive 6)</item>
-    </tech_stack>
-    <key_commands>
-        <command name="start">npm start — Launch the desktop app (Electron)</command>
-        <command name="server">npm run server — Run just the Node.js backend server</command>
-        <command name="test">npm test — Run test suite</command>
-    </key_commands>
-</project_overview>
+`garmin-project-template/VERSION` is the single source of truth for template-to-SDK compatibility. It must be updated every time the template is modified for a new SDK version.
 
-<!-- CODING STANDARDS -->
-<code_style>
-    <refactor_rules>
-        <rule>Preserve behavior unless explicitly asked for feature changes.</rule>
-        <rule>Prefer small, reviewable edits over large rewrites.</rule>
-        <rule>Use clear, consistent names.</rule>
-        <rule>Break large functions into smaller focused helpers when it improves clarity.</rule>
-        <rule>Keep modules loosely coupled and independently editable.</rule>
-        <rule>Add or improve docstrings only where they clarify non-obvious logic.</rule>
-        <rule>Remove misleading, stale, or redundant comments.</rule>
-        <rule>Follow idiomatic style for the language and framework in use.</rule>
-        <rule>If a full rewrite is not justified, do the minimum refactor that materially improves readability.</rule>
-    </refactor_rules>
-    <documentation_rules>
-        <rule>Document public functions, exported modules, important classes, and non-obvious data structures.</rule>
-        <rule>Explain WHY something exists or why logic is tricky. Do not comment obvious line-by-line behavior.</rule>
-        <rule>Include assumptions, constraints, side effects, and error cases where relevant.</rule>
-        <rule>For project files, keep README-level guidance high level. Keep implementation details close to the code.</rule>
-    </documentation_rules>
-    <large_file_rules>
-        <rule>Prioritize core logic, public interfaces, error handling, and files currently being edited.</rule>
-        <rule>State clearly what was not refactored and why.</rule>
-        <rule>No module should be longer than ~300 lines.</rule>
-    </large_file_rules>
-</code_style>
+### VERSION fields
 
-<!-- GARMIN SDK CONSTRAINTS -->
-<sdk_constraints>
-    <constraint>Do not assume drag-and-drop output maps directly to Garmin layouts. All rendering is done via Monkey C dc.draw* calls in onUpdate(), generated from the canvas element state.</constraint>
-    <constraint>Be explicit about API level and device support. If vivoactive6 is not in the installed SDK, use the closest supported device (e.g., Venu 3 or similar 390x390 round device), state which device ID is used, and note that the manifest should be updated when the Vivoactive 6 definition is released.</constraint>
-    <constraint>Permissions in manifest.xml must match what the code uses. Generate the permissions list dynamically from the placed field types, not as a blanket include-all.</constraint>
-    <constraint>Monkey C uses 0xRRGGBB integer color literals, not hex strings.</constraint>
-    <constraint>dc.drawText() origin is top-left of the text bounding box by default. Use Gfx.TEXT_JUSTIFY_CENTER for centered elements.</constraint>
-    <constraint>All sensor data access (heart rate, steps) must use Toybox API calls inside onUpdate(). Never cache sensor handles across lifecycle events.</constraint>
-    <constraint>Safe area: fields must not extend beyond a 370x370 inner circle (10px inset from edge of 390px display).</constraint>
-    <constraint>Mark future-expansion items with // TODO: extend comments.</constraint>
-    <constraint>If the monkeyc build fails, show the full compiler error in the UI. Never silently swallow errors.</constraint>
-</sdk_constraints>
+| Field | Description | Must match |
+|---|---|---|
+| `templateVersion` | Semver for the template itself | — |
+| `minSdkVersion` | Minimum Connect IQ SDK required to compile | `bin/version.txt` in installed SDK |
+| `minApiLevel` | API level targeted by the template | `minSdkVersion` attribute in `manifest.xml` |
+| `targetDeviceId` | Preferred build target | `<iq:product id="..."/>` in `manifest.xml` |
+| `fallbackDeviceId` | Used if targetDeviceId absent from SDK | Documented in `notes` field |
 
-<!-- STOP RULES — per Operating Rules of AI Agents, Chapter 04 -->
-<stop_rules>
-    <!-- For coding tasks -->
-    <rule>Stop after fixing the requested issue. Do not refactor unrelated code.</rule>
-    <rule>Stop after running tests once. Do not re-run unless they failed.</rule>
-    <rule>Do not read tests, config files, or node_modules unless the task requires it.</rule>
-    <rule>Stop after 3 files reviewed in a code review task unless asked for more.</rule>
-    <!-- For phase-based implementation -->
-    <rule>Stop after completing each phase. Pause and confirm before proceeding to the next phase.</rule>
-    <rule>Stop if the same tool is called 3 times with no progress. Surface what is blocked.</rule>
-    <rule>Stop if reading files outside the original scope unless scope expansion was explicitly approved.</rule>
-    <!-- For research -->
-    <rule>Stop after 5 sources unless the topic is genuinely controversial.</rule>
-    <rule>Stop when there is enough evidence to answer, not when there is "more" evidence.</rule>
-    <!-- For document review -->
-    <rule>Stop after 3 issues identified. Rank them by severity.</rule>
-    <rule>Do not suggest rewrites unless asked.</rule>
-</stop_rules>
+`minApiLevel` in VERSION and `minSdkVersion` in `manifest.xml` are the same value (4.2.0). **They must never diverge.** Update both files together.
 
-<core_philosophy>
-    <!-- Swap mantras for your own if they do not match -->
-    <mantras>
-        - Proof over promises. Speed over perfection. Iteration over inspiration.
-        - MVP first: get it working before getting it perfect.
-        - Error handling is not optional. Surface failures explicitly.
-        - Keep modules independently editable.
-    </mantras>
-    <goal>
-        Prioritize correctness, maintainability, and actionable output.
-        Turn complexity into working, deployable software one reviewable step at a time.
-    </goal>
-</core_philosophy>
+### SDK compatibility check
+
+`scripts/generate-constants.js` runs on every `npm start`, `npm run server`, and `npm run build`. It detects the installed SDK version and checks it against `minSdkVersion` in VERSION:
+- SDK absent: warning to stderr, script continues (non-fatal for standalone testing)
+- SDK too old: warning logged; `electron/main.js` shows `dialog.showErrorBox()` and quits
+- `vivoactive6` absent from device list: `fallbackDeviceId` (venu3) used; one-time warning dialog shown
+
+### Update protocol when bumping SDK support
+
+1. Update `minSdkVersion` in `garmin-project-template/manifest.xml`
+2. Update all four version fields in `garmin-project-template/VERSION`
+3. Run `npm run generate-constants:force`
+4. Run `npm test` to confirm no regressions
+5. Bump `package.json` minor version (minor bump for API level changes, patch for template content changes)
+
+### Device detection paths
+
+`generate-constants.js` detects device IDs from:
+1. `%APPDATA%\Garmin\ConnectIQ\Devices` (Windows) / `~/Library/.../Garmin/ConnectIQ/Devices` (macOS) — authoritative
+2. `bin/default.jungle` in the SDK install — fallback if Devices directory is empty
+
+---
+
+## generate-constants cache
+
+`scripts/generate-constants.js` generates `builder/constants.js` from `src/constants/device.js`. It runs automatically via `prestart`, `preserver`, and `prebuild` hooks. A SHA-256 cache guard skips regeneration when inputs haven't changed.
+
+### Cache inputs (all must be unchanged for a cache hit)
+
+| Input | Why |
+|---|---|
+| `src/constants/device.js` | Device dimensions, API levels, DEVICE_ID |
+| `scripts/generate-constants.js` | Static grid and timing constants live in the script itself |
+
+No environment variables affect the output.
+
+### Cache file
+
+`builder/constants.js.cache.json` — written alongside the output. Never committed (`.gitignore`) and excluded from installer builds (`!**/*.cache.json` in `electron-builder` files array).
+
+### Force regeneration
+
+Use when the SDK path changes, after `git clean`, or in CI:
+
+```sh
+# Via npm script (cross-platform):
+npm run generate-constants:force
+
+# Via env var (macOS / Linux):
+GENERATE_FORCE=1 npm run generate-constants
+
+# Via env var (Windows PowerShell):
+$env:GENERATE_FORCE = '1'; npm run generate-constants
+
+# Via CLI flag:
+node scripts/generate-constants.js --force
+```
+
+**CI note:** Run `npm run generate-constants:force` on first install to ensure a clean output regardless of any cached artifacts restored from CI cache.
+
+### What not to do
+
+- Do not edit `builder/constants.js` directly — it is a generated file and will be overwritten.
+- Do not delete `builder/constants.js.cache.json` manually unless you intend to force a full regeneration.
+- Do not add the cache file to git — it is machine-specific.
+
+---
+
+## Runtime prerequisites
+
+### Node.js and npm (enforced)
+
+The `engines` field in `package.json` and `engine-strict=true` in `.npmrc` together enforce:
+
+| Runtime | Minimum | Why |
+|---|---|---|
+| Node.js | `>=22.12.0` | Electron 42.x's own `engines.node` requirement |
+| npm | `>=10.0.0` | lockfile v3 compatibility with electron-builder 26.x |
+
+Running `npm install` on an incompatible Node version produces:
+```
+npm error code EBADENGINE
+npm error Unsupported engine
+```
+and aborts — the install does not silently complete.
+
+**To fix:** install the correct Node version:
+```sh
+# nvm (reads .nvmrc automatically):
+nvm install && nvm use
+
+# Or download from nodejs.org — get Node 22 LTS or later
+```
+
+Verify your environment before starting:
+```sh
+node --version   # must be >= 22.12.0
+npm --version    # must be >= 10.0.0
+```
+
+**Do not remove or lower the `engines` floor** without first checking the `engines.node` field of the Electron version in `devDependencies`. The floor must match or exceed Electron's own requirement.
+
+### Other required tools
+
+- **Java JDK 17 minimum** (required by Connect IQ SDK 9.x). JDK 11 is EOL and will cause cryptic SDK launch failures.
+  - Verify: `java -version` (must show version 17 or higher)
+  - Install: [adoptium.net/temurin/releases/?version=17](https://adoptium.net/temurin/releases/?version=17)
+  - `scripts/generate-constants.js` asserts JDK ≥17 on every `npm start`, `npm run server`, and `npm run build`. Set `SKIP_JAVA_CHECK=1` to bypass (CI pipelines that don't invoke monkeyc):
+    ```sh
+    # macOS / Linux
+    SKIP_JAVA_CHECK=1 npm start
+    # Windows PowerShell
+    $env:SKIP_JAVA_CHECK = "1"; npm start
+    ```
+- **Garmin Connect IQ SDK 8.0.0 or later** — download from [developer.garmin.com](https://developer.garmin.com/connect-iq/sdk/)
+- **Developer key** (`.der` file) for watch face signing — generate via Settings → Generate New Key in the app, or: `node -e "const k=require('./lib/keygen'); k.generateKey(k.getDefaultKeyPath())"`
+
+---
+
+## Critical setup facts
+
+These are non-obvious sequencing requirements you must understand before suggesting
+changes to the startup or build pipeline:
+
+- `npm run generate-constants` must run before `npm start`. The `prestart` hook does
+  this automatically, but the generated files in `src/constants/` must exist before
+  `lib/build.js` or `lib/preview.js` can be imported.
+- The app requires a Garmin Connect IQ developer key (`.der` file) to sign `.prg`
+  files. Without it, export and preview return a clear error but the app still opens.
+- SDK path and developer key path are resolved by `lib/config.js` using a four-level
+  fallback: explicit override parameter, environment variable, auto-detector function,
+  platform default. The Electron main process passes resolved paths through a `cfg`
+  object to the Express server.
+- In packaged builds (`npm run build`), `__dirname` inside the ASAR archive is not
+  writable. Design saves and exports must use paths from `app.getPath()`, not
+  `path.join(__dirname, ...)`.
+
+---
+
+## Observability contract
+
+All server and main-process logging must use pino via `lib/logger.js`. Never use `console.log`, `console.error`, or `console.warn` in `server.js`, `electron/main.js`, or any `lib/*.js` file.
+
+### createLogger API
+
+```js
+const { createLogger } = require('./lib/logger');
+const log = createLogger('my-module'); // binds { module: 'my-module' } to every entry
+
+log.info({ event: 'operation.start', key: value });
+log.error({ event: 'operation.failure', message: err.message });
+```
+
+### Log levels
+
+| Level | When to use |
+|---|---|
+| `fatal` | Process cannot continue, about to exit |
+| `error` | Operation failed, request aborted |
+| `warn` | Recoverable issue, degraded behavior |
+| `info` | Normal operation milestones (server start, request complete) |
+| `debug` | Internal detail (file paths, argv, durations) |
+| `trace` | High-frequency events (poll cycles, IPC payloads) |
+
+### Required fields
+
+Every log entry automatically includes: `timestamp`, `level`, `pid`, `module`.  
+Request-scoped entries must also include `requestId`.  
+monkeyc entries must also include `component: 'monkeyc'`.
+
+### monkeyc tracing (required)
+
+```js
+// lib/build.js — wrap every spawn with this pattern
+monkeycLog.info({ event: 'monkeyc.start',   argv });
+monkeycLog.info({ event: 'monkeyc.success', exitCode: 0, durationMs });
+monkeycLog.error({ event: 'monkeyc.failure', exitCode, durationMs, stderr });
+monkeycLog.fatal({ event: 'monkeyc.spawn_error', code: err.code, message: err.message });
+```
+
+### Redaction (non-negotiable)
+
+Never log: `WFB_SESSION_TOKEN`, `x-wfb-token` header value, passwords, or raw file content.  
+Pino's `redact` option in `lib/logger.js` covers `*.token`, `*.password`, and `req.headers["x-wfb-token"]`.
+
+### Log file locations
+
+In Electron mode, logs are written to:
+
+| Platform | Path |
+|---|---|
+| Windows | `%APPDATA%\WatchFace Builder\logs\wfb-YYYY-MM-DD.log` |
+| macOS | `~/Library/Logs/WatchFace Builder/wfb-YYYY-MM-DD.log` |
+| Linux | `~/.config/WatchFace Builder/logs/wfb-YYYY-MM-DD.log` |
+
+In standalone mode (`npm run server`), logs go to stdout only.  
+`WFB_LOG_LEVEL` env var overrides the default log level (`info` in production, `debug` in dev).
+
+---
+
+## Content Security Policy
+
+The CSP is enforced at two independent layers that must be kept in sync:
+
+| Layer | Location | Scope |
+|---|---|---|
+| **HTTP header (enforcement)** | `server.js` CSP middleware | Every Express response; includes per-request nonce for `script-src` |
+| **Meta tag (declarative fallback)** | `builder/index.html` `<head>` first element | Backup when served outside Express (browser, file://) |
+| **Session handler (Electron guard)** | `electron/main.js` `session.defaultSession.webRequest.onHeadersReceived` | Fallback CSP for responses lacking the server header |
+
+### Current policy
+
+```
+default-src 'none';
+script-src  'self'  [meta tag] / 'self' 'strict-dynamic' 'nonce-xxx'  [server header];
+# Note: 'strict-dynamic' ignores 'self', so the meta tag must NOT use 'strict-dynamic'
+# or it would block all scripts (no nonce available at template time).
+style-src   'self';
+img-src     'self' data:;
+font-src    'self';
+connect-src 'self'  [meta tag] / http://127.0.0.1:PORT [session handler];
+worker-src  'none';
+frame-src   'none';
+object-src  'none';
+base-uri    'self';
+form-action 'self';
+frame-ancestors 'none';
+```
+
+### Rules for adding new origins
+
+Every new external resource (CDN script, font host, image host) requires:
+1. An explicit directive in **both** `server.js` CSP middleware AND `builder/index.html` meta tag.
+2. A comment in this section explaining exactly what the origin serves and why it is needed.
+3. A matching entry in the Electron session handler's `STATIC_CSP` constant.
+
+Do not use `'unsafe-inline'` or `'unsafe-eval'` without explicit approval and a documented remediation path below.
+
+### CSP violation logging
+
+Chromium reports blocked resources as console errors in the renderer. `electron/main.js` captures these via the `console-message` event handler and logs them at `warn` level using pino (`event: 'csp.violation'`). Navigation blocked events are logged as `navigation.blocked`. Check `app.getPath('logs')` for these entries when debugging blocked resources.
+
+### Session handler design
+
+The session `onHeadersReceived` handler PRESERVES the server's nonce-bearing CSP header for all Express responses. It only injects a static fallback CSP when no server header is present. **Do not change this to replace the server's CSP** — doing so would break the per-request nonce mechanism in `script-src`.
+
+---
+
+## Electron security posture (non-negotiable)
+
+`electron/main.js` creates `BrowserWindow` with:
+```js
+webPreferences: {
+  contextIsolation: true,   // isolates renderer from Node.js context
+  nodeIntegration: false,   // no Node.js APIs in renderer
+  sandbox: true,            // OS-level process sandbox
+  preload: path.join(__dirname, 'preload.js'),
+}
+```
+
+`electron/preload.js` is the **only** bridge between renderer and Node.js:
+- Uses `contextBridge.exposeInMainWorld('electronAPI', { ... })` with named methods only.
+- Every named method maps to exactly one channel in `VALID_INVOKE_CHANNELS` or `VALID_RECEIVE_CHANNELS`.
+- Does not expose `require`, `process` (only reads `process.platform` as a static string), `__dirname`, or `Buffer`.
+- All renderer IPC goes through `window.electronAPI.*` — never `require('electron')` directly.
+
+**Security constraints — these rules are non-negotiable for all future changes:**
+
+- Never set `nodeIntegration: true` in any `BrowserWindow`.
+- Never set `contextIsolation: false` in any `BrowserWindow`.
+- Never call `require()` or access `process` from renderer-side code (`builder/`).
+- All new IPC channels must be added to `VALID_INVOKE_CHANNELS` or `VALID_RECEIVE_CHANNELS` in `electron/preload.js` AND documented in `docs/architecture.md` IPC Contract table before use.
+- Every `ipcMain.handle()` must validate its payload before processing.
+- After any change to `main.js` or `preload.js`, run `npm start`, open DevTools, and verify: `window.require === undefined`, `window.process === undefined`, `window.electronAPI` is an object.
+
+---
+
+## Architecture map
+
+| File | Responsibility |
+|---|---|
+| `electron/main.js` | Electron entry point. Creates `BrowserWindow` (hardened — see security posture above), spawns Express as child process, handles IPC, persists config in `electron-store`. |
+| `server.js` | Express HTTP layer. Defines all routes with rate limiters. Reads `index.html` once at startup into `indexTemplate`; injects CSP nonce per request. |
+| `lib/build.js` | Orchestrates Monkey C compilation: validates input, generates project files, spawns `monkeyc`, handles timeout and SIGTERM. |
+| `lib/preview.js` | Manages simulator lifecycle: checks if running, launches if needed, copies `.prg` to request-scoped temp dir, spawns `monkeydo`. |
+| `lib/config.js` | Resolves all paths (SDK bin, developer key, export dir, temp dir, designs dir) with multi-level fallback. Returns the `cfg` object consumed by `server.js`. |
+| `lib/design-store.js` | Saves, lists, and loads design JSON files. `saveDesign` is synchronous with atomic write-then-rename. `listDesigns` is async (`Promise.all` over `fs.promises.readFile`). |
+| `lib/logger.js` | Structured JSON logger. Redacts sensitive fields (paths, keys) before emitting. Early-returns silently when `NODE_ENV === 'test'` unless `LOG_VERBOSE` is set. |
+| `lib/keygen.js` | Generates RSA-4096 developer keys in PKCS#8 DER format. CPU-intensive (1-5 s). |
+
+---
+
+## Known patterns
+
+### Rate limiters
+
+Three instances are defined in `server.js`. Apply them by cost profile:
+
+| Limiter | Cap | Use for |
+|---|---|---|
+| `healthLimiter` | 30 req/60s | Trivial in-memory or fast `existsSync` routes (`GET /api/health`) |
+| `loadDesignLimiter` | 30 req/60s | Filesystem reads: `GET /`, `GET /api/designs`, `GET /api/designs/:filename`, `GET /api/designs/check/:name` |
+| `buildLimiter` | 10 req/60s | CPU/disk-heavy: `POST /api/export`, `POST /api/preview`, `POST /api/save-design`, `POST /api/generate-key`, `GET /api/export/check/:name` |
+
+Do not create new limiter instances. When in doubt between `loadDesignLimiter` and
+`buildLimiter`, use `buildLimiter`.
+
+### The `cfg` object
+
+Built by `lib/config.js:getConfig()` and passed from `electron/main.js` to
+`createServer()`. Shape:
+
+```js
+{
+  sdkBin, monkeyc, monkeydo, simExe,  // resolved binary paths
+  devKey, exportDir, tempDir, designsDir,
+  sdkFound,   // boolean — monkeyc and monkeydo both exist
+  keyFound,   // boolean — devKey exists
+}
+```
+
+Do not store quoted paths (e.g., `"\"C:\\path\""`) in this object. Quote only at the
+`spawn()` call site when `shell: true` is active on Windows.
+
+### Mocking `child_process.spawn` in tests
+
+`lib/build.js` and `lib/preview.js` destructure `spawn` at module load time. Use
+`jest.mock('child_process')` at the file's top level so Jest hoists it before any
+`require`. Then mutate the shared mock per test:
+
+```js
+jest.mock('child_process');
+const childProcess = require('child_process');
+
+const mockChild = new EventEmitter();
+mockChild.stdout = new EventEmitter();
+mockChild.stderr = new EventEmitter();
+mockChild.kill = jest.fn(() => mockChild.emit('close', null, 'SIGTERM'));
+childProcess.spawn.mockReturnValue(mockChild);
+```
+
+`jest.spyOn(childProcess, 'spawn')` will NOT intercept build.js's captured reference;
+always use `childProcess.spawn.mockReturnValue()` directly.
+
+---
+
+## Server security contract (non-negotiable)
+
+- **`server.js` MUST bind to `127.0.0.1` only. Never `0.0.0.0`.** Changing the bind address exposes all API endpoints to the local network.
+- **Every `/api/` route MUST apply `requireSessionToken` middleware.** The only exceptions are `GET /health` (liveness probe, called before the renderer loads) and `GET /api/health` (SDK status, called by the Electron main process which sends the token itself). Page routes (`GET /`, static files) do not require a token.
+- **Every route MUST apply a rate limiter** (`buildLimiter` or `loadDesignLimiter`). Do not add routes without one.
+- **The session token is generated in `electron/main.js` via `crypto.randomBytes(32)` at app startup.** It is never hardcoded, never written to disk, and never logged.
+- **Token comparison MUST use `crypto.timingSafeEqual()`.** Never use `===`. Timing-safe comparison prevents oracle attacks.
+- **The token is held in the `preload.js` closure.** It is never exposed as a readable property on `window`. `apiFetch()` attaches it automatically — renderer code never touches it directly.
+- **In standalone mode (`npm run server`), `WFB_SESSION_TOKEN` must be set before starting:**
+
+  ```powershell
+  # Windows PowerShell
+  $env:WFB_SESSION_TOKEN = node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))"
+  npm run server
+  ```
+
+  ```sh
+  # macOS / Linux
+  WFB_SESSION_TOKEN=$(node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex'))") npm run server
+  ```
+
+  The server exits with code 1 if started standalone without the token.
+
+- **All renderer API calls MUST go through `window.electronAPI.apiFetch()`**, not bare `fetch()`. The only exception is `fetch('/api/health')` in the web-mode fallback (guarded by `!window.electronAPI`) — that endpoint is token-exempt.
+
+---
+
+## What not to do
+
+- **Do not enable `nodeIntegration` or disable `contextIsolation`.** These are the primary Electron attack vectors. The security posture above is enforced unconditionally.
+- **Do not add IPC channels without updating `VALID_INVOKE_CHANNELS` / `VALID_RECEIVE_CHANNELS` in `preload.js` and the `docs/architecture.md` IPC table.** An undocumented channel is an unaudited channel.
+- **Do not use `ipcMain.on()` with `event.returnValue`.** Synchronous IPC blocks the main process. Always use `ipcMain.handle()` + `ipcRenderer.invoke()`.
+- **Do not store quoted paths in `cfg`.** Quote only at the `spawn()` call site:
+  `process.platform === 'win32' ? \`"${cfg.monkeyc}"\` : cfg.monkeyc`.
+- **Do not add `'unsafe-hashes'` to the CSP.** The `style-src` directive is
+  `'self'` only. Inline styles belong in `builder/style.css`, not in HTML attributes.
+- **Do not call `fs.readFileSync` inside route handlers.** The `index.html` template
+  is read once at startup into `indexTemplate`; route handlers inject the per-request
+  nonce into that cached string.
+- **Do not apply `jest.useFakeTimers()` globally.** It blocks Promise microtask
+  resolution and breaks async tests. Apply it only inside the specific test that needs
+  it and restore with `jest.useRealTimers()` before the test exits.
+- **Do not use `path.join(__dirname, 'designs')` in `server.js`.** The designs
+  directory is `cfg.designsDir`, resolved by `lib/config.js` from the caller-supplied
+  override or `os.homedir()` fallback — never from `__dirname`.

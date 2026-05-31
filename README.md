@@ -1,215 +1,113 @@
-# Garmin Vivoactive 6 Watch Face Builder
+# WatchFace Builder
 
-A local web-based visual design tool for creating Garmin Vivoactive 6 watch faces, with one-click export to a valid Connect IQ Monkey C project.
-
-> **Contributing?** See [DEVELOPER.md](DEVELOPER.md) for architecture, testing, and how to add new features.
-
----
-
-## Quick start
-
-### Web server (development / testing)
-```powershell
-npm install
-npm start
-# App runs at http://127.0.0.1:<random-port> in Express mode
-```
-
-### Electron app (desktop / packaged)
-```powershell
-npm install
-npm run dev
-# Electron window opens with embedded Express server
-```
+A desktop GUI for designing custom Garmin Vivoactive 6 watch faces. You place elements
+on a 390x390 canvas, configure their properties, and the app generates a Garmin Connect
+IQ Monkey C project that compiles to a `.prg` binary installable on the watch. The app
+runs as an Electron desktop window or as a standalone Express server in a browser.
 
 ---
 
-## Setup: Configure the Garmin SDK
+## Prerequisites
 
-The builder needs to know where your Garmin Connect IQ SDK and developer key are located. Configuration is loaded in this priority order:
+| Requirement | Version |
+|---|---|
+| Node.js | 22.x |
+| Garmin Connect IQ SDK | 9.x — [developer.garmin.com/connect-iq/sdk](https://developer.garmin.com/connect-iq/sdk/) |
 
-1. **Environment variables** (from `.env` file or shell environment)
-2. **Auto-detection** from standard installation paths
-3. **Platform defaults** (Windows, macOS, Linux)
+The app runs on Windows, macOS, and Linux. The packaged installer (`npm run build`)
+targets Windows only; all other platforms run from source.
 
-### Configure with .env (recommended for custom paths)
+---
 
-If your SDK or developer key is in a non-standard location, copy `.env.example` to `.env` and fill in the paths:
+## First-time setup
 
-```powershell
-# Windows PowerShell
-Copy-Item .env.example .env
-notepad .env
-# Edit and save with your actual paths
+```sh
+# 1. Clone and install
+git clone <repo-url>
+cd watchface-builder
+npm ci
 
-# Or on macOS/Linux
+# 2. Configure environment variables
 cp .env.example .env
-nano .env
+# Edit .env — GARMIN_SDK_BIN and GARMIN_DEV_KEY auto-detect from standard
+# install locations; set them explicitly only if auto-detection fails.
+# See .env.example for all options and platform-specific path examples.
+
+# 3. Generate SDK-derived constants (required before first start)
+npm run generate-constants
+
+# 4. Generate a developer key (one-time, required for build/preview)
+# Option A — via the running app: Settings → Generate New Key
+# Option B — via CLI (writes to ~/.garmin/developer_key.der):
+#   node -e "const k=require('./lib/keygen'); k.generateKey(k.getDefaultKeyPath())"
+
+# 5. Launch
+npm start
 ```
 
-### Environment variables
-
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `GARMIN_SDK_BIN` | Path to SDK `/bin` directory | `C:\Users\you\…\connectiq-sdk-9.1.0-…\bin` |
-| `GARMIN_DEV_KEY` | Path to developer key `.der` file | `C:\Users\you\.garmin\developer_key.der` |
-| `GARMIN_EXPORT_DIR` | Where to write exported projects | `C:\MyProjects\exports` |
-| `GARMIN_TEMP_DIR` | Temp directory for build artifacts | (uses system temp by default) |
-
-Leave these blank (or omit `.env`) to use auto-detection and platform defaults.
-
-### Health check
-
-On startup, the app checks if the SDK and developer key exist. If either is missing, a warning banner appears:
-
-- **"SDK not found"** → Install from https://developer.garmin.com/connect-iq/sdk/
-- **"Developer key not found"** → Generate in Settings → Generate New Key
-
-The app still launches; export/preview will fail with a clear error if dependencies are missing.
+`npm start` runs `generate-constants` automatically via `prestart`, so step 3 is only
+strictly necessary if you need the constants before the first launch. If either the SDK
+or developer key is missing, a warning banner appears but the app still opens.
 
 ---
 
-## Environment
+## Available scripts
 
-| Component | Version / Path |
-|-----------|---------------|
-| Java JDK | 21.0.11 (`C:\Program Files\Common Files\Oracle\Java\javapath\java.exe`) |
-| Connect IQ SDK | 9.1.0 (`%APPDATA%\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-9.1.0-…\`) |
-| monkeyc | `…\bin\monkeyc.bat` |
-| Developer key | `C:\Users\mr_la\.garmin\developer_key.der` |
-| Device definition | `vivoactive6` (native in SDK 9.1.0) |
-| Node.js | v26.2.0 |
+| Script | What it does |
+|---|---|
+| `npm start` | Launch the Electron desktop app. Runs `generate-constants` first via `prestart`. |
+| `npm run dev` | Identical to `npm start`. |
+| `npm run server` | Run the Express backend in standalone mode (no Electron window). |
+| `npm run generate-constants` | Regenerate `src/constants/` from SDK definitions. |
+| `npm test` | Run the Jest test suite once. |
+| `npm run test:watch` | Run tests in watch mode. |
+| `npm run test:coverage` | Run tests and emit a coverage report. |
+| `npm run build` | Build a Windows installer via electron-builder. |
+| `npm run dist` | Alias for `npm run build`. |
+| `npm run package` | Package the app into a directory without an installer. |
+| `npm run make` | Alias for `npm run build`. |
 
-### Add monkeyc to PATH (one-time)
+---
 
-```powershell
-$sdkBin = "C:\Users\mr_la\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-9.1.0-2026-03-09-6a872a80b\bin"
-$cur = [Environment]::GetEnvironmentVariable("PATH","User")
-[Environment]::SetEnvironmentVariable("PATH","$cur;$sdkBin","User")
-# Restart terminal, then: monkeyc --version
+## Architecture overview
+
+The app has three layers communicating through well-defined boundaries.
+
+**Electron main process** (`electron/main.js`): Creates the `BrowserWindow`, persists
+SDK and developer key paths in `electron-store`, starts the Express server on a random
+localhost port, and bridges the renderer to the OS via IPC (file dialogs, key
+generation, health polling). On macOS it keeps the app running after the window is
+closed.
+
+**Express server** (`server.js` + `lib/`): Shared between Electron mode and standalone
+`npm run server`. Rate-limited routes handle build, preview, design save/load, and
+health checks. Business logic lives in focused modules: `lib/build.js` (Monkey C
+compilation via `monkeyc` spawn), `lib/preview.js` (simulator lifecycle), `lib/config.js`
+(SDK path resolution with multi-level fallback), `lib/design-store.js` (design JSON
+persistence), and `lib/keygen.js` (RSA-4096 developer key generation).
+
+**Builder UI** (`builder/`): Vanilla JavaScript SPA served by Express. Communicates
+with the backend exclusively over HTTP. All watch face rendering on-device is done via
+Monkey C `dc.draw*` calls generated from the canvas element state at export time.
+
+---
+
+## Running tests
+
+```sh
+npm test
 ```
 
----
-
-## Using the builder
-
-1. **Add elements** — click an element in the left palette, or press **＋ Add Element** in the toolbar.
-2. **Position** — drag elements on the canvas. The dashed red circle marks the safe area (370 px inner circle); elements near the edge turn red.
-3. **Properties** — click an element to select it, then edit position, size, font, color, and alignment in the right panel.
-4. **Layers** — use **▲ Forward / ▼ Back** in the toolbar or the Z-index field in Properties.
-5. **Undo / Redo** — toolbar buttons or `Ctrl+Z` / `Ctrl+Y` (10-step history).
-6. **Export** — click **⚙ Export .prg**. The server generates the Monkey C project at `exported-garmin-project/` and runs `monkeyc` to build `WatchFace.prg`.
+The suite covers: build orchestration and spawn mocking, concurrency and queue
+serialization, design persistence, config path resolution, rate limiting, key
+generation, logger redaction, and Monkey C code generation (manifest, permissions,
+naming, validation). Tests run under Jest with `NODE_ENV=test`; logger output is
+suppressed automatically during test runs.
 
 ---
 
-## Simulator testing
+## Environment variables
 
-1. Open `exported-garmin-project/` in VS Code.
-2. Press **F5** (Run Without Debugging).
-3. Select **vivoactive6** from the device dropdown.
-4. The Connect IQ Simulator launches and renders your watch face.
-5. Use the simulator's **Data** menu to inject test values (heart rate, steps, etc.).
-
----
-
-## Building the .prg
-
-### Via VS Code (recommended)
-`Command Palette` → `Monkey C: Build for Device` → `vivoactive6` → choose output directory.
-
-### Via CLI
-```powershell
-$sdk = "C:\Users\mr_la\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-9.1.0-2026-03-09-6a872a80b\bin\monkeyc.bat"
-& $sdk `
-  -o ".\exported-garmin-project\bin\WatchFace.prg" `
-  -f ".\exported-garmin-project\monkey.jungle" `
-  -y "C:\Users\mr_la\.garmin\developer_key.der" `
-  -d vivoactive6 `
-  --warn
-```
-
----
-
-## Deploying to the watch
-
-1. Connect the Vivoactive 6 via USB.
-2. It mounts as a removable drive.
-3. Copy `exported-garmin-project\bin\WatchFace.prg` into `GARMIN\APPS\` on the drive.
-4. Safely eject the watch.
-5. On the watch: **Settings → Watch Faces** → select your new face.
-
----
-
-## Project structure
-
-```
-WatchFace Builder/
-├── server.js               Express backend — file generation + monkeyc build
-├── package.json
-├── builder/                Frontend (served at http://localhost:3000)
-│   ├── index.html
-│   ├── style.css
-│   ├── app.js              Main orchestrator
-│   └── modules/
-│       ├── canvas.js       390×390 round canvas editor
-│       ├── elements.js     Element data model + undo/redo history
-│       ├── properties.js   Right-panel property editor
-│       ├── export.js       POST to /api/export
-│       └── data-fields.js  Field definitions (extend by appending objects)
-├── garmin-project-template/ Reference template files
-└── exported-garmin-project/ Generated on export (git-ignored)
-```
-
----
-
-## Packaging and distribution
-
-### Build the packaged app
-```powershell
-npm run package
-# Output: out/WatchFace Builder-win32-x64/
-```
-
-### Create the installer
-```powershell
-npm run make
-# Output: out/make/squirrel.windows/x64/WatchFaceBuilder Setup.exe
-```
-
-### Install and run
-1. Run `WatchFaceBuilder Setup.exe` on any Windows machine (no dependencies required).
-2. On first launch, **Settings** overlay appears — configure SDK path and developer key.
-3. Design watch faces, export, and preview in the simulator.
-4. Exports saved to `Documents/WatchFaceBuilder/exported/` (user-writable location).
-
-### Troubleshooting
-- **"SmartScreen blocked it"** — installer is unsigned. Click "More info → Run anyway."
-- **First run shows Settings overlay** — normal behavior. Fill in SDK paths once, then relaunch is automatic.
-- **Export folder location** — in packaged app, changes to `Documents/WatchFaceBuilder/exported/` instead of project root (for write permissions).
-
----
-
-## Extending the field list
-
-Add an entry to `builder/modules/data-fields.js`:
-
-```javascript
-{ id: 'myField', label: 'My Field', icon: '⭐',
-  apiCall: 'Activity.getActivityInfo().myField',
-  defaultFont: 'FONT_MEDIUM', defaultColor: '#FFFFFF', preview: '42' }
-```
-
-Then add the corresponding `generateDataFetch` and `generateDrawCall` cases to `server.js`.
-No other files need to change.
-
----
-
-## Gotchas
-
-- **Device ID:** `vivoactive6` is the exact ID in SDK 9.1.0 device definitions.
-- **API level:** `minSdkVersion="4.2.0"` — required for Connect IQ 9.x features.
-- **Colors:** Monkey C uses `0xRRGGBB` integer literals, not CSS hex strings. `server.js` converts automatically.
-- **Text origin:** `dc.drawText()` with `TEXT_JUSTIFY_CENTER | TEXT_JUSTIFY_VCENTER` centers text at (x, y). The canvas editor uses the same center-anchor convention, so positions export correctly.
-- **Sensor data:** All `Activity` / `UserProfile` calls must live inside `onUpdate()`. Never cache sensor handles across lifecycle events.
-- **Permissions:** `manifest.xml` is generated with only the permissions required by the placed elements — do not add blanket permissions.
-- **Safe area:** 370 px inner circle (10 px inset from the 390 px display edge). The builder enforces this constraint during drag.
+See `.env.example` for all supported variables, their default values, and
+platform-specific path examples. No variable is required if the SDK and developer
+key are installed in standard locations.

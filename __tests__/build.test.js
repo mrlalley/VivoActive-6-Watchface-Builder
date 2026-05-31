@@ -1,7 +1,10 @@
-const { buildProject } = require('../lib/build');
-const path = require('path');
-const os   = require('os');
-const fs   = require('fs');
+jest.mock('child_process');
+
+const { buildProject }  = require('../lib/build');
+const path              = require('path');
+const os                = require('os');
+const fs                = require('fs');
+const { EventEmitter }  = require('events');
 
 describe('Build Module', () => {
   // Use the OS temp directory so build artifacts never land in the project tree.
@@ -58,30 +61,105 @@ describe('Build Module', () => {
       expect(result.success).toBe(false);
       expect(result.error).toMatch(/monkeyc not found|Add the Garmin SDK/i);
     });
+  });
 
-    it('provides permission denied message for EACCES', () => {
-      // This test would require mocking execFile to return EACCES
-      // For now, verify the error message exists in code
-      const fs = require('fs');
-      const buildCode = fs.readFileSync('./lib/build.js', 'utf8');
-      expect(buildCode).toContain('EACCES');
-      expect(buildCode).toContain('Permission denied');
+  describe('buildProject behavioral tests', () => {
+    const childProcess = require('child_process');
+
+    const dummyMonkeyc = path.join(testExportDir, 'fake-monkeyc');
+    const dummyDevKey  = path.join(testExportDir, 'fake-key.der');
+    const spawnCfg = {
+      monkeyc:   dummyMonkeyc,
+      devKey:    dummyDevKey,
+      exportDir: testExportDir,
+    };
+
+    beforeAll(() => {
+      fs.mkdirSync(testExportDir, { recursive: true });
+      fs.writeFileSync(dummyMonkeyc, '');
+      fs.writeFileSync(dummyDevKey,  '');
     });
 
-    it('distinguishes timeout errors (SIGTERM)', () => {
-      // Verify timeout handling is in code
-      const fs = require('fs');
-      const buildCode = fs.readFileSync('./lib/build.js', 'utf8');
-      expect(buildCode).toContain('SIGTERM');
-      expect(buildCode).toContain('timed out');
+    afterEach(() => {
+      childProcess.spawn.mockReset();
+      jest.restoreAllMocks();
     });
 
-    it('returns log in error response for compiler diagnostics', () => {
-      // Verify error response includes log for stderr output
-      const fs = require('fs');
-      const buildCode = fs.readFileSync('./lib/build.js', 'utf8');
-      expect(buildCode).toContain('error: userMessage');
-      expect(buildCode).toContain('log');
+    it('returns an error result when spawn throws EACCES', async () => {
+      const mockChild = new EventEmitter();
+      mockChild.stdout = new EventEmitter();
+      mockChild.stderr = new EventEmitter();
+      mockChild.kill   = jest.fn();
+      childProcess.spawn.mockReturnValue(mockChild);
+
+      // EACCES surfaces via the child 'error' event, not a synchronous throw:
+      // spawn() succeeds (returns child), then the OS emits error asynchronously.
+      // A synchronous throw inside new Promise((resolve) => {}) causes rejection,
+      // not a resolved { success: false } result.
+      process.nextTick(() => {
+        mockChild.emit('error', Object.assign(new Error('EACCES'), { code: 'EACCES' }));
+      });
+
+      const result = await buildProject(spawnCfg, 'TestFace', []);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/EACCES|permission/i);
+    });
+
+    it('kills the child and returns a timeout error when build exceeds the timeout', async () => {
+      jest.useFakeTimers();
+
+      const mockChild = new EventEmitter();
+      mockChild.stdout = new EventEmitter();
+      mockChild.stderr = new EventEmitter();
+      // Emit 'close' synchronously inside kill so jest.runAllTimers() resolves the promise.
+      mockChild.kill = jest.fn(() => mockChild.emit('close', null, 'SIGTERM'));
+      childProcess.spawn.mockReturnValue(mockChild);
+
+      const buildPromise = buildProject(spawnCfg, 'TestFace', []);
+      jest.runAllTimers();
+      const result = await buildPromise;
+
+      expect(mockChild.kill).toHaveBeenCalled();
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/timeout|timed out/i);
+
+      jest.useRealTimers();
+    });
+
+    it('resolves with success and writes design data when build exits with code 0', async () => {
+      const mockChild = new EventEmitter();
+      mockChild.stdout = new EventEmitter();
+      mockChild.stderr = new EventEmitter();
+      mockChild.kill = jest.fn();
+      childProcess.spawn.mockReturnValue(mockChild);
+
+      // buildProject writes design.json directly via fs.writeFileSync on success —
+      // it does not call design-store.saveDesign. Assert on result shape instead.
+      const buildPromise = buildProject(spawnCfg, 'TestFace', []);
+      mockChild.emit('close', 0);
+      const result = await buildPromise;
+
+      expect(result.success).toBe(true);
+      expect(typeof result.designPath).toBe('string');
+    });
+
+    it('includes stderr output in the error result when build exits non-zero', async () => {
+      const mockChild = new EventEmitter();
+      mockChild.stdout = new EventEmitter();
+      mockChild.stderr = new EventEmitter();
+      mockChild.kill = jest.fn();
+      childProcess.spawn.mockReturnValue(mockChild);
+
+      const buildPromise = buildProject(spawnCfg, 'TestFace', []);
+      mockChild.stderr.emit('data', 'monkeyc: fatal error: bad input');
+      mockChild.emit('close', 1);
+      const result = await buildPromise;
+
+      // On non-zero exit, result.error is the user-facing message ("Build failed …");
+      // the raw compiler output is in result.log.
+      expect(result.success).toBe(false);
+      expect(result.log).toMatch(/monkeyc: fatal error: bad input/);
     });
   });
 });

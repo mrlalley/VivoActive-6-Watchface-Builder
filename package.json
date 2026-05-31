@@ -1,6 +1,10 @@
 {
   "name": "watchface-builder",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=22.12.0",
+    "npm":  ">=10.0.0"
+  },
   "productName": "WatchFace Builder",
   "description": "Garmin Vivoactive 6 Watch Face Visual Builder",
   "author": "WatchFace Builder",
@@ -8,6 +12,7 @@
   "type": "commonjs",
   "scripts": {
     "generate-constants": "node scripts/generate-constants.js",
+    "generate-constants:force": "cross-env GENERATE_FORCE=1 node scripts/generate-constants.js",
     "prestart": "npm run generate-constants",
     "start": "cross-env ELECTRON_IS_DEV=1 electron .",
     "dev": "cross-env ELECTRON_IS_DEV=1 electron .",
@@ -51,14 +56,16 @@
       "assets/**/*",
       "server.js",
       "package.json",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "!**/*.cache.json"
     ]
   },
   "dependencies": {
     "dotenv": "~16.4.5",
     "electron-store": "8.2.0",
     "express": "~4.22.2",
-    "express-rate-limit": "8.5.2"
+    "express-rate-limit": "8.5.2",
+    "pino": "10.3.1"
   },
   "devDependencies": {
     "@jest/globals": "~29.7.0",
@@ -70,7 +77,6 @@
     "supertest": "7.2.2"
   },
   "allowScripts": {
-    "electron@42.3.0": true,
-    "electron-winstaller@5.4.0": true
+    "electron@42.3.0": true
   }
 }

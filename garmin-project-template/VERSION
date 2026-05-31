@@ -1,0 +1,10 @@
+{
+  "templateVersion":  "1.0.0",
+  "minSdkVersion":    "8.0.0",
+  "minApiLevel":      "4.2.0",
+  "targetDeviceId":   "vivoactive6",
+  "fallbackDeviceId": "venu3",
+  "notes": "minSdkVersion is the minimum Connect IQ SDK required to compile this template. minApiLevel matches the minSdkVersion attribute in manifest.xml. targetDeviceId is vivoactive6 (confirmed present in SDK 8.x and 9.x). If vivoactive6 is absent from the installed SDK device list, fallbackDeviceId (venu3) is used and manifest.xml must be updated when the vivoactive6 definition becomes available in that SDK version.",
+  "updateProtocol": "When bumping SDK support: (1) update manifest.xml minSdkVersion, (2) update all four version fields here, (3) run npm run generate-constants:force, (4) run npm test, (5) bump package.json minor version.",
+  "updatedAt":        "2026-05-31"
+}

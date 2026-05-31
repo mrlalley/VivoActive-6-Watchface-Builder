@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- CSP meta tag — declarative fallback layer.
+       The Express server sends the authoritative CSP header (including a per-request nonce
+       for script-src). This meta tag is a defence-in-depth backup for environments where
+       the server header is absent (direct file:// open, browser devtools reload).
+       Both must be kept in sync. See CLAUDE.md §Content Security Policy. -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'none';
+    script-src  'self';
+    style-src   'self';
+    img-src     'self' data:;
+    font-src    'self';
+    connect-src 'self';
+    worker-src  'none';
+    frame-src   'none';
+    object-src  'none';
+    base-uri    'self';
+    form-action 'self';
+  ">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Watch Face Builder — Garmin Vivoactive 6</title>
@@ -143,14 +161,14 @@
 
   <!-- ── Load Designs Dialog ────────────────────────────────────── -->
   <div id="load-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
-    <div class="modal-box" style="min-width: 500px;">
+    <div class="modal-box load-dialog-box">
       <div class="modal-header">
         <h3>Load Design</h3>
         <button id="load-close" class="btn-close" aria-label="Close">✕</button>
       </div>
-      <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
-        <div id="load-list" style="display: flex; flex-direction: column; gap: 8px;">
-          <p style="color: #aaa; font-size: 12px;">Loading designs...</p>
+      <div class="load-dialog-body">
+        <div id="load-list" class="load-dialog-list">
+          <p class="settings-loading-hint">Loading designs...</p>
         </div>
       </div>
     </div>

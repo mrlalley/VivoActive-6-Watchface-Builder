@@ -25,9 +25,15 @@ import { getElements } from './elements.js';
  * @param {string} [projectName='MyWatchFace'] - Name for the Monkey C project
  * @returns {Promise<Object>} Server response with build status, prgPath, and log
  */
+function apiFetch(path, options) {
+  return window.electronAPI?.apiFetch
+    ? window.electronAPI.apiFetch(path, options)
+    : fetch(path, options);
+}
+
 export async function exportProject(projectName = 'MyWatchFace') {
   const elements = getElements();
-  const res = await fetch('/api/export', {
+  const res = await apiFetch('/api/export', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ elements, projectName }),
@@ -43,7 +49,7 @@ export async function exportProject(projectName = 'MyWatchFace') {
  */
 export async function previewInSimulator() {
   const elements = getElements();
-  const res = await fetch('/api/preview', {
+  const res = await apiFetch('/api/preview', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ elements, projectName: 'WatchFacePreview' }),

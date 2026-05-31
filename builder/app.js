@@ -7,6 +7,21 @@ import { DEFAULT_ELEMENT_X, DEFAULT_ELEMENT_Y, MAX_DESIGN_ELEMENTS, SAVE_INDICAT
 
 const LS_KEY = 'wfb-design';
 let saveTimer = null;
+
+// Authenticated fetch helper.
+// In Electron mode: delegates to preload's apiFetch() which attaches x-wfb-token.
+// In browser/web mode: falls back to bare fetch() — server must run without
+// WFB_SESSION_TOKEN for unauthenticated browser access to work.
+function apiFetch(path, options) {
+  if (window.electronAPI?.apiFetch) {
+    return window.electronAPI.apiFetch(path, options);
+  }
+  return fetch(path, options);
+}
+
+// ─── Palette accordion state ───────────────────────────────────────────────────
+// In-memory only — localStorage is blocked in the sandboxed renderer.
+let activeCategoryId = null;
 // requestId of the most recent successful export — used by "Open in VS Code".
 // We store the requestId (not the full path) because the server no longer sends
 // filesystem paths to the renderer. The Electron main process reconstructs the
@@ -85,7 +100,7 @@ function initHealthCheck() {
       btn.disabled = true;
       btn.textContent = '⏳ Generating…';
       try {
-        let res = await fetch('/api/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+        let res = await apiFetch('/api/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
         let result = await res.json();
         if (result.exists) {
           if (!confirm(`A developer key already exists at:\n${result.path}\n\nOverwrite it?`)) {
@@ -93,7 +108,7 @@ function initHealthCheck() {
             btn.textContent = '🔑 Generate Developer Key';
             return;
           }
-          res = await fetch('/api/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force: true }) });
+          res = await apiFetch('/api/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force: true }) });
           result = await res.json();
         }
         if (result.success) {
@@ -398,26 +413,128 @@ function notifyValidation(result) {
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 
+// Collapse a palette <details> with a height animation.
+// Keeps details.open=true during the animation so content remains visible.
+function collapsePanel(detailsEl) {
+  const content = detailsEl.querySelector('.category-items');
+  const summary = detailsEl.querySelector('.category-header');
+  if (!content || detailsEl.dataset.animating === '1') return;
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  summary.setAttribute('aria-expanded', 'false');
+  content.setAttribute('aria-hidden', 'true');
+
+  if (reduced) {
+    detailsEl.open = false;
+    content.style.height = '';
+    return;
+  }
+
+  detailsEl.dataset.animating = '1';
+  content.style.height   = content.scrollHeight + 'px';
+  content.style.overflow = 'hidden';
+  content.getBoundingClientRect(); // force reflow
+  content.style.transition = 'height 200ms cubic-bezier(0.16,1,0.3,1)';
+  content.style.height = '0';
+
+  content.addEventListener('transitionend', function done() {
+    content.removeEventListener('transitionend', done);
+    detailsEl.open = false;
+    content.style.height = content.style.transition = '';
+    content.style.overflow = 'hidden'; // keep hidden until next open
+    delete detailsEl.dataset.animating;
+  }, { once: true });
+}
+
+// Expand a palette <details> with a height animation.
+function expandPanel(detailsEl) {
+  const content = detailsEl.querySelector('.category-items');
+  const summary = detailsEl.querySelector('.category-header');
+  if (!content) return;
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  detailsEl.open = true; // show content so scrollHeight is measurable
+  summary.setAttribute('aria-expanded', 'true');
+  content.setAttribute('aria-hidden', 'false');
+
+  if (reduced) {
+    content.style.height = content.style.overflow = '';
+    return;
+  }
+
+  const target = content.scrollHeight;
+  content.style.height   = '0';
+  content.style.overflow = 'hidden';
+  content.style.transition = 'height 200ms cubic-bezier(0.16,1,0.3,1)';
+  content.getBoundingClientRect(); // force reflow
+  content.style.height = target + 'px';
+
+  content.addEventListener('transitionend', function done() {
+    content.removeEventListener('transitionend', done);
+    content.style.height = content.style.transition = content.style.overflow = '';
+  }, { once: true });
+}
+
 function buildPalette() {
   const palette = document.getElementById('field-palette');
   const modal   = document.getElementById('modal-field-list');
+  const allSideDetails = [];
 
   CATEGORIES.forEach(cat => {
     const fields = DATA_FIELDS.filter(f => f.category === cat.id);
 
+    // ── Sidebar palette ──
     const sideDetails = document.createElement('details');
     sideDetails.className = 'palette-category';
-    if (cat.open) sideDetails.open = true;
+    sideDetails.dataset.categoryId = cat.id;
+
     const sideSummary = document.createElement('summary');
     sideSummary.className = 'category-header';
     sideSummary.textContent = cat.label;
+    sideSummary.setAttribute('aria-expanded', 'false');
+    sideSummary.setAttribute('role', 'button');
+    sideSummary.setAttribute('tabindex', '0');
+
     sideDetails.appendChild(sideSummary);
+
     const sideItems = document.createElement('div');
     sideItems.className = 'category-items';
+    sideItems.setAttribute('aria-hidden', 'true');
+    sideItems.style.overflow = 'hidden';
+    sideItems.style.height   = '0';
     fields.forEach(f => sideItems.appendChild(fieldItem(f, 'palette-item', () => addFieldAt(f.id, DEFAULT_ELEMENT_X, DEFAULT_ELEMENT_Y))));
     sideDetails.appendChild(sideItems);
     palette.appendChild(sideDetails);
+    allSideDetails.push(sideDetails);
 
+    // Intercept native toggle — accordion coordination happens here.
+    sideSummary.addEventListener('click', e => {
+      e.preventDefault();
+      const isOpen = sideDetails.open;
+      if (isOpen) {
+        collapsePanel(sideDetails);
+        activeCategoryId = null;
+      } else {
+        // Collapse every other open panel first
+        allSideDetails.forEach(d => { if (d !== sideDetails && d.open) collapsePanel(d); });
+        expandPanel(sideDetails);
+        activeCategoryId = cat.id;
+      }
+    });
+
+    // Keyboard: Enter/Space handled via click; ArrowUp/Down move focus
+    sideSummary.addEventListener('keydown', e => {
+      const triggers = allSideDetails.map(d => d.querySelector('.category-header'));
+      const idx = triggers.indexOf(sideSummary);
+      if (e.key === 'ArrowDown') { e.preventDefault(); triggers[(idx + 1) % triggers.length].focus(); }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); triggers[(idx - 1 + triggers.length) % triggers.length].focus(); }
+      if (e.key === 'Home')      { e.preventDefault(); triggers[0].focus(); }
+      if (e.key === 'End')       { e.preventDefault(); triggers[triggers.length - 1].focus(); }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sideSummary.click(); }
+    });
+
+    // ── Modal ──
     const modalDetails = document.createElement('details');
     modalDetails.className = 'modal-category';
     if (cat.open) modalDetails.open = true;
@@ -431,6 +548,23 @@ function buildPalette() {
     modalDetails.appendChild(modalItems);
     modal.appendChild(modalDetails);
   });
+
+  // Restore the last user-opened category on palette re-renders.
+  // activeCategoryId is null on first load — leave all categories collapsed.
+  // The user opens one explicitly. No fallback default.
+  if (activeCategoryId !== null) {
+    const restoreDetails = allSideDetails.find(d => d.dataset.categoryId === activeCategoryId);
+    if (restoreDetails) {
+      const content = restoreDetails.querySelector('.category-items');
+      const summary = restoreDetails.querySelector('.category-header');
+      restoreDetails.open = true;
+      summary.setAttribute('aria-expanded', 'true');
+      content.setAttribute('aria-hidden', 'false');
+      content.style.height = content.style.overflow = '';
+    } else {
+      activeCategoryId = null; // category no longer in DOM — reset cleanly
+    }
+  }
 }
 
 function fieldItem(field, className, onClick) {
@@ -485,7 +619,7 @@ async function handleSaveDesign() {
 
   // Check if design already exists
   try {
-    const checkRes = await fetch(`/api/designs/check/${encodeURIComponent(projectName)}`);
+    const checkRes = await apiFetch(`/api/designs/check/${encodeURIComponent(projectName)}`);
     const checkResult = await checkRes.json();
 
     if (checkResult.success && checkResult.exists) {
@@ -503,7 +637,7 @@ async function handleSaveDesign() {
 
   try {
     const elements = getElements();
-    const res = await fetch('/api/save-design', {
+    const res = await apiFetch('/api/save-design', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ projectName, elements }),
@@ -571,7 +705,7 @@ async function handleLoadDesignDialog() {
   list.innerHTML = '<p class="settings-loading-hint">Loading designs...</p>';
 
   try {
-    const res = await fetch('/api/designs');
+    const res = await apiFetch('/api/designs');
     const result = await res.json();
 
     if (!result.success || !result.designs || result.designs.length === 0) {
@@ -617,7 +751,7 @@ async function handleLoadDesignDialog() {
 
 async function loadDesign(filename) {
   try {
-    const res = await fetch(`/api/designs/${encodeURIComponent(filename)}`);
+    const res = await apiFetch(`/api/designs/${encodeURIComponent(filename)}`);
     const result = await res.json();
 
     if (!result.success) {
@@ -713,7 +847,7 @@ async function handleExport() {
 
   // Check if project already exists
   try {
-    const checkRes = await fetch(`/api/export/check/${encodeURIComponent(projectName)}`);
+    const checkRes = await apiFetch(`/api/export/check/${encodeURIComponent(projectName)}`);
     const checkResult = await checkRes.json();
 
     if (checkResult.success && checkResult.exists) {
