@@ -120,6 +120,64 @@ function assertJdkVersion() {
 // First check — runs before cache guard, SDK detection, and generation logic.
 assertJdkVersion();
 
+// ── CI mode configuration ──────────────────────────────────────────────────────
+// When --ci flag is set (or CI=true env var), a missing SDK writes stub constants.
+// This allows CI pipelines without a Garmin SDK to run tests that don't need SDK values.
+
+const CI_MODE = process.argv.includes('--ci') || process.env.CI === 'true';
+
+/**
+ * writeStubConstants()
+ * Writes a stub constants.js file with null/empty values when the SDK is not available.
+ * Tests that require real SDK values must check for IS_STUB and skip accordingly.
+ */
+function writeStubConstants() {
+  const stubContent = `// AUTO-GENERATED STUB — no SDK in CI environment
+// Do not edit manually. Run: npm run generate-constants
+'use strict';
+
+export const CANVAS_SIZE          = 390;
+export const CANVAS_CENTER        = 195;
+export const SAFE_AREA_INSET      = 0;
+export const SAFE_AREA_DIAMETER   = 0;
+export const SAFE_AREA_RADIUS     = 0;
+export const EDGE_WARN_DISTANCE   = 0;
+export const MIN_ELEMENT_SIZE     = 0;
+export const MAX_DESIGN_ELEMENTS  = 200;
+export const LAUNCHER_ICON_SIZE   = 0;
+export const TARGET_API_LEVEL     = null;
+export const MIN_API_LEVEL        = null;
+export const DEVICE_ID            = null;
+
+// Grid display options
+export const GRID_SPACING_OPTIONS              = [20, 10, 5];
+export const GRID_LEVEL_1_MINOR               = 20;
+export const GRID_LEVEL_1_MAJOR               = 100;
+export const GRID_LEVEL_2_MINOR               = 10;
+export const GRID_LEVEL_2_MAJOR               = 50;
+export const GRID_LEVEL_3_MINOR               = 5;
+export const GRID_LEVEL_3_MAJOR               = 25;
+export const GRID_MINOR_ALPHA                 = 0.18;
+export const GRID_MAJOR_ALPHA                 = 0.40;
+export const DEFAULT_ELEMENT_X                = 195;
+export const DEFAULT_ELEMENT_Y                = 195;
+
+// Timing constants (in milliseconds)
+export const CANVAS_REDRAW_INTERVAL           = 33;  // ~30 FPS
+export const DRAG_THROTTLE_MS                 = 16;
+export const ELEMENT_DRAG_START_DELAY_MS      = 150;
+export const UNDO_BATCH_DELAY_MS              = 300;
+export const KEYBOARD_REPEAT_INTERVAL_MS      = 50;
+
+export const IS_STUB = true;
+`;
+
+  const outPath = path.resolve(__dirname, '../builder/constants.js');
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fs.writeFileSync(outPath, stubContent, 'utf8');
+  console.log('[generate-constants] Stub constants written (SDK not found in CI mode)');
+}
+
 // ── Cache configuration ───────────────────────────────────────────────────────
 
 const DEVICE_SRC = path.resolve(__dirname, '../src/constants/device.js');
@@ -331,13 +389,23 @@ function validateSdkCompatibility(sdk) {
   const sdk = detectInstalledSdk();
 
   if (!sdk) {
+    // In CI mode with no SDK, write stub constants and exit cleanly.
+    if (CI_MODE) {
+      process.stderr.write(
+        '[generate-constants] CI mode detected. SDK not found — writing stub constants.\n'
+      );
+      writeStubConstants();
+      process.exit(0);
+    }
+
+    // Outside CI, a missing SDK is non-fatal (standalone mode).
     console.warn(
       '[generate-constants] WARN: Garmin Connect IQ SDK not found.\n' +
       '  Searched: ' + SDK_SEARCH_PATHS.slice(0, 3).join(', ') + '\n' +
       '  Download SDK from: https://developer.garmin.com/connect-iq/sdk/\n' +
       '  Export and Preview features will not work until the SDK is installed.'
     );
-    return; // non-fatal — standalone mode allows running without SDK
+    return;
   }
 
   validateSdkCompatibility(sdk);

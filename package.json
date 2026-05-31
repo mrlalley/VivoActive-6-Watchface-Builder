@@ -13,6 +13,7 @@
   "scripts": {
     "generate-constants": "node scripts/generate-constants.js",
     "generate-constants:force": "cross-env GENERATE_FORCE=1 node scripts/generate-constants.js",
+    "generate-constants:ci": "node scripts/generate-constants.js --ci",
     "prestart": "npm run generate-constants",
     "start": "cross-env ELECTRON_IS_DEV=1 electron .",
     "dev": "cross-env ELECTRON_IS_DEV=1 electron .",

@@ -23,6 +23,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate constants (CI stub mode)
+        run: npm run generate-constants:ci
+        # Generates builder/constants.js before tests run.
+        # Uses --ci flag so a missing Garmin SDK writes a stub file
+        # rather than failing. Tests that require real SDK values must
+        # check for IS_STUB in constants and skip accordingly.
+
       - name: Audit dependencies
         run: npm audit --audit-level=high
 
