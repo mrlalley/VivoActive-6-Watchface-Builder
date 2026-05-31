@@ -23,4 +23,4 @@ function escHtml(str) {
     .replace(/'/g,  '&#39;');  // was missing; use &#39; not &apos;
 }
 
-module.exports = { escHtml };
+export { escHtml };
