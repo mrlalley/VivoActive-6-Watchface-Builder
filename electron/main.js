@@ -59,8 +59,48 @@ const HEALTH_URL    = `${SERVER_URL}/health`;
 const MAX_WAIT_MS   = 10_000;
 const POLL_INTERVAL = 200;
 
-let healthPollInterval = null;
-const HEALTH_POLL_MS = 5000;
+let healthPollTimeoutId = null;
+const HEALTH_POLL_MS = 5000; // Initial poll interval
+const HEALTH_POLL_BACKOFF_SLOW = 15000; // Slower interval after consecutive healthy responses
+const HEALTH_POLL_BACKOFF_SLOWEST = 30000; // Slowest interval when health is stable
+
+// Polling state for adaptive backoff logic
+const healthPollingState = {
+  isRunning: false,
+  consecutiveHealthy: 0,
+  consecutiveErrors: 0,
+  currentDelayMs: HEALTH_POLL_MS,
+};
+
+// Schedule the next health check with adaptive backoff
+function scheduleNextHealthCheck() {
+  if (!healthPollingState.isRunning) return;
+
+  // Determine delay for next check based on health state
+  let nextDelayMs = HEALTH_POLL_MS;
+  if (healthPollingState.consecutiveHealthy >= 4) {
+    // After many consecutive healthy responses, slow down significantly
+    nextDelayMs = HEALTH_POLL_BACKOFF_SLOWEST;
+  } else if (healthPollingState.consecutiveHealthy >= 2) {
+    // After a couple healthy responses, slow down moderately
+    nextDelayMs = HEALTH_POLL_BACKOFF_SLOW;
+  } else if (healthPollingState.consecutiveErrors > 0) {
+    // On errors, back off progressively (5s → 15s → 30s)
+    if (healthPollingState.consecutiveErrors >= 2) {
+      nextDelayMs = HEALTH_POLL_BACKOFF_SLOWEST;
+    } else {
+      nextDelayMs = HEALTH_POLL_BACKOFF_SLOW;
+    }
+  }
+
+  healthPollingState.currentDelayMs = nextDelayMs;
+  healthPollTimeoutId = setTimeout(() => {
+    if (healthPollingState.isRunning) {
+      checkHealth();
+      scheduleNextHealthCheck();
+    }
+  }, nextDelayMs);
+}
 
 // Initialize persistent config store
 const store = new Store({
@@ -233,20 +273,43 @@ function hasCompleteConfig() {
 
 // Check server health and send status to renderer.
 // Sends x-wfb-token so /api/health auth passes when token enforcement is active.
+// Updates adaptive polling backoff state.
 async function checkHealth() {
   try {
     const res = await fetch(`${SERVER_URL}/api/health`, {
       headers: { 'x-wfb-token': SESSION_TOKEN },
     });
-    if (res.status === 429) return; // rate-limited — skip this cycle, try again next poll
+
+    if (res.status === 429) {
+      // Rate-limited — back off but don't treat as error
+      healthPollingState.consecutiveErrors = 0;
+      healthPollingState.consecutiveHealthy = 0;
+      return;
+    }
+
     const health = await res.json();
-    if (mainWindow && mainWindow.webContents) {
-      mainWindow.webContents.send('app:health-status', health);
-      if (health.ok === false) { // strict: only real failures, not undefined/missing
-        mainWindow.webContents.send('app:health-warning', health);
+
+    // Successful fetch and parse — either health.ok or health.ok === false
+    if (health && typeof health === 'object') {
+      healthPollingState.consecutiveErrors = 0;
+      healthPollingState.consecutiveHealthy++;
+
+      if (mainWindow && mainWindow.webContents) {
+        mainWindow.webContents.send('app:health-status', health);
+        if (health.ok === false) { // strict: only real failures, not undefined/missing
+          mainWindow.webContents.send('app:health-warning', health);
+        }
       }
+    } else {
+      // Unexpected response format — treat as error
+      healthPollingState.consecutiveErrors++;
+      healthPollingState.consecutiveHealthy = 0;
     }
   } catch (err) {
+    // Network error, timeout, or JSON parse error — increment error backoff
+    healthPollingState.consecutiveErrors++;
+    healthPollingState.consecutiveHealthy = 0;
+
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.send('app:health-warning', {
         ok: false,
@@ -258,16 +321,26 @@ async function checkHealth() {
 }
 
 function startHealthPolling() {
-  if (healthPollInterval) return; // Already polling — guard against double-start
-  checkHealth(); // Immediate check so the UI sees the initial state without waiting
-  healthPollInterval = setInterval(checkHealth, HEALTH_POLL_MS);
+  if (healthPollingState.isRunning) return; // Already polling — guard against double-start
+
+  healthPollingState.isRunning = true;
+  healthPollingState.consecutiveHealthy = 0;
+  healthPollingState.consecutiveErrors = 0;
+  healthPollingState.currentDelayMs = HEALTH_POLL_MS;
+
+  // Immediate check so the UI sees the initial state without waiting
+  checkHealth();
+
+  // Schedule the next check (will reschedule itself on completion)
+  scheduleNextHealthCheck();
 }
 
 function stopHealthPolling() {
-  if (healthPollInterval) {
-    clearInterval(healthPollInterval);
-    healthPollInterval = null;
+  if (healthPollTimeoutId) {
+    clearTimeout(healthPollTimeoutId);
+    healthPollTimeoutId = null;
   }
+  healthPollingState.isRunning = false;
 }
 
 // ─── IPC handlers ──────────────────────────────────────────────────────────────
