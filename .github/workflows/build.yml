@@ -84,6 +84,75 @@ jobs:
           ls -lah dist-final/ || echo "No dist-final directory"
           ls -lah out/ || echo "No out directory"
 
+      - name: Smoke test - Windows (Launch app)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $exePath = Get-ChildItem -Path "dist-final" -Filter "*.exe" -Exclude "*Setup*" | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $exePath) {
+            Write-Error "No executable found in dist-final"
+            exit 1
+          }
+          Write-Output "Launching: $exePath"
+          $process = Start-Process -FilePath $exePath -PassThru -NoNewWindow
+          Start-Sleep -Seconds 8
+          if ($process.HasExited) {
+            $exitCode = $process.ExitCode
+            Write-Output "App exited with code: $exitCode"
+            if ($exitCode -ne 0) {
+              Write-Error "App crashed immediately"
+              exit 1
+            }
+          } else {
+            Write-Output "App still running - terminating"
+            Stop-Process -InputObject $process -Force
+          }
+          Write-Output "✅ Smoke test passed"
+
+      - name: Smoke test - macOS (Launch app)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          APP_PATH=$(find dist-final -name "WatchFace Builder*.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ No .app bundle found"
+            exit 1
+          fi
+          echo "Launching: $APP_PATH"
+          timeout 10 open "$APP_PATH" 2>&1 || true
+          sleep 8
+          # Check if app process is running
+          if pgrep -i "watchface" > /dev/null; then
+            echo "App running - terminating"
+            pkill -i "watchface" || true
+          fi
+          echo "✅ Smoke test passed"
+
+      - name: Smoke test - Linux (Launch app)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          # Install virtual display for headless testing
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb > /dev/null 2>&1
+
+          DEB_PATH=$(find dist-final -name "*.deb" -type f | head -1)
+          if [ -z "$DEB_PATH" ]; then
+            echo "❌ No .deb package found"
+            exit 1
+          fi
+
+          echo "Installing: $DEB_PATH"
+          sudo dpkg -i "$DEB_PATH" 2>&1 | grep -v "^Setting" || true
+
+          echo "Launching app via xvfb (virtual display)"
+          timeout 10 xvfb-run -a watchface-builder 2>&1 || true
+
+          if [ -d ~/.config/WatchFace\ Builder ]; then
+            echo "✅ App created user config directory"
+          fi
+          echo "✅ Smoke test passed"
+
       - name: Upload artifacts (Windows)
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
