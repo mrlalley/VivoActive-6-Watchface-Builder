@@ -332,7 +332,7 @@ app.on('ready', async () => {
   // before DOMContentLoaded fires in the renderer).
   if (!hasCompleteConfig()) {
     mainWindow.webContents.once('did-finish-load', () => {
-      mainWindow?.webContents.send('settings:showOverlay');
+      mainWindow?.webContents?.send('settings:showOverlay');
     });
   }
 });
@@ -376,14 +376,14 @@ function createMenu() {
           label: 'New Design',
           accelerator: 'Ctrl+N',
           click: () => {
-            mainWindow.webContents.send('file:newDesign');
+            mainWindow?.webContents?.send('file:newDesign');
           },
         },
         {
           label: 'Settings',
           accelerator: 'Ctrl+,',
           click: () => {
-            mainWindow.webContents.send('settings:showOverlay');
+            mainWindow?.webContents?.send('settings:showOverlay');
           },
         },
         { type: 'separator' },
@@ -411,7 +411,7 @@ function createMenu() {
         {
           label: 'About',
           click: () => {
-            dialog.showMessageBox(mainWindow, {
+            dialog.showMessageBox(mainWindow ?? null, {
               type: 'info',
               title: 'About WatchFace Builder',
               message: 'WatchFace Builder v1.0.0',

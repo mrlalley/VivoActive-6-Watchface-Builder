@@ -284,3 +284,27 @@ details[open] > .modal-category-header::before { transform: rotate(90deg); }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* ── Settings Modal ─────────────────────────── */
+.settings-body     { padding: 20px; overflow-y: auto; max-height: 60vh; }
+.settings-desc     { margin-bottom: 16px; color: #aaa; font-size: 13px; }
+.settings-field    { display: flex; flex-direction: column; margin-bottom: 16px; }
+.settings-label    { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #ccc; }
+.settings-hint     { font-size: 11px; color: #888; margin-bottom: 6px; }
+/* input.settings-input — element+class selector (0,1,1) ties with the global
+   input[type="text"] rule (0,1,1) and wins because this rule appears later in
+   the stylesheet. Avoids !important while preserving the larger padding and
+   white text colour from the original inline style. */
+input.settings-input { padding: 8px; background: #2e2e2e; border: 1px solid #3a3a3a;
+                       border-radius: 3px; color: #fff; font-size: 12px; }
+.settings-browse   { margin-top: 6px; width: 100%; }
+.settings-generate { margin-top: 4px; width: 100%; border-color: #4a9eff; color: #4a9eff; }
+.settings-footer   { margin-top: 24px; padding-top: 16px;
+                     border-top: 1px solid #3a3a3a; display: flex; gap: 8px; }
+.settings-btn-full { flex: 1; }
+/* settings-status: differs from settings-hint — uses margin-top, not margin-bottom */
+.settings-status   { margin-top: 6px; font-size: 11px; color: #888; }
+
+/* ── Settings Loading States ──────────────── */
+.settings-loading-hint  { color: #aaa; font-size: 12px; }
+.settings-loading-empty { color: #888; font-size: 12px; }

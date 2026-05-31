@@ -522,7 +522,7 @@ async function handleSaveDesign() {
       alert(`Save failed: ${result.error}`);
     } else {
       flashSaveIndicator();
-      alert(`✓ Design saved!\n\nFile: ${result.filePath}\n\nYou can load it later with the Load button.`);
+      alert(`✓ Design saved!\n\n"${result.projectName}" (${result.elementCount} elements)\n\nYou can load it later with the Load button.`);
     }
   } catch (err) {
     alert(`Error: ${err.message}`);
@@ -568,14 +568,14 @@ async function handleLoadDesignDialog() {
   const list = document.getElementById('load-list');
 
   overlay.classList.remove('hidden');
-  list.innerHTML = '<p style="color: #aaa; font-size: 12px;">Loading designs...</p>';
+  list.innerHTML = '<p class="settings-loading-hint">Loading designs...</p>';
 
   try {
     const res = await fetch('/api/designs');
     const result = await res.json();
 
     if (!result.success || !result.designs || result.designs.length === 0) {
-      list.innerHTML = '<p style="color: #888; font-size: 12px;">No saved designs found.</p>';
+      list.innerHTML = '<p class="settings-loading-empty">No saved designs found.</p>';
       return;
     }
 

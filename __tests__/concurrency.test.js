@@ -4,7 +4,8 @@
 const { buildProject } = require('../lib/build');
 const { saveDesign, listDesigns } = require('../lib/design-store');
 const { AsyncQueue } = require('../lib/queue');
-const fs = require('fs');
+const fs   = require('fs');
+const os   = require('os');
 const path = require('path');
 
 describe('Concurrency Protection', () => {
@@ -229,7 +230,7 @@ describe('Concurrency Protection', () => {
   describe('Preview Request Isolation', () => {
     it('uses request-scoped temp directories', () => {
       // Simulate preview temp directory isolation
-      const baseTempDir = process.env.TEMP || '/tmp';
+      const baseTempDir = os.tmpdir();
       const requestIds = ['pre001', 'pre002', 'pre003'];
 
       const tempDirs = requestIds.map((id) => path.join(baseTempDir, `preview-${id}`));
@@ -243,9 +244,10 @@ describe('Concurrency Protection', () => {
       // Without request isolation: all preview calls write to same path
       // With request isolation: each gets unique subdir
 
-      const oldWay = path.join(process.env.TEMP, 'WatchFace.prg');
-      const newWay1 = path.join(process.env.TEMP, 'preview-req001', 'WatchFace.prg');
-      const newWay2 = path.join(process.env.TEMP, 'preview-req002', 'WatchFace.prg');
+      const tmpBase = os.tmpdir();
+      const oldWay  = path.join(tmpBase, 'WatchFace.prg');
+      const newWay1 = path.join(tmpBase, 'preview-req001', 'WatchFace.prg');
+      const newWay2 = path.join(tmpBase, 'preview-req002', 'WatchFace.prg');
 
       // Old way: collision (same path)
       expect(oldWay).toBe(oldWay);

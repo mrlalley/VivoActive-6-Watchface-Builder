@@ -108,34 +108,34 @@
       <div class="modal-header">
         <h3>Settings — Garmin SDK Configuration</h3>
       </div>
-      <div style="padding: 20px; overflow-y: auto; max-height: 60vh;">
-        <p style="margin-bottom: 16px; color: #aaa; font-size: 13px;">
+      <div class="settings-body">
+        <p class="settings-desc">
           Configure the Garmin Connect IQ SDK paths so the builder can export and build watch faces.
         </p>
 
-        <label style="display: flex; flex-direction: column; margin-bottom: 16px;">
-          <span style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #ccc;">SDK Bin Directory</span>
-          <span style="font-size: 11px; color: #888; margin-bottom: 6px;">
+        <label class="settings-field">
+          <span class="settings-label">SDK Bin Directory</span>
+          <span class="settings-hint">
             Path to monkeyc.bat (e.g., C:\Users\...\Garmin\ConnectIQ\Sdks\...\bin)
           </span>
-          <input id="settings-sdk-path" type="text" placeholder="C:\..." style="padding: 8px; background: #2e2e2e; border: 1px solid #3a3a3a; border-radius: 3px; color: #fff; font-size: 12px;">
-          <button id="settings-sdk-browse" class="btn" style="margin-top: 6px; width: 100%;">Browse…</button>
+          <input id="settings-sdk-path" type="text" placeholder="C:\..." class="settings-input">
+          <button id="settings-sdk-browse" class="btn settings-browse">Browse…</button>
         </label>
 
-        <label style="display: flex; flex-direction: column; margin-bottom: 16px;">
-          <span style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #ccc;">Developer Key</span>
-          <span style="font-size: 11px; color: #888; margin-bottom: 6px;">
+        <label class="settings-field">
+          <span class="settings-label">Developer Key</span>
+          <span class="settings-hint">
             Path to developer_key.der (usually C:\Users\...\\.garmin\developer_key.der)
           </span>
-          <input id="settings-dev-key" type="text" placeholder="C:\..." style="padding: 8px; background: #2e2e2e; border: 1px solid #3a3a3a; border-radius: 3px; color: #fff; font-size: 12px;">
-          <button id="settings-key-browse" class="btn" style="margin-top: 6px; width: 100%;">Browse…</button>
-          <button id="settings-key-generate" class="btn" style="margin-top: 4px; width: 100%; border-color: #4a9eff; color: #4a9eff;">🔑 Generate New Key</button>
-          <div id="settings-key-status" class="hidden" style="margin-top: 6px; font-size: 11px; color: #888;"></div>
+          <input id="settings-dev-key" type="text" placeholder="C:\..." class="settings-input">
+          <button id="settings-key-browse" class="btn settings-browse">Browse…</button>
+          <button id="settings-key-generate" class="btn settings-generate">🔑 Generate New Key</button>
+          <div id="settings-key-status" class="hidden settings-status"></div>
         </label>
 
-        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #3a3a3a; display: flex; gap: 8px;">
-          <button id="settings-save" class="btn btn-primary" style="flex: 1;">Save Settings</button>
-          <button id="settings-cancel" class="btn" style="flex: 1;">Cancel</button>
+        <div class="settings-footer">
+          <button id="settings-save" class="btn btn-primary settings-btn-full">Save Settings</button>
+          <button id="settings-cancel" class="btn settings-btn-full">Cancel</button>
         </div>
       </div>
     </div>
