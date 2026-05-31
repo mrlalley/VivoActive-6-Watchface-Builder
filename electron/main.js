@@ -226,12 +226,10 @@ function createWindow() {
 }
 
 // Spawn server.js as a managed child process.
-// In Electron's main process, process.execPath is the Electron binary, which runs
-// Node.js scripts directly. Outside Electron, WFB_NODE_PATH or 'node' is used.
+// Always use the Node.js binary, not the Electron binary.
+// process.execPath in Electron main points to electron.exe, which cannot run Node.js scripts.
 function startServer() {
-  const nodeBin = process.type === 'browser'
-    ? process.execPath
-    : (process.env.WFB_NODE_PATH || 'node');
+  const nodeBin = process.env.WFB_NODE_PATH || 'node';
 
   // Resolve platform-specific paths here (app.getPath() is unavailable in the child
   // process) and pass them as env vars. lib/config.js reads these at fallback level 2.
@@ -247,6 +245,8 @@ function startServer() {
   // Only override SDK/key paths when explicitly configured; allow auto-detect otherwise.
   if (store.get('sdkBin')) env.GARMIN_SDK_BIN = store.get('sdkBin');
   if (store.get('devKey')) env.GARMIN_DEV_KEY  = store.get('devKey');
+
+  log.debug({ event: 'server.spawn', nodeBin, tokenSet: !!env.WFB_SESSION_TOKEN, port: SERVER_PORT });
 
   serverProcess = spawn(
     nodeBin,
