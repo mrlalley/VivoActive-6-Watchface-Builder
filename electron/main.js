@@ -582,15 +582,19 @@ app.on('ready', async () => {
   // It PRESERVES the server's existing CSP header (with nonce) for all renderer
   // requests — replacing it would break the nonce-based script-src mechanism.
   //
-  // Static CSP (no nonce): permits 'self' scripts via 'strict-dynamic' semantics.
-  // connect-src uses the resolved SERVER_URL so the explicit IP:PORT is enforced.
+  // Static CSP (no nonce): fallback for responses without server CSP header.
+  // Enforces strict security when the HTTP layer header is absent (defense-in-depth).
+  // CRITICAL: connect-src is restricted to the local server ONLY. Do not add
+  // wildcards, external origins, or broad schemes here. See CLAUDE.md for the
+  // contract: any new outbound connection must be added to BOTH server.js CSP
+  // header AND this STATIC_CSP constant, with explicit justification.
   const STATIC_CSP = [
     "default-src 'none'",
     "script-src 'self' 'strict-dynamic'",
     "style-src 'self'",
     "img-src 'self' data:",
     "font-src 'self'",
-    `connect-src ${SERVER_URL}`,
+    `connect-src ${SERVER_URL}`,  // ONLY the local Electron server, e.g. http://127.0.0.1:3000
     "worker-src 'none'",
     "frame-src 'none'",
     "object-src 'none'",
