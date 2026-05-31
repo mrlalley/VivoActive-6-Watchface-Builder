@@ -930,4 +930,11 @@ function addDefaults() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', init);
+// Initialize immediately if DOM is already loaded (module script case),
+// or wait for DOMContentLoaded if still parsing (inline script case).
+// This handles the race condition where <script type="module"> loads after DOMContentLoaded has fired.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
