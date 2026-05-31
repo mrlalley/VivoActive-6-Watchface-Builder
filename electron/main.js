@@ -213,11 +213,15 @@ function createWindow() {
     }
   });
 
-  // Open DevTools in dev mode
-  if (process.env.ELECTRON_IS_DEV) {
+  // Open DevTools only if explicitly requested via OPEN_DEVTOOLS flag
+  // This prevents DevTools from opening on every normal startup
+  if (process.env.OPEN_DEVTOOLS === '1') {
     mainWindow.webContents.openDevTools();
-  } else {
-    // Block DevTools shortcuts in production
+  }
+
+  // Always block DevTools shortcuts (F12, Ctrl+Shift+I) unless explicitly debugging
+  // This prevents accidental DevTools access via keyboard shortcuts in normal usage
+  if (process.env.OPEN_DEVTOOLS !== '1') {
     mainWindow.webContents.on('before-input-event', (event, input) => {
       if (input.control && input.shift && input.key.toLowerCase() === 'i') event.preventDefault();
       if (input.key === 'F12') event.preventDefault();
