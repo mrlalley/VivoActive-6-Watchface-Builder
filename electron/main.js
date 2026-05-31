@@ -133,8 +133,16 @@ function createWindow() {
 
   // CSP violation logger — Chromium reports blocked resources as console errors
   // containing the string "Content Security Policy". Captured here and logged via pino.
-  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
-    if (message.includes('Content Security Policy') || message.includes('content-security-policy')) {
+  // Updated for Electron 42 which passes a single event object with properties:
+  // https://electronjs.org/docs/latest/api/web-contents#event-console-message
+  mainWindow.webContents.on('console-message', (event) => {
+    // Extract properties from the event object (Electron 42 API)
+    const level    = event.level    ?? -1;
+    const message  = event.message  ?? '';
+    const line     = event.line ?? event.lineNumber ?? 0;
+    const sourceId = event.sourceId ?? '';
+
+    if (message && (message.includes('Content Security Policy') || message.includes('content-security-policy'))) {
       log.warn({
         event:    'csp.violation',
         message:  message.trim(),
