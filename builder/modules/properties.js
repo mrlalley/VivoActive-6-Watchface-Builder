@@ -1,6 +1,7 @@
 import { updateElement, removeElement, commitHistory, FONT_HEIGHTS } from './elements.js';
 import { scheduleRedraw, setSelectedId, ANALOG_SHAPES, TICK_TYPES } from './canvas.js';
 import { CANVAS_SIZE, CANVAS_CENTER } from '../constants.js';
+import { escHtml } from '../utils/html-escape.js';
 
 /**
  * @typedef {Object} Element
@@ -57,8 +58,10 @@ export function showProperties(el, onDelete, onAnyChange) {
                     : isHRGraph     ? 'Graph Height'
                     : 'Height';
 
+  // Build the static structure with h3 empty, then set text via textContent
+  // to eliminate the innerHTML XSS sink for el.label.
   panel.innerHTML = `
-    <h3>${el.label}</h3>
+    <h3 class="properties-title"></h3>
 
     ${isTextLabel ? `
     <div class="prop-group">
@@ -121,6 +124,9 @@ export function showProperties(el, onDelete, onAnyChange) {
     <button id="p-delete" class="btn-danger">Delete Element</button>
   `;
 
+  // Set the h3 text via textContent (inherently safe — never interprets HTML)
+  panel.querySelector('.properties-title').textContent = el.label;
+
   // ── Bind inputs ────────────────────────────────────────────────────────────
 
   // Text label: one field drives both preview (canvas) and format (Monkey C export)
@@ -177,6 +183,3 @@ export function showProperties(el, onDelete, onAnyChange) {
   }
 }
 
-function escHtml(str) {
-  return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-}
