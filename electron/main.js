@@ -213,16 +213,17 @@ function createWindow() {
     }
   });
 
-  // Open DevTools only if explicitly requested via OPEN_DEVTOOLS flag
-  // This prevents DevTools from opening on every normal startup
-  if (process.env.OPEN_DEVTOOLS === '1') {
+  // Detect development mode
+  const isDev = process.env.ELECTRON_IS_DEV === '1' || process.env.NODE_ENV === 'development';
+
+  // Open DevTools automatically in dev mode for easier debugging
+  // or when explicitly requested via OPEN_DEVTOOLS flag
+  if (isDev || process.env.OPEN_DEVTOOLS === '1') {
     mainWindow.webContents.openDevTools();
   }
 
   // Allow DevTools keyboard shortcuts (F12, Ctrl+Shift+I) in development mode
   // In production (packaged app), block these shortcuts
-  // ELECTRON_IS_DEV is set by 'npm start' for development mode
-  const isDev = process.env.ELECTRON_IS_DEV === '1';
   if (!isDev) {
     mainWindow.webContents.on('before-input-event', (event, input) => {
       if (input.control && input.shift && input.key.toLowerCase() === 'i') event.preventDefault();
