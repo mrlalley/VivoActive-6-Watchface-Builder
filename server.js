@@ -232,87 +232,128 @@ function createServer(config = {}, detectors = {}) {
   //   GET /, static files middleware
 
   // ── GET /api/export/check/:projectName – Check if project exists ──
-  // Updated for async traversal: readdirSync/lstatSync replaced with
-  // fs.promises to prevent event loop blocking on large export trees.
+  // Uses export manifest for O(1) direct lookup. Falls back to recursive scan
+  // only if manifest is missing or stale (e.g., after export directory is cleaned externally).
   app.get('/api/export/check/:projectName', requireSessionToken, buildLimiter, async (req, res) => {
     try {
       const projectName = req.params.projectName;
-      // Sanitize the incoming name with the same function used during export.
-      // This ensures the collision check matches what the user will actually create.
       const prgName = safePrgName(projectName);
       const expectedFileName = `${prgName}.prg`;
 
-      // Search for the .prg file in the export directory (recursively with depth limit).
-      // Async version prevents event loop blocking during I/O waits.
-      // Returns the directory containing the matching .prg file, or null if not found.
-      // This allows post-retrieval cleanup to know exactly which requestId dir to delete.
       let foundInDir = null;
-      try {
-        const MAX_DEPTH = 10;
-        const MAX_FILES_CHECKED = 10000;
-        let filesChecked = 0;
 
-        const findFileAsync = async (dir, currentDepth = 0) => {
-          if (currentDepth > MAX_DEPTH) {
-            throw new Error(`Export directory too deeply nested (max depth: ${MAX_DEPTH})`);
-          }
-          if (filesChecked++ > MAX_FILES_CHECKED) {
-            throw new Error(`Too many files in export directory (searched ${MAX_FILES_CHECKED}+ files)`);
-          }
+      // ─── Phase 1: Try direct lookup via manifest ──────────────────────────
+      const manifestPath = path.join(cfg.exportDir, '.exports.json');
+      if (fs.existsSync(manifestPath)) {
+        try {
+          const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+          const manifest = JSON.parse(manifestContent);
+          const requestId = manifest[prgName];
 
-          try {
-            const files = await fs.promises.readdir(dir);
-            for (const file of files) {
-              const filePath = path.join(dir, file);
-              let stat;
-              try {
-                stat = await fs.promises.lstat(filePath);
-              } catch (err) {
-                // Entry disappeared between readdir and lstat — skip it
-                if (err.code === 'ENOENT') continue;
-                throw err;
-              }
-              if (stat.isSymbolicLink()) {
-                continue;
-              } else if (stat.isDirectory()) {
-                const found = await findFileAsync(filePath, currentDepth + 1);
-                if (found) return found; // propagate the containing dir back up
-              } else if (file === expectedFileName) {
-                return dir; // return the directory that directly contains the .prg
-              }
+          if (requestId) {
+            // Construct the expected .prg path and verify it exists
+            const expectedPath = path.join(cfg.exportDir, requestId, 'bin', `${prgName}.prg`);
+
+            // Verify path is rooted in exportDir (safety check)
+            const resolvedPath = path.resolve(expectedPath);
+            const resolvedExportDir = path.resolve(cfg.exportDir);
+            if (resolvedPath.startsWith(resolvedExportDir) && fs.existsSync(expectedPath)) {
+              foundInDir = path.dirname(expectedPath); // Return the 'bin' directory
+              logInfo('export-check:manifest-hit', { prgName, requestId });
+            } else if (requestId) {
+              // Manifest entry exists but file not found — stale entry, will be cleaned via fallback
+              logWarn('export-check:stale-manifest', { prgName, requestId });
             }
-          } catch (readErr) {
-            logWarn('export-check:read-failed', { dir, reason: readErr.message });
           }
-          return null;
-        };
-
-        if (fs.existsSync(cfg.exportDir)) {
-          foundInDir = await findFileAsync(cfg.exportDir, 0);
+        } catch (manifestErr) {
+          logWarn('export-check:manifest-read-failed', { reason: manifestErr.message });
+          // Fall through to recursive scan
         }
-      } catch (searchErr) {
-        res.status(400).json({ success: false, error: searchErr.message });
-        return;
+      }
+
+      // ─── Phase 2: Fallback to recursive scan (for missing/stale manifest) ──
+      if (!foundInDir && fs.existsSync(cfg.exportDir)) {
+        try {
+          const MAX_DEPTH = 10;
+          const MAX_FILES_CHECKED = 10000;
+          let filesChecked = 0;
+
+          const findFileAsync = async (dir, currentDepth = 0) => {
+            if (currentDepth > MAX_DEPTH) {
+              throw new Error(`Export directory too deeply nested (max depth: ${MAX_DEPTH})`);
+            }
+            if (filesChecked++ > MAX_FILES_CHECKED) {
+              throw new Error(`Too many files in export directory (searched ${MAX_FILES_CHECKED}+ files)`);
+            }
+
+            try {
+              const files = await fs.promises.readdir(dir);
+              for (const file of files) {
+                const filePath = path.join(dir, file);
+                let stat;
+                try {
+                  stat = await fs.promises.lstat(filePath);
+                } catch (err) {
+                  // Entry disappeared between readdir and lstat — skip it
+                  if (err.code === 'ENOENT') continue;
+                  throw err;
+                }
+                if (stat.isSymbolicLink()) {
+                  continue;
+                } else if (stat.isDirectory()) {
+                  const found = await findFileAsync(filePath, currentDepth + 1);
+                  if (found) return found;
+                } else if (file === expectedFileName) {
+                  return dir; // return the directory that directly contains the .prg
+                }
+              }
+            } catch (readErr) {
+              logWarn('export-check:read-failed', { dir, reason: readErr.message });
+            }
+            return null;
+          };
+
+          foundInDir = await findFileAsync(cfg.exportDir, 0);
+          if (foundInDir) {
+            logInfo('export-check:fallback-scan', { prgName });
+          }
+        } catch (searchErr) {
+          res.status(400).json({ success: false, error: searchErr.message });
+          return;
+        }
       }
 
       const exists = foundInDir !== null;
       res.json({ success: true, exists, projectName });
 
-      // Strategy A — post-retrieval cleanup:
-      // Defer deletion until after res.json() has queued the response body.
-      // setImmediate fires after the current event loop tick, guaranteeing the
-      // response is committed before any filesystem operation begins.
-      // Deletion failure is logged but never surfaces to the client.
+      // Post-retrieval cleanup: delete the requestId directory after response is queued
       if (exists) {
-        // Derive the requestId-level directory: the immediate child of exportDir
-        // that contains (or is) the directory where the .prg was found.
         const rel = path.relative(cfg.exportDir, foundInDir);
         const requestDir = path.join(cfg.exportDir, rel.split(path.sep)[0]);
 
         setImmediate(async () => {
           try {
+            // Remove the requestId directory
             await fs.promises.rm(requestDir, { recursive: true, force: true });
             logInfo('export-check:cleanup', { requestDir: path.basename(requestDir) });
+
+            // Clean up manifest entry if present
+            try {
+              const manifestPath = path.join(cfg.exportDir, '.exports.json');
+              if (fs.existsSync(manifestPath)) {
+                const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+                const manifest = JSON.parse(manifestContent);
+                if (manifest[prgName]) {
+                  delete manifest[prgName];
+                  const tmpPath = manifestPath + '.tmp';
+                  fs.writeFileSync(tmpPath, JSON.stringify(manifest, null, 2));
+                  fs.renameSync(tmpPath, manifestPath);
+                  logInfo('export-check:manifest-cleaned', { prgName });
+                }
+              }
+            } catch (cleanupErr) {
+              logWarn('export-check:manifest-cleanup-failed', { reason: cleanupErr.message });
+            }
           } catch (err) {
             logWarn('export-check:cleanup-failed', { requestDir: path.basename(requestDir), reason: err.message });
           }
