@@ -35,3 +35,29 @@ project_inventory.txt
 CLAUDE.md.good
 CLAUDE.md.bak
 CLAUDE.md.orig
+
+# ── Electron Forge build outputs ────────────────────────────────────────
+# out/: Forge packager output (platform-specific app bundles)
+# release/: Forge make output (signed installers, DMG, AppImage, etc.)
+out/
+release/
+
+# ── Code signing and distribution certificates ──────────────────────────
+# Never commit private keys, signing certificates, or credential files.
+# These must be supplied at CI/CD time via secrets, not stored in the repo.
+*.p12
+*.pfx
+*.cer
+*.crt
+*.key
+*.pem
+*.der
+*.keystore
+
+# Apple-specific notarization and signing files
+apple_*.json
+notarization_*.txt
+.apple-*
+
+# Windows code signing
+*.snk
