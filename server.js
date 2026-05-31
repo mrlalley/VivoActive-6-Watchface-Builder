@@ -231,7 +231,9 @@ function createServer(config = {}, detectors = {}) {
   //   GET /, static files middleware
 
   // ── GET /api/export/check/:projectName – Check if project exists ──
-  app.get('/api/export/check/:projectName', requireSessionToken, buildLimiter, (req, res) => {
+  // Updated for async traversal: readdirSync/lstatSync replaced with
+  // fs.promises to prevent event loop blocking on large export trees.
+  app.get('/api/export/check/:projectName', requireSessionToken, buildLimiter, async (req, res) => {
     try {
       const projectName = req.params.projectName;
       // Sanitize the incoming name with the same function used during export.
@@ -240,6 +242,7 @@ function createServer(config = {}, detectors = {}) {
       const expectedFileName = `${prgName}.prg`;
 
       // Search for the .prg file in the export directory (recursively with depth limit).
+      // Async version prevents event loop blocking during I/O waits.
       // Returns the directory containing the matching .prg file, or null if not found.
       // This allows post-retrieval cleanup to know exactly which requestId dir to delete.
       let foundInDir = null;
@@ -248,7 +251,7 @@ function createServer(config = {}, detectors = {}) {
         const MAX_FILES_CHECKED = 10000;
         let filesChecked = 0;
 
-        const findFile = (dir, currentDepth = 0) => {
+        const findFileAsync = async (dir, currentDepth = 0) => {
           if (currentDepth > MAX_DEPTH) {
             throw new Error(`Export directory too deeply nested (max depth: ${MAX_DEPTH})`);
           }
@@ -257,14 +260,21 @@ function createServer(config = {}, detectors = {}) {
           }
 
           try {
-            const files = fs.readdirSync(dir);
+            const files = await fs.promises.readdir(dir);
             for (const file of files) {
               const filePath = path.join(dir, file);
-              const stat = fs.lstatSync(filePath);
+              let stat;
+              try {
+                stat = await fs.promises.lstat(filePath);
+              } catch (err) {
+                // Entry disappeared between readdir and lstat — skip it
+                if (err.code === 'ENOENT') continue;
+                throw err;
+              }
               if (stat.isSymbolicLink()) {
                 continue;
               } else if (stat.isDirectory()) {
-                const found = findFile(filePath, currentDepth + 1);
+                const found = await findFileAsync(filePath, currentDepth + 1);
                 if (found) return found; // propagate the containing dir back up
               } else if (file === expectedFileName) {
                 return dir; // return the directory that directly contains the .prg
@@ -277,7 +287,7 @@ function createServer(config = {}, detectors = {}) {
         };
 
         if (fs.existsSync(cfg.exportDir)) {
-          foundInDir = findFile(cfg.exportDir, 0);
+          foundInDir = await findFileAsync(cfg.exportDir, 0);
         }
       } catch (searchErr) {
         res.status(400).json({ success: false, error: searchErr.message });
