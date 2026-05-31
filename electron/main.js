@@ -213,18 +213,17 @@ function createWindow() {
     }
   });
 
-  // Detect development mode
-  const isDev = process.env.ELECTRON_IS_DEV === '1' || process.env.NODE_ENV === 'development';
-
-  // Open DevTools automatically in dev mode for easier debugging
-  // or when explicitly requested via OPEN_DEVTOOLS flag
-  if (isDev || process.env.OPEN_DEVTOOLS === '1') {
+  // Open DevTools only if explicitly requested via OPEN_DEVTOOLS flag.
+  // F12 and Ctrl+Shift+I shortcuts always work in dev mode (never blocked).
+  // In production (packaged app), both auto-open and keyboard shortcuts are disabled.
+  if (process.env.OPEN_DEVTOOLS === '1') {
     mainWindow.webContents.openDevTools();
   }
 
-  // Allow DevTools keyboard shortcuts (F12, Ctrl+Shift+I) in development mode
-  // In production (packaged app), block these shortcuts
-  if (!isDev) {
+  // Block DevTools shortcuts in production builds only.
+  // In development, F12 and Ctrl+Shift+I always work.
+  const isProduction = !process.env.ELECTRON_IS_DEV && process.env.NODE_ENV === 'production';
+  if (isProduction) {
     mainWindow.webContents.on('before-input-event', (event, input) => {
       if (input.control && input.shift && input.key.toLowerCase() === 'i') event.preventDefault();
       if (input.key === 'F12') event.preventDefault();
