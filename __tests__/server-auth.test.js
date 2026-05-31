@@ -181,4 +181,55 @@ describe('[Option A] Session token enforcement', () => {
       expect(res.body.error).toBeDefined();
     });
   });
+
+  describe('requireSessionToken', () => {
+    // Focused regression tests: ensure the middleware enforces the token strictly.
+    // Prior behavior: passed through when token was absent (dangerous).
+    // Current behavior: rejects with 401 (correct).
+
+    describe('no-token misconfiguration', () => {
+      beforeEach(() => {
+        delete process.env.WFB_SESSION_TOKEN;
+        if (fs.existsSync(testDir)) {
+          fs.rmSync(testDir, { recursive: true });
+        }
+        fs.mkdirSync(testDir, { recursive: true });
+        server = createServer(mockConfig);
+      });
+
+      it('returns 401 when expectedTokenBuf is null (no token configured)', async () => {
+        // When WFB_SESSION_TOKEN is not set, expectedTokenBuf is null.
+        // The middleware must reject the request, not pass through.
+        const res = await request(server)
+          .get('/api/designs')
+          .expect(401);
+
+        expect(res.body.error).toBeDefined();
+        expect(res.body.error).toMatch(/[Mm]isconfigured|not set/i);
+      });
+    });
+
+    describe('wrong-token rejection', () => {
+      beforeEach(() => {
+        process.env.WFB_SESSION_TOKEN = TOKEN;
+        if (fs.existsSync(testDir)) {
+          fs.rmSync(testDir, { recursive: true });
+        }
+        fs.mkdirSync(testDir, { recursive: true });
+        server = createServer(mockConfig);
+      });
+
+      it('returns 401 when Authorization header token does not match', async () => {
+        // A provided token that doesn't match expectedTokenBuf must be rejected.
+        // This prevents unauthorized requests even when a token is sent.
+        const res = await request(server)
+          .get('/api/designs')
+          .set('X-WFB-Token', 'b'.repeat(64)) // Wrong token
+          .expect(401);
+
+        expect(res.body.error).toBeDefined();
+        expect(res.body.error).toMatch(/[Uu]nauthorized|[Ii]nvalid/);
+      });
+    });
+  });
 });
