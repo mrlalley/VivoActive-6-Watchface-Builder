@@ -27,14 +27,14 @@ describe('Validation', () => {
       expect(() => validateProjectName(null)).toThrow('non-empty string');
     });
 
-    it('rejects names over 100 characters', () => {
-      const longName = 'a'.repeat(101);
-      expect(() => validateProjectName(longName)).toThrow('100 characters or less');
+    it('rejects names over 30 characters', () => {
+      const longName = 'a'.repeat(31);
+      expect(() => validateProjectName(longName)).toThrow('30 characters or fewer');
     });
 
-    it('accepts 100 character names', () => {
-      const name100 = 'a'.repeat(100);
-      expect(validateProjectName(name100)).toBe(true);
+    it('accepts 30 character names', () => {
+      const name30 = 'a'.repeat(30);
+      expect(validateProjectName(name30)).toBe(true);
     });
   });
 

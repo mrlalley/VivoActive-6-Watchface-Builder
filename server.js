@@ -219,6 +219,8 @@ function createServer(config = {}, detectors = {}) {
   app.get('/api/export/check/:projectName', requireSessionToken, buildLimiter, (req, res) => {
     try {
       const projectName = req.params.projectName;
+      // Sanitize the incoming name with the same function used during export.
+      // This ensures the collision check matches what the user will actually create.
       const prgName = safePrgName(projectName);
       const expectedFileName = `${prgName}.prg`;
 
