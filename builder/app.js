@@ -615,7 +615,46 @@ function handleNew() {
 }
 
 async function handleSaveDesign() {
-  const projectName = prompt('Design name:', 'MyWatchFace');
+  // Show the save design dialog and get the project name
+  const overlay = document.getElementById('save-design-overlay');
+  const input = document.getElementById('save-design-input');
+  const confirmBtn = document.getElementById('save-design-confirm');
+  const cancelBtn = document.getElementById('save-design-cancel');
+  const closeBtn = document.getElementById('save-design-close');
+
+  overlay.classList.remove('hidden');
+  input.focus();
+  input.select();
+
+  // Wait for user to confirm or cancel
+  const projectName = await new Promise((resolve) => {
+    const handleConfirm = () => {
+      const name = input.value.trim();
+      cleanup();
+      resolve(name || null);
+    };
+    const handleCancel = () => {
+      cleanup();
+      resolve(null);
+    };
+    const cleanup = () => {
+      overlay.classList.add('hidden');
+      confirmBtn.removeEventListener('click', handleConfirm);
+      cancelBtn.removeEventListener('click', handleCancel);
+      closeBtn.removeEventListener('click', handleCancel);
+      input.removeEventListener('keydown', handleKeydown);
+    };
+    const handleKeydown = (e) => {
+      if (e.key === 'Enter') handleConfirm();
+      if (e.key === 'Escape') handleCancel();
+    };
+
+    confirmBtn.addEventListener('click', handleConfirm);
+    cancelBtn.addEventListener('click', handleCancel);
+    closeBtn.addEventListener('click', handleCancel);
+    input.addEventListener('keydown', handleKeydown);
+  });
+
   if (!projectName) return;
 
   // Check if design already exists

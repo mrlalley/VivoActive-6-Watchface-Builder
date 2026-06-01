@@ -187,6 +187,24 @@
     </div>
   </div>
 
+  <!-- ── Save Design Dialog ────────────────────────────────────── -->
+  <div id="save-design-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3>Save Design</h3>
+        <button id="save-design-close" class="btn-close" aria-label="Close">✕</button>
+      </div>
+      <div style="padding: 16px;">
+        <label for="save-design-input" style="display: block; margin-bottom: 8px; font-weight: 500;">Design Name:</label>
+        <input id="save-design-input" type="text" value="MyWatchFace" style="width: 100%; padding: 8px; border: 1px solid #444; border-radius: 3px; background: #2a2a2a; color: #fff; font-size: 14px; box-sizing: border-box;">
+        <div style="display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end;">
+          <button id="save-design-cancel" class="btn" style="background: #444;">Cancel</button>
+          <button id="save-design-confirm" class="btn" style="background: #4a9eff;">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="app.js"></script>
 </body>
 </html>

@@ -130,6 +130,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     });
 
     // Return a Response-like object that can cross the contextBridge
+    // Pre-read the body so it can be used by both text() and json()
+    const bodyText = await response.text();
     return {
       status: response.status,
       statusText: response.statusText,
@@ -137,10 +139,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       headers: {
         'content-type': response.headers.get('content-type'),
       },
-      // Provide a json() method that parses and returns the body
-      json: async () => {
-        return await response.json();
-      },
+      text: async () => bodyText,
+      json: async () => JSON.parse(bodyText),
     };
   },
 
