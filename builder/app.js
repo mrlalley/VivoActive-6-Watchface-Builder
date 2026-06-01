@@ -870,7 +870,46 @@ async function handlePreview() {
 }
 
 async function handleExport() {
-  const name = prompt('Project name (used in manifest.xml):', 'MyWatchFace');
+  // Show the export dialog and get the project name
+  const overlay = document.getElementById('export-overlay');
+  const input = document.getElementById('export-input');
+  const confirmBtn = document.getElementById('export-confirm');
+  const cancelBtn = document.getElementById('export-cancel');
+  const closeBtn = document.getElementById('export-close');
+
+  overlay.classList.remove('hidden');
+  input.focus();
+  input.select();
+
+  // Wait for user to confirm or cancel
+  const name = await new Promise((resolve) => {
+    const handleConfirm = () => {
+      const value = input.value.trim();
+      cleanup();
+      resolve(value || 'MyWatchFace');
+    };
+    const handleCancel = () => {
+      cleanup();
+      resolve(null);
+    };
+    const cleanup = () => {
+      overlay.classList.add('hidden');
+      confirmBtn.removeEventListener('click', handleConfirm);
+      cancelBtn.removeEventListener('click', handleCancel);
+      closeBtn.removeEventListener('click', handleCancel);
+      input.removeEventListener('keydown', handleKeydown);
+    };
+    const handleKeydown = (e) => {
+      if (e.key === 'Enter') handleConfirm();
+      if (e.key === 'Escape') handleCancel();
+    };
+
+    confirmBtn.addEventListener('click', handleConfirm);
+    cancelBtn.addEventListener('click', handleCancel);
+    closeBtn.addEventListener('click', handleCancel);
+    input.addEventListener('keydown', handleKeydown);
+  });
+
   if (name === null) return;
 
   const projectName = name.trim() || 'MyWatchFace';

@@ -205,6 +205,24 @@
     </div>
   </div>
 
+  <!-- ── Export Dialog ────────────────────────────────────── -->
+  <div id="export-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3>Export Project</h3>
+        <button id="export-close" class="btn-close" aria-label="Close">✕</button>
+      </div>
+      <div style="padding: 16px;">
+        <label for="export-input" style="display: block; margin-bottom: 8px; font-weight: 500;">Project Name (used in manifest.xml):</label>
+        <input id="export-input" type="text" value="MyWatchFace" style="width: 100%; padding: 8px; border: 1px solid #444; border-radius: 3px; background: #2a2a2a; color: #fff; font-size: 14px; box-sizing: border-box;">
+        <div style="display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end;">
+          <button id="export-cancel" class="btn" style="background: #444;">Cancel</button>
+          <button id="export-confirm" class="btn" style="background: #4a9eff;">Export</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="app.js"></script>
 </body>
 </html>
