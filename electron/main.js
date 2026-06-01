@@ -24,7 +24,6 @@ const { createServerManager } = require('./server-manager');
 const log = createLogger('main');
 
 let mainWindow;
-let serverProcess = null;
 
 // Generated once per Electron session. Never persisted to disk. Never logged.
 // Injected into server.js child process via WFB_SESSION_TOKEN env var.
@@ -471,10 +470,8 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-// Safety net: kill the server child process if Electron exits without triggering before-quit
+// Safety net: delegate cleanup through serverManager if Electron exits without before-quit
 // (e.g., uncaught exception in main process). before-quit is the primary cleanup path.
 process.on('exit', () => {
-  if (serverProcess && !serverProcess.killed) {
-    serverProcess.kill();
-  }
+  serverManager?.killServer();
 });
