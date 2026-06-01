@@ -1,130 +1,203 @@
 'use strict';
 
 /**
- * Tests for correct HTTP status code semantics in API responses.
+ * Tests for correct HTTP status code semantics across API routes.
  *
- * Each endpoint should return appropriate 4xx/5xx codes for errors, not 200.
- * Validates that status codes match error types: 400 for validation, 500 for server errors, etc.
+ * Strategy:
+ * - jest.mock() calls are hoisted by Jest before any require(), so the
+ *   mocked versions are what server.js captures when it destructures them at
+ *   module load time.
+ * - Queue singletons (buildQueue, designSaveQueue) are shared objects: spying
+ *   on their .add method in the test affects the same reference the route
+ *   handler holds.
+ * - Call-through defaults preserve real validation behaviour for existing 4xx
+ *   tests without duplicating lib unit-test coverage.
  */
 
-const express = require('express');
+// ─── Module-level mocks (hoisted before require('../server')) ─────────────────
+
+jest.mock('../lib/build', () => {
+  return { ...jest.requireActual('../lib/build'), buildProject: jest.fn() };
+});
+
+jest.mock('../lib/design-store', () => {
+  return {
+    ...jest.requireActual('../lib/design-store'),
+    listDesigns: jest.fn(),
+    saveDesign:  jest.fn(),
+    loadDesign:  jest.fn(),
+  };
+});
+
+// Stub the simulator launcher — we never want to actually launch a process in tests.
+jest.mock('../lib/preview', () => ({
+  ...jest.requireActual('../lib/preview'),
+  previewInSimulator: jest.fn(),
+}));
+
+// ─── Requires (after mock hoisting) ──────────────────────────────────────────
+
 const request = require('supertest');
 const { createServer } = require('../server');
 const path = require('path');
-const fs = require('fs');
+const fs   = require('fs');
+
+// References to the jest.fn() instances captured by server.js at require time
+const { buildProject }               = require('../lib/build');
+const { listDesigns, saveDesign, loadDesign } = require('../lib/design-store');
+const { buildQueue, designSaveQueue } = require('../lib/queue');
+const { QueueFullError }             = require('../lib/errors');
+
+// Actual implementations used as call-through defaults
+const _actual = {
+  buildProject: jest.requireActual('../lib/build').buildProject,
+  listDesigns:  jest.requireActual('../lib/design-store').listDesigns,
+  saveDesign:   jest.requireActual('../lib/design-store').saveDesign,
+  loadDesign:   jest.requireActual('../lib/design-store').loadDesign,
+};
+
+// ─── Suite setup ─────────────────────────────────────────────────────────────
 
 describe('HTTP Status Code Semantics', () => {
-  const TOKEN = 'a'.repeat(64);
+  const TOKEN   = 'a'.repeat(64);
   let server;
   const testDir = path.join(__dirname, 'test-status-codes');
   const mockConfig = {
-    designsDir: testDir,
-    sdkPath: '/fake/sdk',
-    devKeyPath: '/fake/key',
-    simExe: '/fake/sim'
+    designsDir:  testDir,
+    exportDir:   path.join(testDir, 'exports'),
+    sdkBin:      '/fake/sdk/bin',
+    devKey:      '/fake/key.der',
+    simExe:      '/fake/sim',
   };
 
   beforeEach(() => {
-    this.savedToken = process.env.WFB_SESSION_TOKEN;
+    // Restore call-through defaults before every test so 4xx tests see real validation
+    buildProject.mockImplementation((...a) => _actual.buildProject(...a));
+    listDesigns.mockImplementation((...a)  => _actual.listDesigns(...a));
+    saveDesign.mockImplementation((...a)   => _actual.saveDesign(...a));
+    loadDesign.mockImplementation((...a)   => _actual.loadDesign(...a));
+
     process.env.WFB_SESSION_TOKEN = TOKEN;
-    if (fs.existsSync(testDir)) {
-      fs.rmSync(testDir, { recursive: true });
-    }
-    fs.mkdirSync(testDir, { recursive: true });
+    fs.rmSync(testDir, { recursive: true, force: true });
+    fs.mkdirSync(mockConfig.exportDir, { recursive: true });
     server = createServer(mockConfig);
   });
 
   afterEach(() => {
-    if (this.savedToken) {
-      process.env.WFB_SESSION_TOKEN = this.savedToken;
-    } else {
-      delete process.env.WFB_SESSION_TOKEN;
-    }
-    if (fs.existsSync(testDir)) {
-      fs.rmSync(testDir, { recursive: true });
-    }
+    delete process.env.WFB_SESSION_TOKEN;
+    fs.rmSync(testDir, { recursive: true, force: true });
+    jest.restoreAllMocks(); // restores buildQueue / designSaveQueue spies
   });
 
+  // ─── POST /api/export ──────────────────────────────────────────────────────
+
   describe('POST /api/export', () => {
-    test('returns 200 for successful export', async () => {
-      // A successful build returns 200.
-      // Note: This test cannot actually succeed without mocking buildProject,
-      // but we verify the status code would be 200 on success.
-      // The validation logic itself is tested in build.test.js.
-      expect(true).toBe(true);
+    test('returns 200 for successful build; internal paths absent from response', async () => {
+      buildProject.mockResolvedValueOnce({
+        success:     true,
+        requestId:   'req-200-ok',
+        log:         'Build complete',
+        prgPath:     '/srv/exports/req-200-ok/bin/Face.prg',   // must be stripped
+        designPath:  '/srv/exports/req-200-ok/design.json',    // must be stripped
+        projectPath: '/srv/exports/req-200-ok',                // must be stripped
+      });
+
+      const res = await request(server)
+        .post('/api/export')
+        .set('X-WFB-Token', TOKEN)
+        .send({ elements: [], projectName: 'GoodFace' })
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.requestId).toBe('req-200-ok');
+      expect(res.body.prgPath).toBeUndefined();
+      expect(res.body.designPath).toBeUndefined();
+      expect(res.body.projectPath).toBeUndefined();
     });
 
     test('returns 400 for build failure (invalid elements)', async () => {
-      // buildProject returns { success: false, error: "..." } for bad input.
-      // We expect 400 for build failures (client-side problem).
       const res = await request(server)
         .post('/api/export')
         .set('X-WFB-Token', TOKEN)
         .send({ elements: [{ invalid: 'element' }], projectName: 'TestFace' });
 
-      expect([400, 401]).toContain(res.status);
-      if (res.status === 400) {
-        expect(res.body.success).toBe(false);
-        expect(res.body.error).toBeDefined();
-      }
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toBeDefined();
     });
 
-    test('returns 500 for server error (queue error)', async () => {
-      // If queue.add throws an unexpected error (not "Queue full"),
-      // we return 500 (server-side failure).
-      // This cannot be tested without mocking, but we verify the pattern is correct.
-      expect(true).toBe(true);
+    test('returns 500 for unexpected queue error', async () => {
+      jest.spyOn(buildQueue, 'add').mockRejectedValueOnce(new Error('disk full'));
+
+      const res = await request(server)
+        .post('/api/export')
+        .set('X-WFB-Token', TOKEN)
+        .send({ elements: [], projectName: 'TestFace' })
+        .expect(500);
+
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toBeDefined();
     });
 
-    test('returns 503 for queue full', async () => {
-      // Rate limiter already handles 429. Queue saturation is 503.
-      // This is already tested in server-rate-limit.test.js.
-      expect(true).toBe(true);
+    test('returns 503 with Retry-After: 60 when build queue is full', async () => {
+      jest.spyOn(buildQueue, 'add').mockRejectedValueOnce(new QueueFullError());
+
+      const res = await request(server)
+        .post('/api/export')
+        .set('X-WFB-Token', TOKEN)
+        .send({ elements: [], projectName: 'TestFace' })
+        .expect(503);
+
+      expect(res.body.success).toBe(false);
+      expect(res.headers['retry-after']).toBe('60');
     });
   });
 
+  // ─── POST /api/save-design ─────────────────────────────────────────────────
+
   describe('POST /api/save-design', () => {
-    test('returns 400 for save failure (validation error)', async () => {
-      // saveDesign returns { success: false, error: "..." } for bad input.
-      // We expect 400 for save failures (client-side problem).
-      // Valid projectName and elements that pass validation, but we'll trigger an error
-      // by passing invalid elements structure that the design validator rejects.
+    test('returns 400 for save failure (invalid elements fail validation)', async () => {
       const res = await request(server)
         .post('/api/save-design')
         .set('X-WFB-Token', TOKEN)
         .send({ projectName: 'TestDesign', elements: [{ invalid: 'element' }] });
 
-      // For this test, we're verifying the HTTP status code behavior.
-      // If save fails due to validation, we return 400.
-      // If save succeeds (or passes validation), it returns 200.
-      // Valid tests will show success: true or success: false with appropriate status.
-      if (res.status === 500 && res.body.error) {
-        console.log('DEBUG: Got 500 with error:', res.body.error);
-      }
-      if (res.body.success === false) {
-        // Save failure should return 400 or 500 (depending on error type)
-        // For now, just verify it's not 200
-        expect(res.status).toBeGreaterThanOrEqual(400);
-      } else {
-        // Save success returns 200
-        expect(res.status).toBe(200);
-        expect(res.body.success).toBe(true);
-      }
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toBeDefined();
     });
 
-    test('returns 500 for server error (queue error)', async () => {
-      // Unexpected queue errors return 500.
-      expect(true).toBe(true);
+    test('returns 500 for unexpected queue error', async () => {
+      jest.spyOn(designSaveQueue, 'add').mockRejectedValueOnce(new Error('unexpected failure'));
+
+      const res = await request(server)
+        .post('/api/save-design')
+        .set('X-WFB-Token', TOKEN)
+        .send({ projectName: 'TestDesign', elements: [] })
+        .expect(500);
+
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toBeDefined();
     });
 
-    test('returns 503 for queue full', async () => {
-      expect(true).toBe(true);
+    test('returns 503 with Retry-After: 60 when save queue is full', async () => {
+      jest.spyOn(designSaveQueue, 'add').mockRejectedValueOnce(new QueueFullError());
+
+      const res = await request(server)
+        .post('/api/save-design')
+        .set('X-WFB-Token', TOKEN)
+        .send({ projectName: 'TestDesign', elements: [] })
+        .expect(503);
+
+      expect(res.body.success).toBe(false);
+      expect(res.headers['retry-after']).toBe('60');
     });
   });
 
+  // ─── GET /api/designs ─────────────────────────────────────────────────────
+
   describe('GET /api/designs', () => {
     test('returns 200 for successful list', async () => {
-      // Empty design directory returns success.
       const res = await request(server)
         .get('/api/designs')
         .set('X-WFB-Token', TOKEN)
@@ -134,54 +207,49 @@ describe('HTTP Status Code Semantics', () => {
       expect(Array.isArray(res.body.designs)).toBe(true);
     });
 
-    test('returns 500 for filesystem error', async () => {
-      // If designs directory is not accessible, return 500.
-      // Simulate by removing read permission (platform-dependent, may not work on Windows).
-      // Instead, we verify the code path: listDesigns throws → 500.
-      expect(true).toBe(true);
+    test('returns 500 when listDesigns throws a filesystem error', async () => {
+      listDesigns.mockRejectedValueOnce(new Error('EACCES: permission denied'));
+
+      const res = await request(server)
+        .get('/api/designs')
+        .set('X-WFB-Token', TOKEN)
+        .expect(500);
+
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toMatch(/EACCES/);
     });
   });
 
+  // ─── GET /api/designs/:filename ───────────────────────────────────────────
+
   describe('GET /api/designs/:filename', () => {
     test('returns 404 for design not found', async () => {
-      // Trying to load a non-existent design returns 404.
       const res = await request(server)
         .get('/api/designs/nonexistent.json')
-        .set('X-WFB-Token', TOKEN);
+        .set('X-WFB-Token', TOKEN)
+        .expect(404);
 
-      // Debug: log if status is not 404
-      if (res.status !== 404) {
-        console.log('Unexpected status:', res.status, 'Body:', res.body);
-      }
-
-      expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
       expect(res.body.error).toMatch(/not found/i);
     });
 
     test('returns 400 for corrupted design file', async () => {
-      // Write a corrupted JSON file.
-      const filePath = path.join(testDir, 'corrupted.json');
-      fs.writeFileSync(filePath, 'not valid json{{{');
+      fs.writeFileSync(path.join(testDir, 'corrupted.json'), 'not valid json{{{');
 
       const res = await request(server)
         .get('/api/designs/corrupted.json')
-        .set('X-WFB-Token', TOKEN);
+        .set('X-WFB-Token', TOKEN)
+        .expect(400);
 
-      expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
       expect(res.body.error).toMatch(/corrupted/i);
     });
 
     test('returns 200 for valid design', async () => {
-      // Write a valid design file.
-      const design = {
-        projectName: 'ValidDesign',
-        elements: [],
-        savedAt: new Date().toISOString()
-      };
-      const filePath = path.join(testDir, 'valid.json');
-      fs.writeFileSync(filePath, JSON.stringify(design));
+      fs.writeFileSync(
+        path.join(testDir, 'valid.json'),
+        JSON.stringify({ projectName: 'ValidDesign', elements: [], savedAt: new Date().toISOString() }),
+      );
 
       const res = await request(server)
         .get('/api/designs/valid.json')
@@ -192,6 +260,8 @@ describe('HTTP Status Code Semantics', () => {
       expect(res.body.design).toBeDefined();
     });
   });
+
+  // ─── GET /api/designs/check/:projectName ─────────────────────────────────
 
   describe('GET /api/designs/check/:projectName', () => {
     test('returns 200 with exists=false when design does not exist', async () => {
@@ -205,9 +275,10 @@ describe('HTTP Status Code Semantics', () => {
     });
 
     test('returns 200 with exists=true when design exists', async () => {
-      // Create a design file.
-      const filePath = path.join(testDir, 'existent.json');
-      fs.writeFileSync(filePath, JSON.stringify({ projectName: 'existent', elements: [] }));
+      fs.writeFileSync(
+        path.join(testDir, 'existent.json'),
+        JSON.stringify({ projectName: 'existent', elements: [] }),
+      );
 
       const res = await request(server)
         .get('/api/designs/check/existent')
@@ -219,6 +290,8 @@ describe('HTTP Status Code Semantics', () => {
     });
   });
 
+  // ─── POST /api/preview ────────────────────────────────────────────────────
+
   describe('POST /api/preview', () => {
     test('returns 400 for build failure (invalid elements)', async () => {
       const res = await request(server)
@@ -226,21 +299,39 @@ describe('HTTP Status Code Semantics', () => {
         .set('X-WFB-Token', TOKEN)
         .send({ elements: [{ invalid: 'element' }], projectName: 'TestPreview' });
 
-      expect([400, 401]).toContain(res.status);
-      if (res.status === 400) {
-        expect(res.body.success).toBe(false);
-        expect(res.body.error).toBeDefined();
-      }
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toBeDefined();
     });
 
-    test('returns 500 for server error (queue error)', async () => {
-      expect(true).toBe(true);
+    test('returns 500 for unexpected queue error', async () => {
+      jest.spyOn(buildQueue, 'add').mockRejectedValueOnce(new Error('unexpected failure'));
+
+      const res = await request(server)
+        .post('/api/preview')
+        .set('X-WFB-Token', TOKEN)
+        .send({ elements: [], projectName: 'TestPreview' })
+        .expect(500);
+
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toBeDefined();
     });
 
-    test('returns 503 for queue full', async () => {
-      expect(true).toBe(true);
+    test('returns 503 with Retry-After: 60 when build queue is full', async () => {
+      jest.spyOn(buildQueue, 'add').mockRejectedValueOnce(new QueueFullError());
+
+      const res = await request(server)
+        .post('/api/preview')
+        .set('X-WFB-Token', TOKEN)
+        .send({ elements: [], projectName: 'TestPreview' })
+        .expect(503);
+
+      expect(res.body.success).toBe(false);
+      expect(res.headers['retry-after']).toBe('60');
     });
   });
+
+  // ─── GET /api/export/check/:projectName ──────────────────────────────────
 
   describe('GET /api/export/check/:projectName', () => {
     test('returns 200 with exists=false when export does not exist', async () => {
@@ -253,30 +344,39 @@ describe('HTTP Status Code Semantics', () => {
       expect(res.body.exists).toBe(false);
     });
 
-    test('returns 400 for invalid project name or search error', async () => {
-      // This endpoint already returns 400 for search errors.
-      // The validation of the search itself is in the endpoint's try-catch.
-      expect(true).toBe(true);
+    test('returns 200 with rebuildQueued=true when manifest is absent (no tree scan)', async () => {
+      // No .exports.json in exportDir — route returns immediately with rebuildQueued:true
+      // rather than doing a synchronous recursive scan.
+      const res = await request(server)
+        .get('/api/export/check/SomeFace')
+        .set('X-WFB-Token', TOKEN)
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.exists).toBe(false);
+      expect(res.body.rebuildQueued).toBe(true);
     });
   });
 
+  // ─── Summary ─────────────────────────────────────────────────────────────
+
   describe('Status Code Classification Summary', () => {
     test('success endpoints return 2xx', async () => {
-      // GET /api/designs should return 200 for success
       const res = await request(server)
         .get('/api/designs')
         .set('X-WFB-Token', TOKEN);
 
-      expect(res.status >= 200 && res.status < 300).toBe(true);
+      expect(res.status).toBeGreaterThanOrEqual(200);
+      expect(res.status).toBeLessThan(300);
     });
 
     test('client error endpoints return 4xx', async () => {
-      // GET /api/designs/:filename should return 404 for not found
       const res = await request(server)
         .get('/api/designs/missing.json')
         .set('X-WFB-Token', TOKEN);
 
-      expect(res.status >= 400 && res.status < 500).toBe(true);
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(res.status).toBeLessThan(500);
     });
   });
 });
