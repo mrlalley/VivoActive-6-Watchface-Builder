@@ -85,8 +85,12 @@ function registerIpcHandlers(deps) {
       if (!validation.valid) {
         throw new Error(validation.error);
       }
-      store.set('sdkBin', config.sdkBin || '');
-      store.set('devKey', config.devKey || '');
+      // Normalize paths before persisting: eliminates redundant separators
+      // and ensures stored values match the form expected by lib/config.js.
+      // Validation already confirmed these are absolute, non-empty, and
+      // contain no control characters — normalization is safe at this point.
+      store.set('sdkBin', config.sdkBin ? path.normalize(config.sdkBin) : '');
+      store.set('devKey', config.devKey ? path.normalize(config.devKey) : '');
       // Schedule app relaunch after a brief delay to allow response to reach renderer
       setTimeout(() => {
         app.relaunch();
