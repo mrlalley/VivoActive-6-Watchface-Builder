@@ -9,19 +9,24 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const rateLimit = require('express-rate-limit');
 
 const { getConfig } = require('./lib/config');
 const { createLogger, logInfo, logError, logWarn } = require('./lib/logger');
 const { buildProject, sweepExportDir } = require('./lib/build');
-
-// Module-level pino logger — shared across all requests for this process lifetime.
-const log = createLogger('server');
 const { previewInSimulator } = require('./lib/preview');
 const { saveDesign, listDesigns, loadDesign } = require('./lib/design-store');
 const { buildQueue, designSaveQueue } = require('./lib/queue');
 const { generateKey, getDefaultKeyPath } = require('./lib/keygen');
 const { safePrgName } = require('./lib/naming');
+
+// Middleware factories extracted to server/ directory
+const { createSecurityMiddleware } = require('./server/middleware/security');
+const { createCspMiddleware } = require('./server/middleware/csp');
+const { createRateLimiters } = require('./server/middleware/rateLimiters');
+const { registerHealthRoutes } = require('./server/routes/health');
+
+// Module-level pino logger — shared across all requests for this process lifetime.
+const log = createLogger('server');
 
 // ─── Server factory ────────────────────────────────────────────────────────────
 // Creates and returns an Express app with all routes configured.
