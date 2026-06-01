@@ -18,6 +18,7 @@ const { createLoggedHandle, createRateLimitHandler } = require('./ipc-helpers');
 const { createHealthPollingManager } = require('./health-polling');
 const { createWindowManager } = require('./window-manager');
 const { createServerManager } = require('./server-manager');
+const { pickPort } = require('./port-utils');
 
 // Module-level logger — available before app.ready.
 // LOG_FILE_PATH is resolved in app.on('ready') via app.getPath('logs').
@@ -37,11 +38,11 @@ let LOG_FILE_PATH = null;
 const loggedHandle = createLoggedHandle(ipcMain, log);
 const withRateLimit = createRateLimitHandler(ipcMain);
 
-// Port is fixed so the health gate and renderer URL are known before spawn completes.
-// Override with WFB_SERVER_PORT env var to avoid conflicts in test environments.
-const SERVER_PORT   = parseInt(process.env.WFB_SERVER_PORT, 10) || 3000;
-const SERVER_URL    = `http://127.0.0.1:${SERVER_PORT}`;
-const HEALTH_URL    = `${SERVER_URL}/internal/healthz`;  // Liveness probe (unauthenticated)
+// SERVER_URL is resolved to a runtime-chosen port inside app.on('ready') via pickPort().
+// This module-level let is read by the web-contents-created navigation guard, which only
+// fires after 'ready' has run and the BrowserWindow has been created — so it is always set
+// by the time it is needed.
+let SERVER_URL = null;
 const MAX_WAIT_MS   = 10_000;
 const POLL_INTERVAL = 200;
 
@@ -278,8 +279,14 @@ app.on('ready', async () => {
   assertTemplateVersionExists();
   await checkSdkCompatibility();
 
+  // ── Resolve backend port ────────────────────────────────────────────────
+  // Use WFB_SERVER_PORT if explicitly set (test isolation / controlled launches),
+  // otherwise let the OS pick a free ephemeral port on 127.0.0.1.
+  const serverPort = await pickPort(log);
+  SERVER_URL = `http://127.0.0.1:${serverPort}`;
+
   // Create manager instances
-  serverManager = createServerManager(SERVER_PORT, SERVER_URL, SESSION_TOKEN, LOG_FILE_PATH, store, log);
+  serverManager = createServerManager(serverPort, SERVER_URL, SESSION_TOKEN, LOG_FILE_PATH, store, log);
   healthPollingManager = createHealthPollingManager(SERVER_URL, SESSION_TOKEN, log);
 
   // Skip server startup during electron-builder packaging pass
@@ -320,7 +327,7 @@ app.on('ready', async () => {
     "style-src 'self'",
     "img-src 'self' data:",
     "font-src 'self'",
-    `connect-src ${SERVER_URL}`,  // ONLY the local Electron server, e.g. http://127.0.0.1:3000
+    `connect-src ${SERVER_URL}`,  // ONLY the runtime-selected local server (127.0.0.1:dynamic)
     "worker-src 'none'",
     "frame-src 'none'",
     "object-src 'none'",

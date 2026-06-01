@@ -178,7 +178,7 @@ describe('Content Security Policy Enforcement', () => {
       expect(mainJs).toContain('defense-in-depth');
 
       // Check for connect-src restriction comment
-      expect(mainJs).toContain('ONLY the local');
+      expect(mainJs).toContain('ONLY the runtime-selected local server');
       expect(mainJs).toContain('STATIC_CSP');
     });
 

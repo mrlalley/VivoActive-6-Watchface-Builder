@@ -92,36 +92,30 @@ All channels use `ipcMain.handle` (request/response). Channels annotated with
 
 | Variable | Default | Description |
 |---|---|---|
-| `WFB_SERVER_PORT` | `3000` | TCP port server.js binds on `127.0.0.1` |
+| `WFB_SERVER_PORT` | *(dynamic)* | TCP port server.js binds on `127.0.0.1`. Optional. |
 
-The server always binds to `127.0.0.1` only, never `0.0.0.0`. External network
-access is not possible regardless of firewall configuration.
+In **Electron mode**, the main process selects the backend port at startup:
+- If `WFB_SERVER_PORT` is set, that exact value is used (test isolation, controlled launches).
+- Otherwise, `electron/port-utils.js` binds a temporary server to `127.0.0.1:0`, reads the
+  OS-assigned ephemeral port, releases it, and passes it to server.js via `WFB_SERVER_PORT`.
+  This eliminates startup failure when another process occupies a previously fixed port.
+
+The server always binds to `127.0.0.1` only, never `0.0.0.0`. The selected port is never
+exposed beyond localhost regardless of firewall configuration.
 
 **Overriding the port** (e.g., for test isolation):
 
 ```sh
-# Standalone mode
+# Standalone mode — port defaults to 3000 when WFB_SERVER_PORT is unset
 WFB_SERVER_PORT=3001 npm run server
 
-# Electron mode (pass via env before launching)
+# Electron mode — override forces a specific port
 WFB_SERVER_PORT=3001 npm start
 ```
-
-In Electron mode, the main process passes `WFB_SERVER_PORT` to the spawned child
-process via the `env` argument to `spawn()`.
 
 ---
 
 ## Known Limitations and Follow-up TODOs
-
-### Dynamic port allocation
-
-The port is currently fixed at `WFB_SERVER_PORT` (default 3000). If port 3000 is
-already in use (by another app or a previous unclean exit), startup will fail.
-
-**Follow-up**: allocate a random port in the main process using `net.createServer`,
-pass it to the child via `WFB_SERVER_PORT`, and use it in all URL construction.
-This eliminates port conflicts on rapid restart.
 
 ### Windows SIGTERM (graceful shutdown)
 
