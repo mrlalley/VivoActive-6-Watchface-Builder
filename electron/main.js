@@ -14,6 +14,10 @@ const { scanForLatestSdk } = require('../lib/config');
 const { detectSdk, SdkNotFoundError } = require('../lib/sdk-detect');
 const { createLogger } = require('../lib/logger');
 const { registerIpcHandlers } = require('../src/main/ipc/handlers');
+const { createLoggedHandle, createRateLimitHandler } = require('./ipc-helpers');
+const { createHealthPollingManager } = require('./health-polling');
+const { createWindowManager } = require('./window-manager');
+const { createServerManager } = require('./server-manager');
 
 // Module-level logger — available before app.ready.
 // LOG_FILE_PATH is resolved in app.on('ready') via app.getPath('logs').
@@ -30,27 +34,9 @@ const SESSION_TOKEN = crypto.randomBytes(32).toString('hex');
 // Resolved in app.on('ready') via app.getPath('logs') — not available at module load time.
 let LOG_FILE_PATH = null;
 
-/**
- * Wrap an ipcMain.handle() registration with structured logging.
- * Logs every invoke start, success, and failure with channel name and duration.
- * @param {string} channel
- * @param {Function} handler - async (event, payload) => result
- */
-function loggedHandle(channel, handler) {
-  ipcMain.handle(channel, async (event, payload) => {
-    const ipcLog  = log.child({ channel });
-    const startMs = Date.now();
-    ipcLog.debug({ event: 'ipc.invoke.start' });
-    try {
-      const result = await handler(event, payload);
-      ipcLog.debug({ event: 'ipc.invoke.success', durationMs: Date.now() - startMs });
-      return result;
-    } catch (err) {
-      ipcLog.error({ event: 'ipc.invoke.failure', message: err.message, durationMs: Date.now() - startMs });
-      throw err;
-    }
-  });
-}
+// IPC helpers created from module factories
+const loggedHandle = createLoggedHandle(ipcMain, log);
+const withRateLimit = createRateLimitHandler(ipcMain);
 
 // Port is fixed so the health gate and renderer URL are known before spawn completes.
 // Override with WFB_SERVER_PORT env var to avoid conflicts in test environments.
@@ -60,48 +46,9 @@ const HEALTH_URL    = `${SERVER_URL}/internal/healthz`;  // Liveness probe (unau
 const MAX_WAIT_MS   = 10_000;
 const POLL_INTERVAL = 200;
 
-let healthPollTimeoutId = null;
-const HEALTH_POLL_MS = 5000; // Initial poll interval
-const HEALTH_POLL_BACKOFF_SLOW = 15000; // Slower interval after consecutive healthy responses
-const HEALTH_POLL_BACKOFF_SLOWEST = 30000; // Slowest interval when health is stable
+// Health polling manager will be created in app.ready
+let healthPollingManager = null;
 
-// Polling state for adaptive backoff logic
-const healthPollingState = {
-  isRunning: false,
-  consecutiveHealthy: 0,
-  consecutiveErrors: 0,
-  currentDelayMs: HEALTH_POLL_MS,
-};
-
-// Schedule the next health check with adaptive backoff
-function scheduleNextHealthCheck() {
-  if (!healthPollingState.isRunning) return;
-
-  // Determine delay for next check based on health state
-  let nextDelayMs = HEALTH_POLL_MS;
-  if (healthPollingState.consecutiveHealthy >= 4) {
-    // After many consecutive healthy responses, slow down significantly
-    nextDelayMs = HEALTH_POLL_BACKOFF_SLOWEST;
-  } else if (healthPollingState.consecutiveHealthy >= 2) {
-    // After a couple healthy responses, slow down moderately
-    nextDelayMs = HEALTH_POLL_BACKOFF_SLOW;
-  } else if (healthPollingState.consecutiveErrors > 0) {
-    // On errors, back off progressively (5s → 15s → 30s)
-    if (healthPollingState.consecutiveErrors >= 2) {
-      nextDelayMs = HEALTH_POLL_BACKOFF_SLOWEST;
-    } else {
-      nextDelayMs = HEALTH_POLL_BACKOFF_SLOW;
-    }
-  }
-
-  healthPollingState.currentDelayMs = nextDelayMs;
-  healthPollTimeoutId = setTimeout(() => {
-    if (healthPollingState.isRunning) {
-      checkHealth();
-      scheduleNextHealthCheck();
-    }
-  }, nextDelayMs);
-}
 
 // Initialize persistent config store
 const store = new Store({
@@ -112,17 +59,6 @@ const store = new Store({
 });
 
 // Rate limiter for IPC handlers: prevents rapid-fire calls causing resource exhaustion
-function withRateLimit(handlerName, handler, delayMs = 1000) {
-  let lastCall = 0;
-  ipcMain.handle(handlerName, async (event, ...args) => {
-    const now = Date.now();
-    if (now - lastCall < delayMs) {
-      throw new Error(`Rate limited: please wait ${Math.ceil((delayMs - (now - lastCall)) / 1000)}s before retrying`);
-    }
-    lastCall = now;
-    return handler(event, ...args);
-  });
-}
 
 // Initialize all IPC handlers with injected dependencies
 function initializeIpcHandlers() {
@@ -155,209 +91,17 @@ function resolveBinaryPath(relativePath) {
   }
 }
 
-// Create and show the main window
-function createWindow() {
-  const iconPath = path.join(__dirname, '..', 'assets', 'icon.ico');
-  const windowConfig = {
-    width: 1400,
-    height: 900,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: true,
-      preload: path.join(__dirname, 'preload.js'),
-    },
-  };
+// Window manager will be created in app.ready
+let windowManager = null;
 
-  // Only set icon if it exists
-  const fs = require('fs');
-  if (fs.existsSync(iconPath)) {
-    windowConfig.icon = iconPath;
-  }
-
-  mainWindow = new BrowserWindow(windowConfig);
-
-  // Pause health polling while the window is out of focus or minimized.
-  // start* is idempotent (guarded by healthPollInterval); stop* is safe to call redundantly.
-  mainWindow.on('focus',    startHealthPolling);
-  mainWindow.on('show',     startHealthPolling); // restore from tray / un-minimize
-  mainWindow.on('blur',     stopHealthPolling);
-  mainWindow.on('minimize', stopHealthPolling);
-  mainWindow.on('hide',     stopHealthPolling);  // hide-to-tray
-  mainWindow.on('closed',   () => {
-    stopHealthPolling(); // prevent interval surviving after window is destroyed
-    mainWindow = null;
-  });
-
-  // Load the app from localhost — waitForServer() ensures it is ready before this runs.
-  mainWindow.loadURL(SERVER_URL);
-
-  // CSP violation logger — Chromium reports blocked resources as console errors
-  // containing the string "Content Security Policy". Captured here and logged via pino.
-  // Updated for Electron 42 which passes a single event object with properties:
-  // https://electronjs.org/docs/latest/api/web-contents#event-console-message
-  mainWindow.webContents.on('console-message', (event) => {
-    // Extract properties from the event object (Electron 42 API)
-    const level    = event.level    ?? -1;
-    const message  = event.message  ?? '';
-    const line     = event.line ?? event.lineNumber ?? 0;
-    const sourceId = event.sourceId ?? '';
-
-    if (message && (message.includes('Content Security Policy') || message.includes('content-security-policy'))) {
-      log.warn({
-        event:    'csp.violation',
-        message:  message.trim(),
-        line,
-        sourceId: sourceId || '(unknown)',
-      });
-    }
-  });
-
-  // Open DevTools only if explicitly requested via OPEN_DEVTOOLS flag.
-  // F12 and Ctrl+Shift+I shortcuts always work (not blocked).
-  if (process.env.OPEN_DEVTOOLS === '1') {
-    mainWindow.webContents.openDevTools();
-  }
-}
-
-// Spawn server.js as a managed child process.
-// Always use the Node.js binary, not the Electron binary.
-// process.execPath in Electron main points to electron.exe, which cannot run Node.js scripts.
-function startServer() {
-  const nodeBin = process.env.WFB_NODE_PATH || 'node';
-
-  // Resolve platform-specific paths here (app.getPath() is unavailable in the child
-  // process) and pass them as env vars. lib/config.js reads these at fallback level 2.
-  const env = {
-    ...process.env,
-    WFB_SERVER_PORT:    String(SERVER_PORT),
-    WFB_SESSION_TOKEN:  SESSION_TOKEN,        // auth token for all /api/ routes
-    WFB_LOG_FILE:       LOG_FILE_PATH || '',  // log file path (empty = stdout only)
-    GARMIN_EXPORT_DIR:  process.env.GARMIN_EXPORT_DIR || path.join(app.getPath('documents'), 'WatchFaceBuilder', 'exported'),
-    GARMIN_TEMP_DIR:    process.env.GARMIN_TEMP_DIR || path.join(app.getPath('temp'), 'CIQPreview'),
-    GARMIN_DESIGNS_DIR: process.env.GARMIN_DESIGNS_DIR || path.join(app.getPath('userData'), 'designs'),
-  };
-  // Only override SDK/key paths when explicitly configured; allow auto-detect otherwise.
-  if (store.get('sdkBin')) env.GARMIN_SDK_BIN = store.get('sdkBin');
-  if (store.get('devKey')) env.GARMIN_DEV_KEY  = store.get('devKey');
-
-  log.debug({ event: 'server.spawn', nodeBin, tokenSet: !!env.WFB_SESSION_TOKEN, port: SERVER_PORT });
-
-  serverProcess = spawn(
-    nodeBin,
-    [path.join(__dirname, '..', 'server.js')],
-    { env, stdio: 'inherit' }
-  );
-
-  serverProcess.on('exit', (code, signal) => {
-    log.error({ event: 'server.exit', code, signal });
-  });
-}
-
-// Poll GET /health until the server responds 200 or the deadline expires.
-// The /health route is always 200 when the process is alive — distinct from
-// /api/health which reflects SDK/key configuration status.
-function waitForServer(timeoutMs = MAX_WAIT_MS) {
-  return new Promise((resolve, reject) => {
-    const deadline = Date.now() + timeoutMs;
-
-    function poll() {
-      http.get(HEALTH_URL, (res) => {
-        res.resume(); // consume response body to release the socket
-        if (res.statusCode === 200) return resolve();
-        retry();
-      }).on('error', retry);
-    }
-
-    function retry() {
-      if (Date.now() >= deadline) {
-        return reject(
-          new Error(`server.js did not become ready within ${timeoutMs}ms`)
-        );
-      }
-      setTimeout(poll, POLL_INTERVAL);
-    }
-
-    poll();
-  });
-}
+// Server manager will be created in app.ready
+let serverManager = null;
 
 // Check if config is complete
 function hasCompleteConfig() {
   return store.get('sdkBin') && store.get('devKey');
 }
 
-// Check server health and send status to renderer.
-// Sends x-wfb-token so /api/health auth passes when token enforcement is active.
-// Updates adaptive polling backoff state.
-async function checkHealth() {
-  try {
-    const res = await fetch(`${SERVER_URL}/api/health`, {
-      headers: { 'x-wfb-token': SESSION_TOKEN },
-    });
-
-    if (res.status === 429) {
-      // Rate-limited — back off but don't treat as error
-      healthPollingState.consecutiveErrors = 0;
-      healthPollingState.consecutiveHealthy = 0;
-      return;
-    }
-
-    const health = await res.json();
-
-    // Successful fetch and parse — either health.ok or health.ok === false
-    if (health && typeof health === 'object') {
-      healthPollingState.consecutiveErrors = 0;
-      healthPollingState.consecutiveHealthy++;
-
-      if (mainWindow && mainWindow.webContents) {
-        mainWindow.webContents.send('app:health-status', health);
-        if (health.ok === false) { // strict: only real failures, not undefined/missing
-          mainWindow.webContents.send('app:health-warning', health);
-        }
-      }
-    } else {
-      // Unexpected response format — treat as error
-      healthPollingState.consecutiveErrors++;
-      healthPollingState.consecutiveHealthy = 0;
-    }
-  } catch (err) {
-    // Network error, timeout, or JSON parse error — increment error backoff
-    healthPollingState.consecutiveErrors++;
-    healthPollingState.consecutiveHealthy = 0;
-
-    if (mainWindow && mainWindow.webContents) {
-      mainWindow.webContents.send('app:health-warning', {
-        ok: false,
-        error: 'Server unreachable',
-        message: err.message
-      });
-    }
-  }
-}
-
-function startHealthPolling() {
-  if (healthPollingState.isRunning) return; // Already polling — guard against double-start
-
-  healthPollingState.isRunning = true;
-  healthPollingState.consecutiveHealthy = 0;
-  healthPollingState.consecutiveErrors = 0;
-  healthPollingState.currentDelayMs = HEALTH_POLL_MS;
-
-  // Immediate check so the UI sees the initial state without waiting
-  checkHealth();
-
-  // Schedule the next check (will reschedule itself on completion)
-  scheduleNextHealthCheck();
-}
-
-function stopHealthPolling() {
-  if (healthPollTimeoutId) {
-    clearTimeout(healthPollTimeoutId);
-    healthPollTimeoutId = null;
-  }
-  healthPollingState.isRunning = false;
-}
 
 // ─── IPC handlers ──────────────────────────────────────────────────────────────
 // All channels use ipcMain.handle() (request/response). No ipcMain.on().
@@ -535,14 +279,18 @@ app.on('ready', async () => {
   assertTemplateVersionExists();
   await checkSdkCompatibility();
 
+  // Create manager instances
+  serverManager = createServerManager(SERVER_PORT, SERVER_URL, SESSION_TOKEN, LOG_FILE_PATH, store, log);
+  healthPollingManager = createHealthPollingManager(SERVER_URL, SESSION_TOKEN, log);
+
   // Skip server startup during electron-builder packaging pass
   if (!process.env.PACKAGING_MODE) {
-    startServer(); // spawn child process — synchronous, does not block
+    serverManager.startServer(); // spawn child process — synchronous, does not block
 
     // Health gate: do not load the renderer until /health returns 200.
     // If the server does not become ready within MAX_WAIT_MS, show an error and quit.
     try {
-      await waitForServer();
+      await serverManager.waitForServer();
     } catch (err) {
       dialog.showErrorBox(
         'Server failed to start',
@@ -592,12 +340,16 @@ app.on('ready', async () => {
     callback({ responseHeaders: headers });
   });
 
-  createWindow();
+  // Create window manager and create the main window
+  windowManager = createWindowManager(SERVER_URL, healthPollingManager, log);
+  windowManager.createWindow();
+  mainWindow = windowManager.getMainWindow();
+
   createMenu();
 
   // Start health polling — fires one immediate check and then every HEALTH_POLL_MS.
   // Focus/blur/minimize events in createWindow() will pause/resume the interval.
-  startHealthPolling();
+  healthPollingManager.startHealthPolling();
 
   // Show Settings if config is incomplete — wait for renderer to finish loading
   // Note: Settings can be accessed via File > Settings menu or Ctrl+, keyboard shortcut.
@@ -615,15 +367,16 @@ app.on('window-all-closed', () => {
 // This allows server.js to call server.close() and exit cleanly before the main
 // process exits. On Windows, kill() sends SIGKILL — see docs/architecture.md §Known Limitations.
 app.on('before-quit', () => {
-  if (serverProcess && !serverProcess.killed) {
-    serverProcess.kill('SIGTERM');
+  if (serverManager) {
+    serverManager.killServer();
   }
 });
 
 app.on('activate', () => {
   // On macOS, re-create window when dock icon is clicked
-  if (mainWindow === null) {
-    createWindow();
+  if (mainWindow === null && windowManager) {
+    windowManager.createWindow();
+    mainWindow = windowManager.getMainWindow();
   }
 });
 
