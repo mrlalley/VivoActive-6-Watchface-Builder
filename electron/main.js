@@ -691,6 +691,18 @@ function createMenu() {
       ],
     },
     {
+      label: 'View',
+      submenu: [
+        {
+          label: 'Toggle Developer Tools',
+          accelerator: 'F12',
+          click: () => {
+            mainWindow?.webContents?.toggleDevTools();
+          },
+        },
+      ],
+    },
+    {
       label: 'Help',
       submenu: [
         {
