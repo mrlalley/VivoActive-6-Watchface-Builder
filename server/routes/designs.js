@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { ValidationError, QueueFullError, DesignNotFoundError, DesignCorruptedError } = require('../../lib/errors');
 
 function registerDesignRoutes(app, cfg, limiters, { requireSessionToken, designSaveQueue, safePrgName, saveDesign, listDesigns, loadDesign, log }) {
   const designsDir = cfg.designsDir;
@@ -28,13 +29,11 @@ function registerDesignRoutes(app, cfg, limiters, { requireSessionToken, designS
       }
       res.json({ success, projectName: savedName, elementCount, error });
     } catch (err) {
-      if (err.message === 'Queue full — try again later') {
+      if (err instanceof QueueFullError) {
         res.set('Retry-After', '60');
         return res.status(503).json({ success: false, error: err.message, log: '' });
       }
-      // Validation errors (from validateProjectName, validateElements) return 400.
-      // Other errors (filesystem, etc.) return 500.
-      if (err.message && (err.message.includes('Validation failed') || err.message.includes('Invalid') || err.message.includes('must be'))) {
+      if (err instanceof ValidationError) {
         return res.status(400).json({ success: false, error: err.message, log: '' });
       }
       logError('save-design:error', { reason: err.message });
@@ -84,11 +83,10 @@ function registerDesignRoutes(app, cfg, limiters, { requireSessionToken, designS
       });
     } catch (err) {
       logError('designs:load-error', { reason: err.message });
-      // Design not found returns 404. Other errors (validation, filesystem) return 400/500.
-      if (err.message && err.message.includes('not found')) {
+      if (err instanceof DesignNotFoundError) {
         return res.status(404).json({ success: false, error: err.message });
       }
-      if (err.message && err.message.includes('corrupted')) {
+      if (err instanceof DesignCorruptedError) {
         return res.status(400).json({ success: false, error: err.message });
       }
       res.status(500).json({ success: false, error: err.message });

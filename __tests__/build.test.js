@@ -1,6 +1,7 @@
 jest.mock('child_process');
 
 const { buildProject }  = require('../lib/build');
+const { ValidationError } = require('../lib/errors');
 const path              = require('path');
 const os                = require('os');
 const fs                = require('fs');
@@ -40,15 +41,11 @@ describe('Build Module', () => {
 
   describe('buildProject', () => {
     it('rejects invalid projectName', async () => {
-      const result = await buildProject(mockCfg, '', []);
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Validation failed');
+      await expect(buildProject(mockCfg, '', [])).rejects.toThrow(ValidationError);
     });
 
     it('rejects invalid elements', async () => {
-      const result = await buildProject(mockCfg, 'TestFace', [{ invalid: 'element' }]);
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Validation failed');
+      await expect(buildProject(mockCfg, 'TestFace', [{ invalid: 'element' }])).rejects.toThrow(ValidationError);
     });
 
     it('reports missing monkeyc', async () => {

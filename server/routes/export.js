@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { ValidationError, QueueFullError } = require('../../lib/errors');
 
 function registerExportRoutes(app, cfg, limiters, { requireSessionToken, buildQueue, safePrgName, buildProject, log }) {
   const { buildLimiter } = limiters;
@@ -180,13 +181,11 @@ function registerExportRoutes(app, cfg, limiters, { requireSessionToken, buildQu
       }
       res.json({ success, error, log, requestId });
     } catch (err) {
-      if (err.message === 'Queue full — try again later') {
+      if (err instanceof QueueFullError) {
         res.set('Retry-After', '60');
         return res.status(503).json({ success: false, error: err.message, log: '', requestId: 'unknown' });
       }
-      // Validation errors (from validateProjectName, validateElements) return 400.
-      // Other errors (filesystem, etc.) return 500.
-      if (err.message && (err.message.includes('Validation failed') || err.message.includes('Invalid') || err.message.includes('must be'))) {
+      if (err instanceof ValidationError) {
         return res.status(400).json({ success: false, error: err.message, log: '', requestId: 'unknown' });
       }
       logError('export:error', { reason: err.message });
