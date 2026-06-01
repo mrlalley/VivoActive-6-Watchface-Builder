@@ -150,25 +150,52 @@ describe('Export Existence Check Optimization', () => {
     });
   });
 
-  describe('Fallback to recursive scan', () => {
-    test('falls back to scan when manifest is missing', async () => {
+  describe('Manifest miss behavior (async rebuild)', () => {
+    test('returns immediately with rebuildQueued: true when manifest is missing', async () => {
       // Set up: create export structure WITHOUT manifest
       const requestId = 'abc123';
       const binDir = path.join(mockConfig.exportDir, requestId, 'bin');
       fs.mkdirSync(binDir, { recursive: true });
       fs.writeFileSync(path.join(binDir, 'TestFace.prg'), 'fake prg');
 
-      // No manifest file created — should still find via scan
+      // No manifest file created
 
       const res = await request(server)
         .get('/api/export/check/TestFace')
         .set('X-WFB-Token', TOKEN)
         .expect(200);
 
-      expect(res.body.exists).toBe(true);
+      // Should NOT block scanning — returns immediately
+      expect(res.body.success).toBe(true);
+      expect(res.body.exists).toBe(false);
+      expect(res.body.rebuildQueued).toBe(true);
     });
 
-    test('falls back when manifest entry is stale (file removed)', async () => {
+    test('triggers async rebuild when manifest miss occurs', async () => {
+      // Set up: create export structure WITHOUT manifest
+      const requestId = 'abc123';
+      const binDir = path.join(mockConfig.exportDir, requestId, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'TestFace.prg'), 'fake prg');
+
+      const res = await request(server)
+        .get('/api/export/check/TestFace')
+        .set('X-WFB-Token', TOKEN)
+        .expect(200);
+
+      expect(res.body.rebuildQueued).toBe(true);
+
+      // Wait for async rebuild to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Verify manifest was rebuilt
+      const manifestPath = path.join(mockConfig.exportDir, '.exports.json');
+      expect(fs.existsSync(manifestPath)).toBe(true);
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      expect(manifest['TestFace']).toBe(requestId);
+    });
+
+    test('handles stale manifest entry gracefully', async () => {
       // Set up: manifest points to non-existent file
       const requestId = 'abc123';
       const safeProjectName = 'StaleFace';
@@ -180,46 +207,13 @@ describe('Export Existence Check Optimization', () => {
         JSON.stringify(manifest)
       );
 
-      // Create another export that scan will find
-      const realRequestId = 'real456';
-      const binDir = path.join(mockConfig.exportDir, realRequestId, 'bin');
-      fs.mkdirSync(binDir, { recursive: true });
-      fs.writeFileSync(path.join(binDir, 'StaleFace.prg'), 'fake prg');
-
-      // Update manifest to point to real location
-      const updatedManifest = { [safeProjectName]: realRequestId };
-      fs.writeFileSync(
-        path.join(mockConfig.exportDir, '.exports.json'),
-        JSON.stringify(updatedManifest)
-      );
-
       const res = await request(server)
         .get('/api/export/check/StaleFace')
         .set('X-WFB-Token', TOKEN)
         .expect(200);
 
-      // Should still find via scan if direct lookup fails
-      expect(res.body.exists).toBe(true);
-    });
-
-    test('respects MAX_DEPTH limit in fallback scan', async () => {
-      // Create deeply nested structure beyond MAX_DEPTH (10)
-      let currentDir = mockConfig.exportDir;
-      for (let i = 0; i < 15; i++) {
-        currentDir = path.join(currentDir, `level${i}`);
-        fs.mkdirSync(currentDir, { recursive: true });
-      }
-
-      // Try to check — should error or not find due to depth limit
-      const res = await request(server)
-        .get('/api/export/check/DeepFace')
-        .set('X-WFB-Token', TOKEN);
-
-      // Should either error or report not found
-      expect([200, 400]).toContain(res.status);
-      if (res.status === 200) {
-        expect(res.body.exists).toBe(false);
-      }
+      // When file doesn't exist, should return exists: false
+      expect(res.body.exists).toBe(false);
     });
   });
 
@@ -260,14 +254,14 @@ describe('Export Existence Check Optimization', () => {
         'not valid json {'
       );
 
-      // Should fall back to scan without error
+      // Should trigger async rebuild without crashing
       const res = await request(server)
         .get('/api/export/check/TestFace')
         .set('X-WFB-Token', TOKEN)
         .expect(200);
 
       expect(res.body.success).toBe(true);
-      expect(res.body.exists).toBe(false); // Nothing found, but no crash
+      expect(res.body.rebuildQueued).toBe(true);
     });
 
     test('handles empty manifest', async () => {
@@ -283,6 +277,85 @@ describe('Export Existence Check Optimization', () => {
         .expect(200);
 
       expect(res.body.exists).toBe(false);
+    });
+  });
+
+  describe('POST /api/export/repair-manifest', () => {
+    test('rebuilds manifest by scanning exportDir', async () => {
+      // Set up: create multiple exports without manifest
+      const requestId1 = 'req001';
+      const binDir1 = path.join(mockConfig.exportDir, requestId1, 'bin');
+      fs.mkdirSync(binDir1, { recursive: true });
+      fs.writeFileSync(path.join(binDir1, 'WatchFace1.prg'), 'fake prg 1');
+
+      const requestId2 = 'req002';
+      const binDir2 = path.join(mockConfig.exportDir, requestId2, 'bin');
+      fs.mkdirSync(binDir2, { recursive: true });
+      fs.writeFileSync(path.join(binDir2, 'WatchFace2.prg'), 'fake prg 2');
+
+      // No manifest exists yet
+      const manifestPath = path.join(mockConfig.exportDir, '.exports.json');
+      expect(fs.existsSync(manifestPath)).toBe(false);
+
+      // Call repair endpoint
+      const res = await request(server)
+        .post('/api/export/repair-manifest')
+        .set('X-WFB-Token', TOKEN)
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.manifestRebuilt).toBe(true);
+      expect(res.body.filesFound).toBe(2);
+
+      // Verify manifest was created with both entries
+      expect(fs.existsSync(manifestPath)).toBe(true);
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      expect(manifest['WatchFace1']).toBe(requestId1);
+      expect(manifest['WatchFace2']).toBe(requestId2);
+    });
+
+    test('requires authentication to repair manifest', async () => {
+      const res = await request(server)
+        .post('/api/export/repair-manifest')
+        .expect(401);
+    });
+
+    test('handles missing exportDir gracefully', async () => {
+      // Remove exportDir
+      fs.rmSync(mockConfig.exportDir, { recursive: true });
+
+      const res = await request(server)
+        .post('/api/export/repair-manifest')
+        .set('X-WFB-Token', TOKEN);
+
+      // Should handle error gracefully
+      expect([200, 500]).toContain(res.status);
+    });
+
+    test('overwrites stale manifest with rebuilt version', async () => {
+      // Create old manifest with stale entries
+      const oldManifest = { 'OldFace': 'oldreq123' };
+      const manifestPath = path.join(mockConfig.exportDir, '.exports.json');
+      fs.writeFileSync(manifestPath, JSON.stringify(oldManifest));
+
+      // Create new export
+      const newRequestId = 'newreq456';
+      const binDir = path.join(mockConfig.exportDir, newRequestId, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'NewFace.prg'), 'fake prg');
+
+      // Repair manifest
+      const res = await request(server)
+        .post('/api/export/repair-manifest')
+        .set('X-WFB-Token', TOKEN)
+        .expect(200);
+
+      expect(res.body.filesFound).toBe(1);
+
+      // Verify manifest is updated
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      expect(manifest['OldFace']).toBeUndefined(); // stale entry removed
+      expect(manifest['NewFace']).toBe(newRequestId); // new entry added
     });
   });
 });

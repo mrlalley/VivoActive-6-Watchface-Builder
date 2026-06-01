@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { ValidationError, QueueFullError } = require('../../lib/errors');
+const { rebuildExportManifest } = require('../../lib/build');
 
 function registerExportRoutes(app, cfg, limiters, { requireSessionToken, buildQueue, safePrgName, buildProject, log }) {
   const { buildLimiter } = limiters;
@@ -56,62 +57,20 @@ function registerExportRoutes(app, cfg, limiters, { requireSessionToken, buildQu
         // ENOENT: manifest doesn't exist — fall through to recursive scan
       }
 
-      // ─── Phase 2: Fallback to recursive scan (for missing/stale manifest) ──
-      let exportDirExists = false;
-      try {
-        await fs.promises.access(cfg.exportDir);
-        exportDirExists = true;
-      } catch { /* ENOENT — no export dir yet */ }
-
-      if (!foundInDir && exportDirExists) {
-        try {
-          const MAX_DEPTH = 10;
-          const MAX_FILES_CHECKED = 10000;
-          let filesChecked = 0;
-
-          const findFileAsync = async (dir, currentDepth = 0) => {
-            if (currentDepth > MAX_DEPTH) {
-              throw new Error(`Export directory too deeply nested (max depth: ${MAX_DEPTH})`);
-            }
-            if (filesChecked++ > MAX_FILES_CHECKED) {
-              throw new Error(`Too many files in export directory (searched ${MAX_FILES_CHECKED}+ files)`);
-            }
-
-            try {
-              const files = await fs.promises.readdir(dir);
-              for (const file of files) {
-                const filePath = path.join(dir, file);
-                let stat;
-                try {
-                  stat = await fs.promises.lstat(filePath);
-                } catch (err) {
-                  // Entry disappeared between readdir and lstat — skip it
-                  if (err.code === 'ENOENT') continue;
-                  throw err;
-                }
-                if (stat.isSymbolicLink()) {
-                  continue;
-                } else if (stat.isDirectory()) {
-                  const found = await findFileAsync(filePath, currentDepth + 1);
-                  if (found) return found;
-                } else if (file === expectedFileName) {
-                  return dir; // return the directory that directly contains the .prg
-                }
-              }
-            } catch (readErr) {
-              logWarn('export-check:read-failed', { dir, reason: readErr.message });
-            }
-            return null;
-          };
-
-          foundInDir = await findFileAsync(cfg.exportDir, 0);
-          if (foundInDir) {
-            logInfo('export-check:fallback-scan', { prgName });
+      // ─── Phase 2: No recursive scan — trigger async rebuild instead ────────
+      if (!foundInDir) {
+        // Trigger manifest rebuild asynchronously, return immediately
+        setImmediate(async () => {
+          try {
+            await rebuildExportManifest(cfg.exportDir);
+            logInfo('export-check:rebuild-triggered', { prgName });
+          } catch (err) {
+            logWarn('export-check:rebuild-failed', { prgName, reason: err.message });
           }
-        } catch (searchErr) {
-          res.status(400).json({ success: false, error: searchErr.message });
-          return;
-        }
+        });
+
+        res.json({ success: true, exists: false, rebuildQueued: true, projectName });
+        return;
       }
 
       const exists = foundInDir !== null;
@@ -190,6 +149,26 @@ function registerExportRoutes(app, cfg, limiters, { requireSessionToken, buildQu
       }
       logError('export:error', { reason: err.message });
       res.status(500).json({ success: false, error: err.message, log: '', requestId: 'unknown' });
+    }
+  });
+
+  // ── POST /api/export/repair-manifest – Rebuild manifest by scanning exportDir ──
+  app.post('/api/export/repair-manifest', requireSessionToken, buildLimiter, async (req, res) => {
+    try {
+      const filesFound = await rebuildExportManifest(cfg.exportDir);
+      res.json({
+        success: true,
+        message: 'Export manifest rebuilt',
+        filesFound,
+        manifestRebuilt: true,
+      });
+    } catch (err) {
+      logError('export:repair-manifest-failed', { reason: err.message });
+      res.status(500).json({
+        success: false,
+        error: err.message,
+        manifestRebuilt: false,
+      });
     }
   });
 }
