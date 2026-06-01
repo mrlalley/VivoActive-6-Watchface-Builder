@@ -600,14 +600,8 @@ app.on('ready', async () => {
   startHealthPolling();
 
   // Show Settings if config is incomplete — wait for renderer to finish loading
-  // before sending the IPC message, otherwise the listener isn't registered yet
-  // and the message is silently dropped (webContents.send has no delivery guarantee
-  // before DOMContentLoaded fires in the renderer).
-  if (!hasCompleteConfig()) {
-    mainWindow.webContents.once('did-finish-load', () => {
-      mainWindow?.webContents?.send('settings:showOverlay');
-    });
-  }
+  // Note: Settings can be accessed via File > Settings menu or Ctrl+, keyboard shortcut.
+  // Auto-opening is disabled to avoid interrupting workflow on startup.
 });
 
 app.on('window-all-closed', () => {
