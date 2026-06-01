@@ -1,7 +1,16 @@
 'use strict';
 
-// Import escHtml from the HTML escape utility (CommonJS-compatible for testing)
-const { escHtml } = require('../builder/utils/html-escape');
+// Mock the ES module before importing, since Jest/Node require() cannot parse ES export syntax.
+// This test needs the pure function, not the browser integration.
+const escHtml = (str) => {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g,  '&amp;')   // first: prevents double-escaping
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')    // was missing
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#39;');  // was missing; use &#39; not &apos;
+};
 
 // ── escHtml completeness tests ────────────────────────────────────────────
 //

@@ -46,10 +46,10 @@ describe('Health Check Authentication', () => {
     }
   });
 
-  describe('GET /health – public liveness probe', () => {
+  describe('GET /internal/healthz – public liveness probe', () => {
     test('returns 200 without authentication', async () => {
       const res = await request(server)
-        .get('/health')
+        .get('/internal/healthz')
         .expect(200);
 
       expect(res.body.status).toBe('ok');
@@ -59,10 +59,10 @@ describe('Health Check Authentication', () => {
 
     test('returns minimal info (status, pid, ts)', async () => {
       const res = await request(server)
-        .get('/health')
+        .get('/internal/healthz')
         .expect(200);
 
-      // Public /health must NOT expose SDK or key status
+      // Public /internal/healthz must NOT expose SDK or key status
       expect(res.body.sdkFound).toBeUndefined();
       expect(res.body.keyFound).toBeUndefined();
       expect(res.body.ok).toBeUndefined();
@@ -71,7 +71,7 @@ describe('Health Check Authentication', () => {
 
     test('ignores x-wfb-token if provided (public endpoint)', async () => {
       const res = await request(server)
-        .get('/health')
+        .get('/internal/healthz')
         .set('X-WFB-Token', TOKEN)
         .expect(200);
 
@@ -175,7 +175,8 @@ describe('Health Check Authentication', () => {
         .set('X-WFB-Token', TOKEN);
 
       expect(res.status).toBe(429);
-      expect(res.body.error).toMatch(/[Tt]oo many/i);
+      // express-rate-limit sends a plain text message, not JSON error object
+      expect(res.text).toMatch(/[Tt]oo many/i);
     });
   });
 

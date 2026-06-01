@@ -61,3 +61,7 @@ notarization_*.txt
 
 # Windows code signing
 *.snk
+bundle-2-renderer.md
+bundle-3-builder-tests.md
+codebase-review-bundle.md
+repo-tree.txt
