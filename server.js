@@ -28,6 +28,7 @@ const { registerDesignRoutes } = require('./server/routes/designs');
 const { registerExportRoutes } = require('./server/routes/export');
 const { registerPreviewRoutes } = require('./server/routes/preview');
 const { registerKeygenRoutes } = require('./server/routes/keygen');
+const { registerBackgroundRoutes } = require('./server/routes/backgrounds');
 
 // Module-level pino logger — shared across all requests for this process lifetime.
 const log = createLogger('server');
@@ -221,6 +222,13 @@ function createServer(config = {}, detectors = {}) {
     index: false // Disable default index.html serving
   }));
 
+  // ─── Serve bundled background assets (backgrounds + thumbnails) ───────────────
+  // No authentication required — these are static images served to the renderer.
+  // img-src 'self' in the CSP already covers same-origin image requests.
+  app.use('/assets', express.static(path.join(__dirname, 'assets'), {
+    index: false,
+  }));
+
   // ── Register extracted route modules ────────────────────────────────────────
 
   // Register all routes with extracted modules
@@ -260,6 +268,11 @@ function createServer(config = {}, detectors = {}) {
     requireSessionToken,
     generateKey,
     getDefaultKeyPath,
+    log,
+  });
+
+  registerBackgroundRoutes(app, cfg, limiters, {
+    requireSessionToken,
     log,
   });
 

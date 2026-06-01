@@ -50,6 +50,7 @@ let elements = [];
 let nextId = 1;
 let history = [];
 let historyIndex = -1;
+let background = null; // background descriptor or null
 
 /**
  * Create a new Element with default properties based on the field definition.
@@ -141,8 +142,12 @@ export function setElements(els) {
   nextId = els.length > 0 ? Math.max(...els.map(e => e.id)) + 1 : 1;
 }
 
+export function getBackground() { return background; }
+export function setBackground(descriptor) { background = descriptor || null; }
+export function clearBackground() { background = null; }
+
 export function exportState() {
-  return JSON.stringify({ elements, nextId });
+  return JSON.stringify({ elements, nextId, background });
 }
 
 export function importState(json) {
@@ -221,6 +226,8 @@ export function importState(json) {
   nextId = state.nextId !== undefined
     ? state.nextId
     : (elements.length > 0 ? Math.max(...elements.map(e => e.id)) + 1 : 1);
+  // Restore background descriptor (optional field — absent in old designs means no background)
+  background = (state.background && typeof state.background === 'object') ? state.background : null;
   history = [JSON.parse(JSON.stringify(elements))];
   historyIndex = 0;
 }

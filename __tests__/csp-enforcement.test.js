@@ -63,7 +63,8 @@ describe('Content Security Policy Enforcement', () => {
 
       const csp = res.headers['content-security-policy'];
       // Extract the nonce: script-src 'self' 'strict-dynamic' 'nonce-xxxxx'
-      const nonceMatch = csp.match(/nonce-([a-z0-9]+)/i);
+      // nonce is base64 (crypto.randomBytes(16)) — may contain +, /, and =
+      const nonceMatch = csp.match(/nonce-([A-Za-z0-9+/=]+)/);
       expect(nonceMatch).toBeTruthy();
       expect(nonceMatch[1].length).toBeGreaterThan(10); // sanity check nonce length
     });

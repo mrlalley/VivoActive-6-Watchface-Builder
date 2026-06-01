@@ -1,6 +1,6 @@
 import { DATA_FIELDS, CATEGORIES } from './modules/data-fields.js';
-import { addElement, createElement, exportState, importState, undo, redo, getElements } from './modules/elements.js';
-import { initCanvas, render, scheduleRedraw, setSelectedId, toggleSafeArea, toggleGrid, bringForward, sendBackward, cleanupCanvas, runValidation } from './modules/canvas.js';
+import { addElement, createElement, exportState, importState, undo, redo, getElements, getBackground, setBackground, clearBackground } from './modules/elements.js';
+import { initCanvas, render, scheduleRedraw, setSelectedId, toggleSafeArea, toggleGrid, bringForward, sendBackward, cleanupCanvas, runValidation, setCanvasBackground, clearCanvasBackground, getBackgroundCache } from './modules/canvas.js';
 import { showProperties } from './modules/properties.js';
 import { exportProject, previewInSimulator } from './modules/export.js';
 import { DEFAULT_ELEMENT_X, DEFAULT_ELEMENT_Y, MAX_DESIGN_ELEMENTS, SAVE_INDICATOR_HIDE_DELAY } from './constants.js';
@@ -58,6 +58,217 @@ function tryRestore() {
     // Silently fail and start with empty canvas (graceful degradation)
     return false;
   }
+}
+
+// ─── Background ──────────────────────────────────────────────────────────────
+
+async function loadBackgroundImage(descriptor) {
+  const { assetId, source } = descriptor;
+  const cache = getBackgroundCache();
+  if (cache.has(assetId)) return cache.get(assetId);
+
+  if (source === 'custom') {
+    // Custom images need auth — server returns base64 dataUrl
+    const res    = await apiFetch(`/api/backgrounds/custom/${encodeURIComponent(assetId)}`);
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error || `Custom background not found: ${assetId}`);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload  = () => resolve(img);
+      img.onerror = () => reject(new Error(`Failed to decode custom background: ${assetId}`));
+      img.src = result.dataUrl;
+    });
+  }
+
+  // Bundled — set img.src directly (no auth needed for /assets/ static files)
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload  = () => resolve(img);
+    img.onerror = () => reject(new Error(`Failed to load background asset: ${assetId}`));
+    img.src = `/assets/backgrounds/${encodeURIComponent(assetId)}.png`;
+  });
+}
+
+async function applyBackground(descriptor) {
+  // Always reset AOD to 'none' when picking a new background — user opts in explicitly
+  const fullDescriptor = { ...descriptor, aod: { variant: 'none' } };
+  try {
+    const img = await loadBackgroundImage(fullDescriptor);
+    setBackground(fullDescriptor);
+    setCanvasBackground(img, fullDescriptor.assetId);
+    document.getElementById('btn-bg-clear').classList.remove('hidden');
+    // Highlight selected thumbnail
+    document.querySelectorAll('.bg-thumb').forEach(el => {
+      el.classList.toggle('bg-thumb--selected', el.dataset.assetId === fullDescriptor.assetId);
+    });
+    // Sync AOD checkbox to off
+    const aodCheck = document.getElementById('bg-aod-check');
+    if (aodCheck) aodCheck.checked = false;
+    document.getElementById('bg-aod-row')?.classList.remove('hidden');
+    scheduleAutoSave();
+  } catch (err) {
+    showToast(`Could not load background: ${err.message}`);
+  }
+}
+
+function removeBackground() {
+  clearBackground();
+  clearCanvasBackground();
+  document.getElementById('btn-bg-clear').classList.add('hidden');
+  document.getElementById('bg-aod-row')?.classList.add('hidden');
+  const aodCheck = document.getElementById('bg-aod-check');
+  if (aodCheck) aodCheck.checked = false;
+  document.querySelectorAll('.bg-thumb').forEach(el => el.classList.remove('bg-thumb--selected'));
+  scheduleAutoSave();
+}
+
+async function tryRestoreBackground() {
+  const descriptor = getBackground();
+  if (!descriptor) return;
+  try {
+    const img = await loadBackgroundImage(descriptor);
+    setCanvasBackground(img, descriptor.assetId);
+    document.getElementById('btn-bg-clear')?.classList.remove('hidden');
+    document.getElementById('bg-aod-row')?.classList.remove('hidden');
+    document.querySelectorAll('.bg-thumb').forEach(el => {
+      el.classList.toggle('bg-thumb--selected', el.dataset.assetId === descriptor.assetId);
+    });
+    // Restore AOD checkbox state
+    const aodCheck = document.getElementById('bg-aod-check');
+    if (aodCheck) aodCheck.checked = descriptor.aod?.variant === 'dimmed';
+  } catch {
+    // Background asset missing — clear silently so old designs still open
+    clearBackground();
+    clearCanvasBackground();
+  }
+}
+
+function initBackground() {
+  const btn    = document.getElementById('btn-background');
+  const picker = document.getElementById('bg-picker');
+  const thumbs = document.getElementById('bg-thumbs');
+  const clearBtn = document.getElementById('btn-bg-clear');
+  if (!btn || !picker || !thumbs) return;
+
+  // Toggle picker open/close
+  btn.addEventListener('click', () => {
+    picker.classList.toggle('hidden');
+  });
+
+  // Close picker when clicking outside
+  document.addEventListener('click', (e) => {
+    const group = document.getElementById('bg-toolbar-group');
+    if (group && !group.contains(e.target)) {
+      picker.classList.add('hidden');
+    }
+  });
+
+  clearBtn?.addEventListener('click', () => {
+    removeBackground();
+    picker.classList.add('hidden');
+  });
+
+  // AOD checkbox — shown only when a background is selected
+  const aodRow = document.createElement('label');
+  aodRow.id = 'bg-aod-row';
+  aodRow.className = 'bg-aod-row hidden';
+  aodRow.title = 'Generate a 25%-brightness variant used in always-on display mode';
+  const aodCheck = document.createElement('input');
+  aodCheck.type = 'checkbox';
+  aodCheck.id = 'bg-aod-check';
+  aodRow.appendChild(aodCheck);
+  aodRow.appendChild(document.createTextNode(' Dim for AOD'));
+  picker.appendChild(aodRow);
+
+  aodCheck.addEventListener('change', () => {
+    const current = getBackground();
+    if (!current) return;
+    const updated = { ...current, aod: { variant: aodCheck.checked ? 'dimmed' : 'none' } };
+    setBackground(updated);
+    scheduleAutoSave();
+  });
+
+  // "+ Import Image" button — Electron mode only; hidden in web mode
+  if (window.electronAPI?.importBackgroundImage) {
+    const importBtn = document.createElement('button');
+    importBtn.id = 'btn-bg-import';
+    importBtn.className = 'btn btn-bg-import';
+    importBtn.title = 'Import a custom 390×390 PNG background';
+    importBtn.textContent = '+ Import';
+    picker.appendChild(importBtn);
+
+    importBtn.addEventListener('click', async () => {
+      importBtn.disabled = true;
+      importBtn.textContent = '⏳';
+      try {
+        const result = await window.electronAPI.importBackgroundImage();
+        if (result.canceled) return;
+        if (!result.success) {
+          showToast(`Import failed: ${result.error}`);
+          return;
+        }
+        // Apply immediately using the returned dataUrl — no server round-trip needed
+        const descriptor = { source: 'custom', assetId: result.assetId, aod: { variant: 'none' } };
+        setBackground(descriptor);
+        const img = await new Promise((resolve, reject) => {
+          const i = new Image();
+          i.onload  = () => resolve(i);
+          i.onerror = () => reject(new Error('Failed to decode imported image'));
+          i.src = result.dataUrl;
+        });
+        getBackgroundCache().set(result.assetId, img);
+        setCanvasBackground(img, result.assetId);
+        document.getElementById('btn-bg-clear').classList.remove('hidden');
+        document.getElementById('bg-aod-row')?.classList.remove('hidden');
+        const aodCheckEl = document.getElementById('bg-aod-check');
+        if (aodCheckEl) aodCheckEl.checked = false;
+        document.querySelectorAll('.bg-thumb').forEach(el => el.classList.remove('bg-thumb--selected'));
+        picker.classList.add('hidden');
+        scheduleAutoSave();
+      } catch (err) {
+        showToast(`Import error: ${err.message}`);
+      } finally {
+        importBtn.disabled = false;
+        importBtn.textContent = '+ Import';
+      }
+    });
+  }
+
+  // Populate thumbnail strip from index.json
+  apiFetch('/assets/backgrounds/index.json')
+    .then(r => r.json())
+    .then(index => {
+      index.forEach(entry => {
+        const thumb = document.createElement('img');
+        thumb.className = 'bg-thumb';
+        thumb.dataset.assetId = entry.id;
+        thumb.src = `/assets/backgrounds/thumbs/${encodeURIComponent(entry.id)}.png`;
+        thumb.title = entry.label;
+        thumb.alt   = entry.label;
+        thumb.addEventListener('click', () => {
+          applyBackground({ source: 'bundled', assetId: entry.id });
+          picker.classList.add('hidden');
+        });
+        thumbs.appendChild(thumb);
+      });
+    })
+    .catch(() => {
+      // Server not ready or assets missing — picker stays empty
+    });
+}
+
+function showToast(message, durationMs = 5000) {
+  let toast = document.getElementById('toast-msg');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast-msg';
+    toast.className = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add('toast--visible');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove('toast--visible'), durationMs);
 }
 
 // ─── Health check ────────────────────────────────────────────────────────────
@@ -333,6 +544,7 @@ function hideSettings() {
 function init() {
   initHealthCheck();
   initSettings();
+  initBackground();
   buildPalette();
 
   initCanvas(
@@ -390,6 +602,7 @@ function init() {
   // On first cold start (nothing in localStorage) the canvas starts blank.
   // addDefaults() is preserved below as a dev/test utility but not called automatically.
   tryRestore();
+  tryRestoreBackground();
 
   // Wait for Garmin TTF fonts to finish loading before first render so text
   // sizes are correct from the start (fonts/Yantramanav + Roboto served from /builder/fonts/).
@@ -606,6 +819,7 @@ function onDelete() {
 function handleNew() {
   if (!confirm('Start a new design? The current design will be cleared.')) return;
   importState(JSON.stringify({ elements: [], nextId: 1 }));
+  clearCanvasBackground();
   activeCategoryId = null; // collapse palette accordion on next render
   setSelectedId(null);
   showProperties(null);

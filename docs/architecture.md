@@ -75,6 +75,7 @@ All channels use `ipcMain.handle` (request/response). Channels annotated with
 | `settings:autoDetect` | none | `{ sdkBin, devKey, sdkFound, keyFound }` | Scans platform SDK paths. Rate-limited: 1 call / 2s |
 | `key:generate` | `{ outputPath?, force? }` | `{ success, path?, exists?, error? }` | RSA-4096. Path must be inside `~/.garmin/` or `~/Documents/`. Rate-limited: 1 call / 5s |
 | `shell:openVSCode` | `requestId` (string, `[a-z0-9]+`) | `{ success, error? }` | Opens exported project folder via `vscode://` URI. requestId is validated server-side. |
+| `background:import` | none | `{ success, canceled?, assetId?, dataUrl?, error? }` | Opens native PNG file picker, validates magic bytes + dimensions (390×390) + size (≤512 KB), copies to `userData/wfb-backgrounds/<uuid>.png`. Returns dataUrl for immediate canvas use; renderer never receives the file path. Rate-limited: 1 call / 2s |
 
 ### Main → Renderer (fire-and-forget sends)
 

@@ -13,7 +13,8 @@ const VALID_INVOKE_CHANNELS = [
   'settings:autoDetect',
   'key:generate',
   'shell:openVSCode',
-  'get-session-token',   // one-time fetch; result held in closure, never on window
+  'get-session-token',      // one-time fetch; result held in closure, never on window
+  'background:import',      // open file picker, validate PNG, copy to userData; returns { success, assetId, dataUrl }
 ];
 
 // VALID_RECEIVE_CHANNELS: channels the renderer may subscribe to via ipcRenderer.on/once().
@@ -143,6 +144,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
       json: async () => JSON.parse(bodyText),
     };
   },
+
+  // Import a background image from disk (Electron mode only).
+  // Opens a native file picker, validates the PNG (size, dimensions, magic bytes),
+  // copies it to the managed userData directory, and returns { success, assetId, dataUrl }.
+  // The renderer never sees the file system path — only assetId and dataUrl are returned.
+  importBackgroundImage: () => ipcRenderer.invoke('background:import'),
 
   // The OS platform string, read once at preload time.
   // Exposed as a plain string — process itself is NOT accessible to the renderer.

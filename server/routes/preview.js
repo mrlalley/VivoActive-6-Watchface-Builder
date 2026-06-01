@@ -9,11 +9,11 @@ function registerPreviewRoutes(app, cfg, limiters, { requireSessionToken, buildQ
 
   // ── POST /api/preview – Build and launch in simulator ──
   app.post('/api/preview', requireSessionToken, buildLimiter, async (req, res) => {
-    const { elements = [], projectName = 'WatchFacePreview' } = req.body;
+    const { elements = [], projectName = 'WatchFacePreview', background = null } = req.body;
     try {
       // Serialize builds: only one at a time (prevents file contention)
       const buildResult = await buildQueue.add(
-        () => buildProject(cfg, projectName, elements),
+        () => buildProject(cfg, projectName, elements, null, background),
         `preview:${projectName}`
       );
       if (!buildResult.success) {

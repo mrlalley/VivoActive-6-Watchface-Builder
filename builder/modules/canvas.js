@@ -57,6 +57,11 @@ let onSelectCb = null;
 let onChangeCb = null;
 let analogRenderTimer = null; // Adaptive analog rendering timer
 
+// Background image state — module-level so render() can access it.
+// backgroundImageEl is an HTMLImageElement; backgroundCache maps assetId → HTMLImageElement.
+let backgroundImageEl = null;
+const backgroundCache = new Map();
+
 // ─── Reactive safe-area validation ───────────────────────────────────────────
 // Updated after every element commit (drag, resize, add, property change, undo).
 // Drives the red outline overlay and the export/preview button state.
@@ -166,6 +171,11 @@ export function render() {
   ctx.clip();
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+  // Draw background image if one is set
+  if (backgroundImageEl && backgroundImageEl.complete) {
+    ctx.drawImage(backgroundImageEl, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+  }
 
   if (gridLevel > 0) drawGrid(gridLevel);
 
@@ -659,6 +669,26 @@ function mousePos(e) {
 export function setSelectedId(id) { selectedId = id; scheduleRedraw(); }
 export function getSelectedId() { return selectedId; }
 export { scheduleRedraw };
+
+/**
+ * Set the canvas background to a loaded HTMLImageElement.
+ * Pass null to clear. The image is cached by assetId so repeated calls
+ * with the same asset don't reload from the network.
+ * @param {HTMLImageElement|null} imgEl
+ * @param {string|null} assetId
+ */
+export function setCanvasBackground(imgEl, assetId = null) {
+  backgroundImageEl = imgEl;
+  if (imgEl && assetId) backgroundCache.set(assetId, imgEl);
+  scheduleRedraw();
+}
+
+export function clearCanvasBackground() {
+  backgroundImageEl = null;
+  scheduleRedraw();
+}
+
+export function getBackgroundCache() { return backgroundCache; }
 
 export function cleanupCanvas() {
   // Stop the adaptive render loop when canvas is destroyed or re-initialized

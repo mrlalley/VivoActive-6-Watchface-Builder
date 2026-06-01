@@ -1,4 +1,4 @@
-import { getElements } from './elements.js';
+import { getElements, getBackground } from './elements.js';
 
 /**
  * @typedef {Object} Element
@@ -33,10 +33,11 @@ function apiFetch(path, options) {
 
 export async function exportProject(projectName = 'MyWatchFace') {
   const elements = getElements();
+  const background = getBackground();
   const res = await apiFetch('/api/export', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ elements, projectName }),
+    body: JSON.stringify({ elements, projectName, background }),
   });
   if (!res.ok) throw new Error(`Server error ${res.status}`);
   return res.json();
@@ -49,10 +50,11 @@ export async function exportProject(projectName = 'MyWatchFace') {
  */
 export async function previewInSimulator() {
   const elements = getElements();
+  const background = getBackground();
   const res = await apiFetch('/api/preview', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ elements, projectName: 'WatchFacePreview' }),
+    body: JSON.stringify({ elements, projectName: 'WatchFacePreview', background }),
   });
   if (!res.ok) throw new Error(`Server error ${res.status}`);
   return res.json();

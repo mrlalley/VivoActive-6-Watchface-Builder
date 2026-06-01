@@ -20,9 +20,10 @@ function createServerManager(serverPort, serverUrl, sessionToken, logFilePath, s
       WFB_SERVER_PORT: String(serverPort),
       WFB_SESSION_TOKEN: sessionToken, // auth token for all /api/ routes
       WFB_LOG_FILE: logFilePath || '', // log file path (empty = stdout only)
-      GARMIN_EXPORT_DIR: process.env.GARMIN_EXPORT_DIR || path.join(app.getPath('documents'), 'WatchFaceBuilder', 'exported'),
-      GARMIN_TEMP_DIR: process.env.GARMIN_TEMP_DIR || path.join(app.getPath('temp'), 'CIQPreview'),
-      GARMIN_DESIGNS_DIR: process.env.GARMIN_DESIGNS_DIR || path.join(app.getPath('userData'), 'designs'),
+      GARMIN_EXPORT_DIR:      process.env.GARMIN_EXPORT_DIR      || path.join(app.getPath('documents'), 'WatchFaceBuilder', 'exported'),
+      GARMIN_TEMP_DIR:        process.env.GARMIN_TEMP_DIR        || path.join(app.getPath('temp'), 'CIQPreview'),
+      GARMIN_DESIGNS_DIR:     process.env.GARMIN_DESIGNS_DIR     || path.join(app.getPath('userData'), 'designs'),
+      GARMIN_BACKGROUNDS_DIR: process.env.GARMIN_BACKGROUNDS_DIR || path.join(app.getPath('userData'), 'wfb-backgrounds'),
     };
     // Only override SDK/key paths when explicitly configured; allow auto-detect otherwise.
     if (store.get('sdkBin')) env.GARMIN_SDK_BIN = store.get('sdkBin');

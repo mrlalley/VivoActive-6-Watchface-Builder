@@ -7,12 +7,28 @@
  * Input validation is applied at the boundary via src/shared/ipc-schema.js.
  */
 
+const crypto = require('crypto');
+
 const {
   validateDialogOpenOptions,
   validateSettingsSaveConfig,
   validateKeyGenerateOptions,
   validateShellOpenVSCode,
 } = require('../../shared/ipc-schema');
+
+// Max allowed file size for imported background images (512 KB)
+const MAX_BACKGROUND_BYTES = 512 * 1024;
+
+// PNG magic bytes: \x89PNG
+const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
+
+// Parse width/height from a PNG buffer's IHDR chunk.
+// Returns null when the buffer is too short or not a valid PNG.
+function parsePngDimensions(buf) {
+  if (buf.length < 24) return null;
+  if (!buf.slice(0, 4).equals(PNG_MAGIC)) return null;
+  return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+}
 
 /**
  * Register all IPC invoke handlers.
@@ -169,6 +185,91 @@ function registerIpcHandlers(deps) {
       }
     },
     5000
+  );
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Invoke handlers: background:import (rate-limited 2s)
+  // Opens a native file picker, validates the selected PNG, copies it to
+  // the managed backgrounds directory, and returns { success, assetId, dataUrl }.
+  // The renderer never receives the filesystem path — only assetId and dataUrl.
+  // ─────────────────────────────────────────────────────────────────────
+  withRateLimit(
+    'background:import',
+    async (event) => {
+      // Open native file picker — user selects the file, not the renderer.
+      const result = await dialog.showOpenDialog(mainWindow, {
+        title: 'Import Watch Face Background',
+        properties: ['openFile'],
+        filters: [{ name: 'PNG Images', extensions: ['png'] }],
+      });
+
+      if (result.canceled || result.filePaths.length === 0) {
+        return { success: false, canceled: true };
+      }
+
+      const srcPath = result.filePaths[0];
+
+      // ── Validate ───────────────────────────────────────────────────────
+      let fileBuffer;
+      try {
+        fileBuffer = fs.readFileSync(srcPath);
+      } catch (readErr) {
+        return { success: false, error: `Cannot read file: ${readErr.message}` };
+      }
+
+      if (fileBuffer.length > MAX_BACKGROUND_BYTES) {
+        return {
+          success: false,
+          error: `File too large (${(fileBuffer.length / 1024).toFixed(0)} KB). Maximum is 512 KB.`,
+        };
+      }
+
+      // Verify PNG magic bytes
+      if (!fileBuffer.slice(0, 4).equals(PNG_MAGIC)) {
+        return { success: false, error: 'File is not a valid PNG image. Please select a PNG file.' };
+      }
+
+      // Validate dimensions — must be exactly 390×390
+      const dims = parsePngDimensions(fileBuffer);
+      if (!dims) {
+        return { success: false, error: 'Could not read image dimensions. File may be corrupt.' };
+      }
+      if (dims.width !== 390 || dims.height !== 390) {
+        return {
+          success: false,
+          error: `Image must be 390×390 pixels. This image is ${dims.width}×${dims.height}.`,
+        };
+      }
+
+      // ── Copy to managed directory ──────────────────────────────────────
+      const bgDir = path.join(app.getPath('userData'), 'wfb-backgrounds');
+      try {
+        fs.mkdirSync(bgDir, { recursive: true });
+      } catch (mkdirErr) {
+        return { success: false, error: `Cannot create backgrounds directory: ${mkdirErr.message}` };
+      }
+
+      // UUID-based assetId prevents path traversal and preserves no original filename
+      const uuid     = crypto.randomUUID();
+      const assetId  = `custom-${uuid}`;
+      const dstPath  = path.join(bgDir, `${assetId}.png`);
+
+      // Belt-and-suspenders: confirm destination is inside bgDir
+      if (!path.resolve(dstPath).startsWith(path.resolve(bgDir) + path.sep)) {
+        return { success: false, error: 'Internal path safety check failed.' };
+      }
+
+      try {
+        fs.writeFileSync(dstPath, fileBuffer);
+      } catch (writeErr) {
+        return { success: false, error: `Cannot save background: ${writeErr.message}` };
+      }
+
+      // Return dataUrl for immediate canvas use; renderer never sees the file path
+      const dataUrl = `data:image/png;base64,${fileBuffer.toString('base64')}`;
+      return { success: true, assetId, dataUrl };
+    },
+    2000
   );
 
   // ─────────────────────────────────────────────────────────────────────

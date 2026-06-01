@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { ValidationError, QueueFullError } = require('../../lib/errors');
+const { validateBackground } = require('../../lib/validation');
 const { rebuildExportManifest } = require('../../lib/build');
 
 function registerExportRoutes(app, cfg, limiters, { requireSessionToken, buildQueue, safePrgName, buildProject, log }) {
@@ -123,11 +124,16 @@ function registerExportRoutes(app, cfg, limiters, { requireSessionToken, buildQu
 
   // ── POST /api/export – Export and build .prg file ──
   app.post('/api/export', requireSessionToken, buildLimiter, async (req, res) => {
-    const { elements = [], projectName = 'MyWatchFace' } = req.body;
+    const { elements = [], projectName = 'MyWatchFace', background = null } = req.body;
+    try {
+      validateBackground(background);
+    } catch (validationErr) {
+      return res.status(400).json({ success: false, error: validationErr.message, log: '', requestId: 'unknown' });
+    }
     try {
       // Serialize builds: only one at a time (prevents file contention)
       const result = await buildQueue.add(
-        () => buildProject(cfg, projectName, elements),
+        () => buildProject(cfg, projectName, elements, null, background),
         `export:${projectName}`
       );
       // Strip server-side paths before sending to the client — prgPath, designPath,

@@ -1,0 +1,7 @@
+[
+  { "id": "analog-dress-gold",    "label": "Dress Gold",   "category": "analog", "variant": "dress"   },
+  { "id": "analog-tool-black",    "label": "Tool Black",   "category": "analog", "variant": "tool"    },
+  { "id": "analog-roman-silver",  "label": "Roman Silver", "category": "analog", "variant": "roman"   },
+  { "id": "analog-minimal-white", "label": "Minimal White","category": "analog", "variant": "minimal" },
+  { "id": "analog-sport-dark",    "label": "Sport Dark",   "category": "analog", "variant": "sport"   }
+]
