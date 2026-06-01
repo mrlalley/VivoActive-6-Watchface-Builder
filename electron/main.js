@@ -214,20 +214,9 @@ function createWindow() {
   });
 
   // Open DevTools only if explicitly requested via OPEN_DEVTOOLS flag.
-  // F12 and Ctrl+Shift+I shortcuts always work in dev mode (never blocked).
-  // In production (packaged app), both auto-open and keyboard shortcuts are disabled.
+  // F12 and Ctrl+Shift+I shortcuts always work (not blocked).
   if (process.env.OPEN_DEVTOOLS === '1') {
     mainWindow.webContents.openDevTools();
-  }
-
-  // Block DevTools shortcuts in production builds only.
-  // In development, F12 and Ctrl+Shift+I always work.
-  const isProduction = !process.env.ELECTRON_IS_DEV && process.env.NODE_ENV === 'production';
-  if (isProduction) {
-    mainWindow.webContents.on('before-input-event', (event, input) => {
-      if (input.control && input.shift && input.key.toLowerCase() === 'i') event.preventDefault();
-      if (input.key === 'F12') event.preventDefault();
-    });
   }
 }
 
