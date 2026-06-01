@@ -117,22 +117,31 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Authenticated fetch helper.
   // Attaches x-wfb-token from the preload closure on every request.
-  // Renderer code uses this instead of fetch() for all /api/ calls.
-  // The token is NEVER accessible as window.electronAPI.token or similar.
+  // Response objects cannot cross the contextBridge, so we return a wrapper
+  // that mimics the Response API: status, headers, and json() method.
   apiFetch: async (apiPath, options = {}) => {
-    console.log('[PRELOAD] apiFetch called with:', apiPath);
-    console.log('[PRELOAD] fetch available?', typeof fetch);
     const token = await _getToken();
-    console.log('[PRELOAD] token retrieved:', typeof token);
-    const response = fetch(apiPath, {
+    const response = await fetch(apiPath, {
       ...options,
       headers: {
         ...(options.headers || {}),
         'x-wfb-token': token,
       },
     });
-    console.log('[PRELOAD] fetch returned:', typeof response, response);
-    return response;
+
+    // Return a Response-like object that can cross the contextBridge
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      headers: {
+        'content-type': response.headers.get('content-type'),
+      },
+      // Provide a json() method that parses and returns the body
+      json: async () => {
+        return await response.json();
+      },
+    };
   },
 
   // The OS platform string, read once at preload time.
