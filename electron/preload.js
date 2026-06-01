@@ -120,10 +120,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Renderer code uses this instead of fetch() for all /api/ calls.
   // The token is NEVER accessible as window.electronAPI.token or similar.
   apiFetch: async (apiPath, options = {}) => {
-    if (typeof fetch === 'undefined') {
-      throw new Error('fetch is not available in preload context');
-    }
+    console.log('[PRELOAD] apiFetch called with:', apiPath);
+    console.log('[PRELOAD] fetch available?', typeof fetch);
     const token = await _getToken();
+    console.log('[PRELOAD] token retrieved:', typeof token);
     const response = fetch(apiPath, {
       ...options,
       headers: {
@@ -131,9 +131,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         'x-wfb-token': token,
       },
     });
-    if (!response || typeof response.then !== 'function') {
-      throw new Error(`fetch returned invalid value: ${typeof response}`);
-    }
+    console.log('[PRELOAD] fetch returned:', typeof response, response);
     return response;
   },
 
