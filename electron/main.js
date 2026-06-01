@@ -233,9 +233,9 @@ function startServer() {
     WFB_SERVER_PORT:    String(SERVER_PORT),
     WFB_SESSION_TOKEN:  SESSION_TOKEN,        // auth token for all /api/ routes
     WFB_LOG_FILE:       LOG_FILE_PATH || '',  // log file path (empty = stdout only)
-    GARMIN_EXPORT_DIR:  path.join(app.getPath('documents'), 'WatchFaceBuilder', 'exported'),
-    GARMIN_TEMP_DIR:    path.join(app.getPath('temp'), 'CIQPreview'),
-    GARMIN_DESIGNS_DIR: path.join(app.getPath('userData'), 'designs'),
+    GARMIN_EXPORT_DIR:  process.env.GARMIN_EXPORT_DIR || path.join(app.getPath('documents'), 'WatchFaceBuilder', 'exported'),
+    GARMIN_TEMP_DIR:    process.env.GARMIN_TEMP_DIR || path.join(app.getPath('temp'), 'CIQPreview'),
+    GARMIN_DESIGNS_DIR: process.env.GARMIN_DESIGNS_DIR || path.join(app.getPath('userData'), 'designs'),
   };
   // Only override SDK/key paths when explicitly configured; allow auto-detect otherwise.
   if (store.get('sdkBin')) env.GARMIN_SDK_BIN = store.get('sdkBin');
