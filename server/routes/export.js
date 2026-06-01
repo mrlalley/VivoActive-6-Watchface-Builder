@@ -21,35 +21,48 @@ function registerExportRoutes(app, cfg, limiters, { requireSessionToken, buildQu
 
       // ─── Phase 1: Try direct lookup via manifest ──────────────────────────
       const manifestPath = path.join(cfg.exportDir, '.exports.json');
-      if (fs.existsSync(manifestPath)) {
-        try {
-          const manifestContent = fs.readFileSync(manifestPath, 'utf8');
-          const manifest = JSON.parse(manifestContent);
-          const requestId = manifest[prgName];
+      try {
+        const manifestContent = await fs.promises.readFile(manifestPath, 'utf8');
+        const manifest = JSON.parse(manifestContent);
+        const requestId = manifest[prgName];
 
-          if (requestId) {
-            // Construct the expected .prg path and verify it exists
-            const expectedPath = path.join(cfg.exportDir, requestId, 'bin', `${prgName}.prg`);
+        if (requestId) {
+          // Construct the expected .prg path and verify it exists
+          const expectedPath = path.join(cfg.exportDir, requestId, 'bin', `${prgName}.prg`);
 
-            // Verify path is rooted in exportDir (safety check)
-            const resolvedPath = path.resolve(expectedPath);
-            const resolvedExportDir = path.resolve(cfg.exportDir);
-            if (resolvedPath.startsWith(resolvedExportDir) && fs.existsSync(expectedPath)) {
-              foundInDir = path.dirname(expectedPath); // Return the 'bin' directory
-              logInfo('export-check:manifest-hit', { prgName, requestId });
-            } else if (requestId) {
-              // Manifest entry exists but file not found — stale entry, will be cleaned via fallback
-              logWarn('export-check:stale-manifest', { prgName, requestId });
-            }
+          // Verify path is rooted in exportDir (safety check)
+          const resolvedPath = path.resolve(expectedPath);
+          const resolvedExportDir = path.resolve(cfg.exportDir);
+
+          let prgExists = false;
+          try {
+            await fs.promises.access(expectedPath);
+            prgExists = true;
+          } catch { /* ENOENT — file not found */ }
+
+          if (resolvedPath.startsWith(resolvedExportDir) && prgExists) {
+            foundInDir = path.dirname(expectedPath); // Return the 'bin' directory
+            logInfo('export-check:manifest-hit', { prgName, requestId });
+          } else if (requestId) {
+            // Manifest entry exists but file not found — stale entry, will be cleaned via fallback
+            logWarn('export-check:stale-manifest', { prgName, requestId });
           }
-        } catch (manifestErr) {
-          logWarn('export-check:manifest-read-failed', { reason: manifestErr.message });
-          // Fall through to recursive scan
         }
+      } catch (manifestErr) {
+        if (manifestErr.code !== 'ENOENT') {
+          logWarn('export-check:manifest-read-failed', { reason: manifestErr.message });
+        }
+        // ENOENT: manifest doesn't exist — fall through to recursive scan
       }
 
       // ─── Phase 2: Fallback to recursive scan (for missing/stale manifest) ──
-      if (!foundInDir && fs.existsSync(cfg.exportDir)) {
+      let exportDirExists = false;
+      try {
+        await fs.promises.access(cfg.exportDir);
+        exportDirExists = true;
+      } catch { /* ENOENT — no export dir yet */ }
+
+      if (!foundInDir && exportDirExists) {
         try {
           const MAX_DEPTH = 10;
           const MAX_FILES_CHECKED = 10000;
@@ -117,14 +130,21 @@ function registerExportRoutes(app, cfg, limiters, { requireSessionToken, buildQu
             // Clean up manifest entry if present
             try {
               const manifestPath = path.join(cfg.exportDir, '.exports.json');
-              if (fs.existsSync(manifestPath)) {
-                const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+              let manifestContent;
+              try {
+                manifestContent = await fs.promises.readFile(manifestPath, 'utf8');
+              } catch (readErr) {
+                if (readErr.code !== 'ENOENT') throw readErr;
+                // ENOENT — no manifest to clean up; skip silently
+                manifestContent = null;
+              }
+              if (manifestContent !== null) {
                 const manifest = JSON.parse(manifestContent);
                 if (manifest[prgName]) {
                   delete manifest[prgName];
                   const tmpPath = manifestPath + '.tmp';
-                  fs.writeFileSync(tmpPath, JSON.stringify(manifest, null, 2));
-                  fs.renameSync(tmpPath, manifestPath);
+                  await fs.promises.writeFile(tmpPath, JSON.stringify(manifest, null, 2));
+                  await fs.promises.rename(tmpPath, manifestPath);
                   logInfo('export-check:manifest-cleaned', { prgName });
                 }
               }

@@ -36,14 +36,22 @@ function registerHealthRoutes(app, cfg, limiters, { requireSessionToken, buildQu
 
   // ── GET /api/health – Authenticated health check for application and build state ──
   // Requires session token to prevent information disclosure about SDK/key presence and build activity.
-  app.get('/api/health', requireSessionToken, limiters.healthLimiter, (req, res) => {
-    const health = {
-      ok: fs.existsSync(cfg.monkeyc) && fs.existsSync(cfg.devKey),
-      sdkFound: fs.existsSync(cfg.monkeyc),
-      keyFound: fs.existsSync(cfg.devKey),
-      timestamp: new Date().toISOString(),
-    };
-    res.status(health.ok ? 200 : 503).json({ ...health, buildQueue: buildQueue.stats() });
+  app.get('/api/health', requireSessionToken, limiters.healthLimiter, async (req, res) => {
+    try {
+      const [sdkFound, keyFound] = await Promise.all([
+        fs.promises.access(cfg.monkeyc).then(() => true).catch(() => false),
+        fs.promises.access(cfg.devKey).then(() => true).catch(() => false),
+      ]);
+      const health = {
+        ok: sdkFound && keyFound,
+        sdkFound,
+        keyFound,
+        timestamp: new Date().toISOString(),
+      };
+      res.status(health.ok ? 200 : 503).json({ ...health, buildQueue: buildQueue.stats() });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   });
 }
 

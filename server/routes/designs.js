@@ -55,11 +55,15 @@ function registerDesignRoutes(app, cfg, limiters, { requireSessionToken, designS
   });
 
   // ── GET /api/designs/check/:projectName – Check if design exists ──
-  app.get('/api/designs/check/:projectName', requireSessionToken, loadDesignLimiter, (req, res) => {
+  app.get('/api/designs/check/:projectName', requireSessionToken, loadDesignLimiter, async (req, res) => {
     try {
       const projectName = req.params.projectName;
       const fileName = `${safePrgName(projectName)}.json`;
-      const exists = fs.existsSync(path.join(designsDir, fileName));
+      let exists = false;
+      try {
+        await fs.promises.access(path.join(designsDir, fileName));
+        exists = true;
+      } catch { /* ENOENT — design file not present */ }
 
       res.json({ success: true, exists, projectName });
     } catch (err) {

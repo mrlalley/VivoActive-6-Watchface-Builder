@@ -29,7 +29,10 @@
       "Bash(npx electron *)",
       "Bash(npx electron-builder *)",
       "Bash(dir \"c:\\\\Users\\\\mr_la\\\\WatchFace Builder\\\\dist-final\")",
-      "Bash(\"c:\\\\Users\\\\mr_la\\\\WatchFace Builder\\\\dist-final\\\\WatchFace Builder 1.0.0.exe\")"
+      "Bash(\"c:\\\\Users\\\\mr_la\\\\WatchFace Builder\\\\dist-final\\\\WatchFace Builder 1.0.0.exe\")",
+      "Bash(awk '{print $2}')",
+      "Bash(xargs kill -9)",
+      "Bash(curl -s http://127.0.0.1:3000/internal/healthz)"
     ]
   }
 }

@@ -13,8 +13,15 @@ function registerKeygenRoutes(app, cfg, limiters, { requireSessionToken, generat
     const outputPath = cfg.devKey || getDefaultKeyPath();
     const force = req.body?.force === true;
 
-    if (!force && fs.existsSync(outputPath)) {
-      return res.json({ success: false, exists: true, path: outputPath });
+    if (!force) {
+      let keyExists = false;
+      try {
+        await fs.promises.access(outputPath);
+        keyExists = true;
+      } catch { /* ENOENT — key not yet generated */ }
+      if (keyExists) {
+        return res.json({ success: false, exists: true, path: outputPath });
+      }
     }
 
     try {
