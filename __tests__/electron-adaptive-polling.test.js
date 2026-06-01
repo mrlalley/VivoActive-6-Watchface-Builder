@@ -46,6 +46,19 @@ describe('Electron Adaptive Health Polling', () => {
     jest.clearAllTimers();
   });
 
+  afterEach(() => {
+    // Stop polling and clear the timeout handle. Tests that call
+    // scheduleNextHealthCheck() directly (without fake timers) create real
+    // setTimeout handles — stopHealthPolling() clears them so Jest can exit.
+    healthPollingState.isRunning = false;
+    if (healthPollTimeoutId) {
+      clearTimeout(healthPollTimeoutId);
+      healthPollTimeoutId = null;
+    }
+    // Restore real timers in case a test threw before calling jest.useRealTimers().
+    jest.useRealTimers();
+  });
+
   // Minimal implementations of the polling functions
   function scheduleNextHealthCheck() {
     if (!healthPollingState.isRunning) return;
@@ -71,6 +84,14 @@ describe('Electron Adaptive Health Polling', () => {
       consecutiveHealthy: healthPollingState.consecutiveHealthy,
       consecutiveErrors: healthPollingState.consecutiveErrors,
     });
+
+    // Clear any existing timeout before scheduling a new one.
+    // Tests that call scheduleNextHealthCheck() multiple times would otherwise
+    // leave orphaned handles that prevent Jest from exiting.
+    if (healthPollTimeoutId) {
+      clearTimeout(healthPollTimeoutId);
+      healthPollTimeoutId = null;
+    }
 
     healthPollTimeoutId = setTimeout(() => {
       if (healthPollingState.isRunning) {
