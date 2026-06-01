@@ -9,6 +9,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 
 const { getConfig } = require('./lib/config');
 const { createLogger, logInfo, logError, logWarn } = require('./lib/logger');
