@@ -161,17 +161,22 @@ function detectSdkPath() {
 
 // ── Template version and SDK compatibility helpers ────────────────────────────
 // These run once in app.on('ready') before the server or renderer starts.
-// They are synchronous guards — the app will not load in a broken state.
+// Both helpers are async to avoid blocking the main-process event loop on I/O.
 
 const TEMPLATE_VERSION_FILE = path.join(__dirname, '..', 'garmin-project-template', 'VERSION');
 
 /**
- * assertTemplateVersionExists()
+ * ensureTemplateVersionExists()
  * Hard-exits if garmin-project-template/VERSION is missing.
- * This file is required for SDK compatibility checking.
+ * Returns false and calls app.quit() when the file is absent so the caller
+ * can return early; returns true when the file exists.
+ * @returns {Promise<boolean>}
  */
-function assertTemplateVersionExists() {
-  if (!fs.existsSync(TEMPLATE_VERSION_FILE)) {
+async function ensureTemplateVersionExists() {
+  try {
+    await fs.promises.access(TEMPLATE_VERSION_FILE);
+    return true;
+  } catch {
     log.fatal({ event: 'startup.version_file_missing', path: TEMPLATE_VERSION_FILE });
     dialog.showErrorBox(
       'Template Version File Missing',
@@ -180,6 +185,7 @@ function assertTemplateVersionExists() {
       'Reinstall the application or run:\n  npm run generate-constants:force'
     );
     app.quit();
+    return false;
   }
 }
 
@@ -192,7 +198,7 @@ function assertTemplateVersionExists() {
 async function checkSdkCompatibility() {
   let templateMeta;
   try {
-    templateMeta = JSON.parse(fs.readFileSync(TEMPLATE_VERSION_FILE, 'utf8'));
+    templateMeta = JSON.parse(await fs.promises.readFile(TEMPLATE_VERSION_FILE, 'utf8'));
   } catch (err) {
     log.warn({ event: 'startup.version_file_unreadable', message: err.message });
     return; // Non-fatal — generate-constants pre-script would have already warned.
@@ -276,7 +282,7 @@ app.on('ready', async () => {
   // ── Template version and SDK compatibility gate ──────────────────────────
   // Must run before the server starts and before the renderer loads.
   // generate-constants.js (prestart) warns on incompatibility; this is the hard block.
-  assertTemplateVersionExists();
+  if (!await ensureTemplateVersionExists()) return;
   await checkSdkCompatibility();
 
   // ── Resolve backend port ────────────────────────────────────────────────
