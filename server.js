@@ -82,12 +82,34 @@ function createServer(config = {}, detectors = {}) {
     next();
   });
 
-  // ── GET /health – Liveness probe for the Electron startup health gate ──────────
-  // Registered before all other routes and before CSP middleware so it is always
-  // fast and reachable even when other middleware is misconfigured.
-  // No rate limiter: server binds to 127.0.0.1 only; this endpoint is not exposed
-  // to external networks.
-  app.get('/health', (req, res) => {
+  // ════════════════════════════════════════════════════════════════════════════════
+  // HEALTH ENDPOINT SECURITY CONTRACT
+  // ════════════════════════════════════════════════════════════════════════════════
+  //
+  // Two distinct endpoints, two distinct purposes:
+  //
+  // 1. GET /internal/healthz (unauthenticated, liveness-only)
+  //    - For: Electron startup, infrastructure monitoring, load balancers, probes.
+  //    - Contains: minimal process info only (status, pid, timestamp).
+  //    - NO authentication required; NO rate limiter (server binds to 127.0.0.1).
+  //    - RULE: Never add SDK/key/config/build state here. Use /api/health.
+  //    - Registered before all other routes and before CSP middleware.
+  //
+  // 2. GET /api/health (authenticated, application health)
+  //    - For: Renderer health checks, operational queries, build state monitoring.
+  //    - Contains: SDK/key detection status, build queue, config completeness.
+  //    - REQUIRES: x-wfb-token header; rate-limited.
+  //    - RULE: This is the source of truth for application health and config.
+  //
+  // DO NOT:
+  // - Add new health-like endpoints outside /api/* without explicit security review.
+  // - Include any SDK/key/config info in /internal/healthz.
+  // - Treat /internal/healthz as an API surface or extend its payload.
+  //
+  // ════════════════════════════════════════════════════════════════════════════════
+
+  // ── GET /internal/healthz – Liveness probe for the Electron startup health gate ──
+  app.get('/internal/healthz', (req, res) => {
     res.json({ status: 'ok', pid: process.pid, ts: Date.now() });
   });
 

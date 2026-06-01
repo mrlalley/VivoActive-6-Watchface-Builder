@@ -56,7 +56,7 @@ function loggedHandle(channel, handler) {
 // Override with WFB_SERVER_PORT env var to avoid conflicts in test environments.
 const SERVER_PORT   = parseInt(process.env.WFB_SERVER_PORT, 10) || 3000;
 const SERVER_URL    = `http://127.0.0.1:${SERVER_PORT}`;
-const HEALTH_URL    = `${SERVER_URL}/health`;
+const HEALTH_URL    = `${SERVER_URL}/internal/healthz`;  // Liveness probe (unauthenticated)
 const MAX_WAIT_MS   = 10_000;
 const POLL_INTERVAL = 200;
 
